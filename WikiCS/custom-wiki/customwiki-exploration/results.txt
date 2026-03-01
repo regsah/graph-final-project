@@ -1,0 +1,21 @@
+=== Degree Statistics ===
+Total  – Min: 0, Max: 3474, Mean: 49.75, Median: 14
+In     – Min: 0, Max: 3283, Mean: 24.87, Median: 4
+Out    – Min: 0, Max: 316, Mean: 24.87, Median: 9
+
+=== Degree Assortativity ===
+Coefficient: -0.091838  (DISASSORTATIVE)
+
+=== Topic-Link Assortativity Summary ===
+             Metric  Connected Mean  Connected Std  Random Mean  Random Std    Diff
+  Cosine Similarity          0.6253         0.0791       0.4990      0.0645  0.1263
+Pearson Correlation          0.6252         0.0791       0.4989      0.0645  0.1263
+ Euclidean Distance         32.1073         3.8649      37.3866      2.8966 -5.2792
+
+=== Local Transitivity ===
+Mean: 0.4527
+Median: 0.4286
+Min: 0.0000, Max: 1.0000
+Std: 0.2991
+CC==0: 1463, CC>0: 10238
+Global Transitivity: 0.2623

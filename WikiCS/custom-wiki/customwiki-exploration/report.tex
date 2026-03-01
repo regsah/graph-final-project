@@ -1,0 +1,198 @@
+\documentclass[12pt,a4paper]{article}
+
+% ── packages ───────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{caption}
+\usepackage{float}
+
+\geometry{margin=2.5cm}
+
+\title{Custom-WikiCS Graph Exploration}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Dataset Overview}
+% ═══════════════════════════════════════════════════════════════════════════
+
+The Custom-WikiCS graph is a directed graph derived from Wikipedia computer-science articles.
+Each node represents an article, and each directed edge represents a hyperlink from one article to another.
+In addition, every node is associated with a 768-dimensional embedding vector generated from its article text.
+
+\begin{itemize}
+    \item \textbf{Nodes:} 11\,701
+    \item \textbf{Edges:} 291\,039
+    \item \textbf{Embedding dimension:} 768
+\end{itemize}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Degree Distribution}
+% ═══════════════════════════════════════════════════════════════════════════
+
+Figure~\ref{fig:degree_dist} shows the degree distributions (total, in-degree, and out-degree)
+of the graph.  The distributions are heavily right-skewed: most nodes have low degree while a
+few hub pages accumulate thousands of incoming links.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/degree_distribution.png}
+    \caption{Degree distribution histograms (total, in-degree, out-degree).}
+    \label{fig:degree_dist}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Degree statistics.}
+\label{tab:degree_stats}
+\begin{tabular}{lrrrr}
+\toprule
+ & \textbf{Min} & \textbf{Max} & \textbf{Mean} & \textbf{Median} \\
+\midrule
+Total Degree  & 0 & 3\,474 & 49.75 & 14 \\
+In-Degree     & 0 & 3\,283 & 24.87 & 4  \\
+Out-Degree    & 0 & 316    & 24.87 & 9  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Log--Log Plot}
+
+Figure~\ref{fig:degree_loglog} presents the degree distribution on log--log axes.
+The approximately linear relationship in this scale indicates a power-law--like behaviour,
+which is characteristic of scale-free networks.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{img/degree_distribution_loglog.png}
+    \caption{Degree distribution on log--log scale.}
+    \label{fig:degree_loglog}
+\end{figure}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Degree Assortativity}
+% ═══════════════════════════════════════════════════════════════════════════
+
+The \emph{degree assortativity coefficient}~$r$ measures whether high-degree nodes
+tend to connect to other high-degree nodes (\emph{assortative}, $r>0$) or to low-degree
+nodes (\emph{disassortative}, $r<0$).
+
+\[
+    r = -0.0918
+\]
+
+The negative coefficient indicates that the graph is \textbf{disassortative}:
+high-degree nodes tend to connect to low-degree nodes.
+This is consistent with the typical structure of information networks (e.g., Wikipedia),
+where a few highly-linked hub articles reference many less popular articles.
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Topic--Link Structure Assortativity}
+% ═══════════════════════════════════════════════════════════════════════════
+
+To assess whether linked articles are also \emph{topically similar},
+we compare the embedding vectors of connected node pairs against those of
+randomly sampled (unconnected) pairs using three metrics:
+Cosine Similarity, Pearson Correlation, and Euclidean Distance.
+
+\subsection{Cosine Similarity}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/topic_link_cosine.png}
+    \caption{Cosine similarity distribution: connected vs.\ random pairs.}
+    \label{fig:cosine}
+\end{figure}
+
+\subsection{Pearson Correlation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/topic_link_pearson.png}
+    \caption{Pearson correlation distribution: connected vs.\ random pairs.}
+    \label{fig:pearson}
+\end{figure}
+
+\subsection{Euclidean Distance}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/topic_link_euclidean.png}
+    \caption{Euclidean distance distribution: connected vs.\ random pairs.}
+    \label{fig:euclidean}
+\end{figure}
+
+\subsection{Summary}
+
+Table~\ref{tab:topic_link} summarises the three metrics.
+Connected pairs consistently show \emph{higher} cosine similarity and Pearson correlation
+and \emph{lower} Euclidean distance compared with random pairs.
+This confirms that the link structure of the graph is positively correlated with topic similarity.
+
+\begin{table}[H]
+\centering
+\caption{Topic--link assortativity summary.}
+\label{tab:topic_link}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Metric} & \textbf{Conn.\ Mean} & \textbf{Conn.\ Std} & \textbf{Rand.\ Mean} & \textbf{Rand.\ Std} & \textbf{Diff} \\
+\midrule
+Cosine Similarity   & 0.6253 & 0.0791 & 0.4990 & 0.0645 & +0.1263 \\
+Pearson Correlation & 0.6252 & 0.0791 & 0.4989 & 0.0645 & +0.1263 \\
+Euclidean Distance  & 32.1073 & 3.8649 & 37.3866 & 2.8966 & $-5.2792$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Local Transitivity (Clustering Coefficient)}
+% ═══════════════════════════════════════════════════════════════════════════
+
+The \emph{local clustering coefficient} of a node~$v$ measures how many of $v$'s
+neighbours are also neighbours of each other.  High values indicate that $v$ sits
+inside a tightly-knit cluster.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/local_transitivity.png}
+    \caption{Local transitivity distribution: all nodes (left) and nodes with CC $> 0$ (right).}
+    \label{fig:transitivity}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Local transitivity statistics.}
+\label{tab:cc_stats}
+\begin{tabular}{lr}
+\toprule
+\textbf{Statistic} & \textbf{Value} \\
+\midrule
+Mean CC       & 0.4527 \\
+Median CC     & 0.4286 \\
+Min CC        & 0.0000 \\
+Max CC        & 1.0000 \\
+Std CC        & 0.2991 \\
+Nodes with CC $= 0$ & 1\,463 \\
+Nodes with CC $> 0$ & 10\,238 \\
+Global Transitivity  & 0.2623 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The mean local clustering coefficient is $0.4527$, which is relatively high,
+indicating that node neighbourhoods tend to be well-connected.
+The global transitivity of the graph is $0.2623$.
+About $12.5\%$ of nodes have a clustering coefficient of exactly~0;
+these are either isolated nodes or nodes whose neighbours share no edges among
+themselves.
+
+\end{document}
