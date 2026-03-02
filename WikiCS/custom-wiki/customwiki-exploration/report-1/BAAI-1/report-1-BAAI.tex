@@ -29,7 +29,7 @@ The Custom-WikiCS graph is a directed graph derived from Wikipedia computer-scie
 Each node represents an article, and each directed edge represents a hyperlink from one article to another.
 In addition, every node is associated with a 1024-dimensional embedding vector produced by the
 \textbf{BAAI/bge-m3} sentence-embedding model.  Because bge-m3 yields $\ell_2$-normalised vectors,
-all pairwise Euclidean distances fall in the interval~$[0,2]$ and cosine similarity in~$[0,1]$.
+all pairwise Euclidean distances fall in the interval~$[0,2]$ and cosine similarity in~$[-1,1]$.
 
 \begin{itemize}
     \item \textbf{Nodes:} 11\,701
