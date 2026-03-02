@@ -45,7 +45,7 @@ few hub pages accumulate thousands of incoming links.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{img/degree_distribution.png}
+    \includegraphics[width=\textwidth]{img-1-alibaba/degree_distribution.png}
     \caption{Degree distribution histograms (total, in-degree, out-degree).}
     \label{fig:degree_dist}
 \end{figure}
@@ -73,7 +73,7 @@ which is characteristic of scale-free networks.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.65\textwidth]{img/degree_distribution_loglog.png}
+    \includegraphics[width=0.65\textwidth]{img-1-alibaba/degree_distribution_loglog.png}
     \caption{Degree distribution on log--log scale.}
     \label{fig:degree_loglog}
 \end{figure}
@@ -108,7 +108,7 @@ Cosine Similarity, Pearson Correlation, and Euclidean Distance.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{img/topic_link_cosine.png}
+    \includegraphics[width=0.8\textwidth]{img-1-alibaba/topic_link_cosine.png}
     \caption{Cosine similarity distribution: connected vs.\ random pairs.}
     \label{fig:cosine}
 \end{figure}
@@ -117,7 +117,7 @@ Cosine Similarity, Pearson Correlation, and Euclidean Distance.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{img/topic_link_pearson.png}
+    \includegraphics[width=0.8\textwidth]{img-1-alibaba/topic_link_pearson.png}
     \caption{Pearson correlation distribution: connected vs.\ random pairs.}
     \label{fig:pearson}
 \end{figure}
@@ -126,7 +126,7 @@ Cosine Similarity, Pearson Correlation, and Euclidean Distance.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{img/topic_link_euclidean.png}
+    \includegraphics[width=0.8\textwidth]{img-1-alibaba/topic_link_euclidean.png}
     \caption{Euclidean distance distribution: connected vs.\ random pairs.}
     \label{fig:euclidean}
 \end{figure}
@@ -163,7 +163,7 @@ inside a tightly-knit cluster.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{img/local_transitivity.png}
+    \includegraphics[width=\textwidth]{img-1-alibaba/local_transitivity.png}
     \caption{Local transitivity distribution: all nodes (left) and nodes with CC $> 0$ (right).}
     \label{fig:transitivity}
 \end{figure}
@@ -194,5 +194,63 @@ The global transitivity of the graph is $0.2623$.
 About $12.5\%$ of nodes have a clustering coefficient of exactly~0;
 these are either isolated nodes or nodes whose neighbours share no edges among
 themselves.
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Similarity Metrics vs.\ Node Degree}
+% ═══════════════════════════════════════════════════════════════════════════
+
+To investigate how topical similarity between linked articles relates to the
+connectivity of the endpoints, Figure~\ref{fig:sim_degree} plots each of the
+three similarity metrics (Cosine Similarity, Euclidean Distance, and Pearson
+Correlation) against the degree of the source and target nodes of every edge.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img-1-alibaba/similarityxdegree.png}
+    \caption{Similarity metrics vs.\ node degree (source and target).
+             Each row corresponds to a different metric; the left column uses
+             the source node degree and the right column the target node degree.}
+    \label{fig:sim_degree}
+\end{figure}
+
+Several observations emerge from the scatter plots:
+\begin{itemize}
+    \item For low-degree nodes the similarity values span a wide range,
+          while for high-degree hubs the spread narrows and converges toward
+          the population mean.  This variance reduction is expected: hubs
+          connect to many diverse articles, so their average similarity
+          regresses toward the global mean.
+    \item A cluster of edges with cosine similarity close to~$1.0$ (and
+          Euclidean distance close to~$0$) is visible at low degrees,
+          corresponding to pairs of near-duplicate or closely related articles
+          that share few other links.
+    \item The patterns are largely symmetric between source and target
+          degree, consistent with the fact that topical similarity is an
+          undirected property even though the graph itself is directed.
+\end{itemize}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Cosine Similarity vs.\ Local Transitivity}
+% ═══════════════════════════════════════════════════════════════════════════
+
+Figure~\ref{fig:cos_cc} examines the relationship between the cosine
+similarity of connected pairs and the local clustering coefficient (CC) of
+the source and target nodes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img-1-alibaba/cosinexlocaltransitivity.png}
+    \caption{Cosine similarity vs.\ local transitivity of the source node
+             (left) and the target node (right).}
+    \label{fig:cos_cc}
+\end{figure}
+
+The scatter plots show a slight positive trend: edges incident to nodes with
+higher clustering coefficients tend to exhibit somewhat higher cosine
+similarity.  This suggests that tightly-knit local neighbourhoods---where
+many neighbours are also interconnected---tend to be more topically coherent.
+Nevertheless, the relationship is weak and spread is substantial across all
+CC values, indicating that local transitivity alone is not a strong predictor
+of topical similarity.
 
 \end{document}
