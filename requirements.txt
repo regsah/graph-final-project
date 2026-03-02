@@ -22,6 +22,8 @@ pyarrow
 matplotlib
 networkx
 scipy
+python-louvain
+infomap
 
 # ── ML ────────────────────────────────────────────────────────────────
 scikit-learn
