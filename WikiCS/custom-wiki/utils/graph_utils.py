@@ -47,9 +47,8 @@ def resolve_title(query, title_to_id, threshold=0.6):
     """
     Return the best matching title for `query` using fuzzy matching.
     If `query` is an exact title, returns it directly.
-    Otherwise returns the SHORTEST title among fuzzy matches above `threshold`.
-    The shortest title is preferred because Wikipedia article titles tend to be
-    the canonical (shortest) form of a topic.
+    Otherwise returns the fuzzy match with the highest similarity score above `threshold`.
+    Returns None if no match exceeds the threshold.
     """
     if query in title_to_id:
         return query
@@ -58,7 +57,7 @@ def resolve_title(query, title_to_id, threshold=0.6):
     if not matches:
         return None
 
-    return min(matches, key=lambda x: len(x[0]))[0]
+    return matches[0][0]
 
 
 def load_embeddings(bge_path, n2v_path):
