@@ -4,6 +4,8 @@ from .graph_utils import (
     resolve_title,
     load_embeddings,
     build_normalized_embeddings,
+    node2vec_svd,
+    node2vec_walks,
 )
 
 __all__ = [
@@ -12,4 +14,6 @@ __all__ = [
     "resolve_title",
     "load_embeddings",
     "build_normalized_embeddings",
+    "node2vec_svd",
+    "node2vec_walks",
 ]

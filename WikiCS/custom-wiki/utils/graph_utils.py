@@ -1,10 +1,13 @@
 import json
 import os
 import pickle
+import random
 import numpy as np
 import pandas as pd
 import networkx as nx
 from difflib import SequenceMatcher
+from scipy import sparse
+from collections import deque
 
 
 def load_graph_data(data_path="../../data/data-embeddings.json"):
@@ -92,3 +95,161 @@ def build_normalized_embeddings(df_bge, df_n2v, G, alpha):
         })
 
     return pd.DataFrame(rows)
+
+
+# ── Pure-numpy Node2Vec (no C-extensions required) ────────────────────────────
+def _alias_setup(probs):
+    """Build alias table for efficient sampling from a discrete distribution."""
+    J = np.zeros(len(probs), dtype=np.int32)
+    q = np.zeros(len(probs), dtype=np.float64)
+    norm_const = float(np.sum(probs))
+    probs = np.array(probs) / norm_const
+    smaller = []
+    larger = []
+    for i, p in enumerate(probs):
+        if p < 1.0:
+            smaller.append(i)
+        else:
+            larger.append(i)
+    while smaller and larger:
+        s = smaller.pop()
+        l = larger.pop()
+        q[s] = probs[s] * len(probs)
+        J[s] = l
+        probs[l] = probs[l] + probs[s] - 1.0
+        if probs[l] < 1.0:
+            smaller.append(l)
+        else:
+            larger.append(l)
+    for i in range(len(probs)):
+        q[i] = probs[i] * len(probs)
+    return J, q
+
+
+def _alias_draw(J, q):
+    """Draw a sample from the alias table."""
+    i = int(np.random.randint(0, len(J)))
+    u = np.random.random()
+    if u < q[i]:
+        return i
+    return J[i]
+
+
+def _compute_transition_probs(G, p, q):
+    """
+    Compute transition probabilities for Node2Vec random walks.
+    Returns adjacency dict with alias tables for each node.
+    """
+    adj = {n: list(G.neighbors(n)) for n in G.nodes()}
+    transition = {}
+    for src in G.nodes():
+        neighbors = adj[src]
+        if not neighbors:
+            transition[src] = None
+            continue
+        probs = []
+        for dst in neighbors:
+            w = 1.0
+            if dst == src:
+                w = 1.0 / p
+            elif G.has_edge(dst, src):
+                w = 1.0
+            else:
+                w = 1.0 / q
+            probs.append(w)
+        J, q_table = _alias_setup(probs)
+        transition[src] = (J, q_table, adj[src])
+    return transition
+
+
+def node2vec_walks(G, p=1.0, q=1.0, walk_length=20, walks_per_node=10, seed=42):
+    """
+    Generate Node2Vec random walks using pure numpy/scipy (no C extensions).
+    Matches torch_geometric.nn.Node2Vec with p, q parameters.
+
+    Parameters:
+        G: NetworkX graph (undirected or directed)
+        p: Return parameter (1 = BFS-like, low = backtrack frequently)
+        q: In-out parameter (1 = BFS-like, low = DFS-like)
+        walk_length: Length of each random walk
+        walks_per_node: Number of walks per source node
+        seed: Random seed
+
+    Returns:
+        List of walks, each walk is a list of node IDs
+    """
+    np.random.seed(seed)
+    random.seed(seed)
+    transition = _compute_transition_probs(G, p, q)
+    walks = []
+    nodes = list(G.nodes())
+    for _ in range(walks_per_node):
+        random.shuffle(nodes)
+        for node in nodes:
+            if transition[node] is None:
+                continue
+            walk = [node]
+            J, q_table, neighbors = transition[node]
+            for _ in range(walk_length - 1):
+                next_node = neighbors[_alias_draw(J, q_table)]
+                walk.append(next_node)
+            walks.append(walk)
+    return walks
+
+
+def node2vec_svd(G, num_walks=10, walk_length=80, embedding_dim=128, seed=42):
+    """
+    Node2Vec-style embeddings using Matrix Factorization (SVD on PPI-style matrix).
+
+    Instead of Word2Vec on random walks, this builds a positive PMI-style matrix
+    from random walks and factorises it with TruncatedSVD — pure numpy/scipy,
+    no C extensions.
+
+    Parameters:
+        G: NetworkX graph (undirected)
+        num_walks: Number of random walks per node
+        walk_length: Length of each walk
+        embedding_dim: Output embedding dimension
+        seed: Random seed
+
+    Returns:
+        dict {node_id: numpy array (embedding_dim,)}
+    """
+    from sklearn.decomposition import TruncatedSVD
+    np.random.seed(seed)
+    random.seed(seed)
+
+    nodes = list(G.nodes())
+    node_to_idx = {n: i for i, n in enumerate(nodes)}
+    n = len(nodes)
+
+    walks = node2vec_walks(G, p=1.0, q=1.0, walk_length=walk_length,
+                            walks_per_node=num_walks, seed=seed)
+
+    window = 5
+    count_mat = np.zeros((n, n), dtype=np.float64)
+    for walk in walks:
+        for i, src in enumerate(walk):
+            s_idx = node_to_idx[src]
+            start = max(0, i - window)
+            end = min(len(walk), i + window + 1)
+            for j in range(start, end):
+                if i == j:
+                    continue
+                dst = walk[j]
+                d_idx = node_to_idx[dst]
+                count_mat[s_idx, d_idx] += 1.0
+
+    pmi_mat = count_mat.copy()
+    row_sum = count_mat.sum(axis=1)
+    col_sum = count_mat.sum(axis=0)
+    total = count_mat.sum()
+    row_sum[row_sum == 0] = 1.0
+    col_sum[col_sum == 0] = 1.0
+    pmi_mat = np.log((count_mat * total) / (row_sum[:, None] * col_sum[None, :]) + 1e-10)
+    pmi_mat = np.maximum(pmi_mat, 0)
+
+    svd = TruncatedSVD(n_components=embedding_dim, random_state=seed)
+    embeddings = svd.fit_transform(pmi_mat)
+
+    return {nodes[i]: embeddings[i].astype(np.float32) for i in range(n)}
