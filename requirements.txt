@@ -31,4 +31,5 @@ scikit-learn
 
 # ── Misc ──────────────────────────────────────────────────────────────
 requests
+powerlaw
 Wikipedia-API
