@@ -21,3 +21,6 @@ wiki_stem_corpus.csv
 
 # Cache directories
 cache/
+
+# Misc
+misc/
