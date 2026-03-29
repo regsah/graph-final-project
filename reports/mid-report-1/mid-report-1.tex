@@ -1,0 +1,590 @@
+\documentclass[12pt, a4paper]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[turkish]{babel}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{pdflscape}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{pgfgantt}
+\usepackage{amsmath,amssymb}
+\usepackage[numbers]{natbib}
+
+% --- Formatting ---
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{0pt}
+
+% --- Header/Footer ---
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Bitirme Projesi -- Ara Rapor}
+\lhead{Şahin Üregil}
+\rfoot{Sayfa \thepage}
+
+\begin{document}
+
+% =============================================================================
+% KAPAK SAYFASI
+% =============================================================================
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    \Huge
+    \textbf{Galatasaray Üniversitesi} \\
+    \Large
+    \textbf{Bilgisayar Mühendisliği} \\
+    \vspace{2cm}
+    \Huge
+    \textbf{Bitirme Projesi: Ara Rapor} \\
+    \vspace{1cm}
+    \Large
+    \textit{Graf Sinir Ağları ile Vikipedi Makale Önerisi} \\
+    \vspace{0.5cm}
+    \large
+    \textit{Recommandation d'articles Wikipédia par réseaux de neurones sur graphes} \\
+    \vspace{3cm}
+    \textbf{Hazırlayan:} \\
+    Şahin Üregil (21401920) \\
+    \vspace{1cm}
+    \textbf{Teslim Tarihi:} \\
+    Mart 2026 \\
+    \vspace*{\fill}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =============================================================================
+% 1. PROJE BAŞLIĞI
+% =============================================================================
+\section{Proje Başlığı}
+
+\textbf{Türkçe:} Graf Sinir Ağları ile Vikipedi Makale Önerisi
+
+\textbf{Fransızca:} Recommandation d'articles Wikipédia par réseaux de neurones sur graphes
+
+% =============================================================================
+% 2. PROJE KONUSU
+% =============================================================================
+\section{Proje Konusu}
+
+Günümüzde Wikipedia gibi devasa ansiklopedik kaynakların hacmi katlanarak artmaktadır. Kullanıcılar için temel sorun artık bilgiye erişmek değil, bu veri yığını içinde hedefe yönelik doğru öğrenme patikasını çizebilmektir. Geleneksel arama motorları ve öneri sistemleri genellikle anahtar kelime eşleşmesine veya işbirlikçi filtrelemeye (collaborative filtering) dayanmakta; ancak bu yöntemler, kullanıcının ``bir konuyu sıfırdan öğrenme'' niyetini anlamakta ve kavramlar arasındaki hiyerarşik ya da anlamsal ilişkileri (örneğin ``Derin Öğrenme''yi anlamak için önce ``Lineer Cebir''in bilinmesi gerekliliği) modellemekte yetersiz kalmaktadır.
+
+Bu proje kapsamında, metin verisi ile yapısal bağlantı verisini birleştiren, çok kipli (multimodal) ve graf tabanlı bir öneri çerçevesi geliştirilmesi hedeflenmektedir. Sistem, Wikipedia veri setini temel alarak makaleler arasındaki hiperlink yapısını bir graf olarak modelleyecek ve her makalenin anlamsal içeriğini ön eğitimli cümle gömme modelleri (sentence embedding models) ile vektörleştirecektir. Bu iki bilgi kaynağı, Graf Sinir Ağları (GNN) aracılığıyla birleştirilerek kullanıcının sorgusuna en uygun makale önerileri üretilecek ve sonrasında da Büyük Dil Modelleri (LLMs) kullanılarak hiyerarşik bir yapıda kullanıcıya sunulacaktır.
+
+Projenin kapsamı, Bilgisayar bilimi üzerine olan İngilizce Wikipedia makaleleri üzerinde çalışan bir öneri sistemi prototipi geliştirmekle sınırlıdır. Çoklu dil desteği, gerçek zamanlı kullanıcı etkileşimi takibi ve üretime hazır bir servis mimarisi bu çalışmanın kapsamı dışındadır.
+
+% =============================================================================
+% 3. PROJENİN AMACI VE HEDEFLERİ
+% =============================================================================
+\section{Projenin Amacı ve Hedefleri}
+
+Bu projenin temel amacı, Wikipedia'nın bilgisayar bilimi alanındaki makaleleri üzerinde çalışan, metin ve graf yapısını birlikte kullanan çok kipli (multimodal) bir öneri sistemi geliştirmektir. Sistem; kullanıcının girdiği bir sorguya veya ilgi alanına karşılık, anlamsal olarak en ilişkili makaleleri tespit edecek ve bu makaleleri kavramsal bir hiyerarşi içinde sunacaktır.
+
+Proje sonunda elde edilmesi beklenen sonuçlar şunlardır:
+
+\begin{itemize}
+    \item Wikipedia makalelerinin hiperlink yapısının bir graf olarak modellenmesi ve bu graf üzerinde GAT (Graph Attention Networks) tabanlı düğüm temsillerinin (node embeddings) öğrenilmesi.
+    \item Makale metinlerinin ön eğitimli cümle gömme modelleri (BAAI/bge-m3 ve Alibaba-NLP/gte-modernbert-base) ile anlamsal vektörlere dönüştürülmesi ve bu vektörlerin graf yapısıyla birleştirilmesi (multimodal fusion).
+    \item Kullanıcı sorgusuna en uygun makalelerin sıralanarak önerilmesi.
+    \item Önerilen makalelerin Büyük Dil Modelleri (LLM) aracılığıyla hiyerarşik bir öğrenme patikası şeklinde kullanıcıya sunulması.
+\end{itemize}
+
+Tespit edilen temel sorun, mevcut Wikipedia arama ve öneri mekanizmalarının kavramlar arası yapısal ilişkileri göz ardı etmesidir. Bir kullanıcı ``makine öğrenmesi'' araştırdığında, sistem yalnızca anahtar kelime eşleşmesi yapmakta; ``olasılık teorisi'' veya ``optimizasyon'' gibi ön koşul niteliğindeki kavramları önermemektedir. Bu projede önerilen çözüm, hiperlink grafındaki yapısal bilgiyi metin içeriğinin anlamsal derinliğiyle birleştirerek bu eksikliği gidermektir.
+
+% =============================================================================
+% 4. PROJE KONUSUNUN ÖZGÜN DEĞERİ
+% =============================================================================
+\section{Proje Konusunun Özgün Değeri}
+
+Bu projenin mevcut uygulamalardan ayrılan ve özgün değer taşıyan yönleri aşağıda sıralanmıştır:
+
+\begin{itemize}
+    \item \textbf{Modern metin temsili ile graf yapısının birleştirilmesi:} Literatürdeki en yakın çalışma olan WikiRecNet \cite{wikirecnet2020}, metin temsili için Doc2Vec gibi eski nesil bir yöntem kullanmaktadır. Bu proje, Doc2Vec yerine bağlamsal anlam yakalayabilen modern cümle gömme modellerini (BAAI/bge-m3 ve Alibaba-NLP/gte-modernbert-base) GNN mimarisiyle birleştirerek daha güçlü bir multimodal temsil elde etmeyi hedeflemektedir.
+
+    \item \textbf{Dikkat mekanizmasıyla bağlantı ağırlıklandırma:} Standart GCN modelleri bir makaleye verilen tüm referansları eşit önemde kabul etmektedir. Oysa bir Wikipedia makalesindeki her hiperlink, konunun özüyle aynı derecede alakalı değildir. Bu projede GAT'ın dikkat (attention) mekanizması kullanılarak her bağlantının anlamsal ağırlığı öğrenilecek ve öneri kalitesi artırılacaktır.
+
+    \item \textbf{LLM destekli hiyerarşik sunum:} Mevcut öneri sistemleri genellikle düz bir liste halinde sonuç döndürmektedir. Bu projede, GNN tabanlı öneri sonuçları bir Büyük Dil Modeli aracılığıyla hiyerarşik bir öğrenme patikasına dönüştürülerek kullanıcıya kavramsal bir yol haritası sunulacaktır.
+\end{itemize}
+
+% =============================================================================
+% 5. PROJENİN TOPLUMSAL KATKISI
+% =============================================================================
+\section{Projenin Toplumsal Katkısı}
+
+Bu projenin toplumsal katkıları bilimsel, teknolojik ve sosyo-ekonomik boyutlarıyla aşağıda ele alınmıştır.
+
+\textbf{Bilimsel ve Teknolojik Katkı:}
+Proje, Graf Sinir Ağları ile Transformer tabanlı dil modellerini Wikipedia bağlamında birleştiren bir çerçeve sunarak, graflar üzerinde öneri sistemleri alanına doğrudan katkıda bulunmaktadır. Elde edilecek sonuçlar ve karşılaştırmalı analizler, bu alandaki araştırmacılara referans niteliğinde olacaktır.
+
+\textbf{Eğitime Erişim ve Bilgi Demokratizasyonu:}
+Wikipedia, dünya genelinde ücretsiz erişilebilen en büyük bilgi kaynaklarından biridir. Ancak bu devasa içerik, özellikle bir konuyu sıfırdan öğrenmek isteyen kullanıcılar için bunaltıcı olabilmektedir. Bu proje, kullanıcılara kavramsal bir öğrenme patikası sunarak kendi kendine öğrenme süreçlerini kolaylaştırmayı ve bilgiye erişimdeki eşitsizliği azaltmayı hedeflemektedir.
+
+\textbf{Sürdürülebilirlik:}
+Proje tamamen açık ve ücretsiz veriler (Wikipedia) üzerine inşa edilmektedir. Geliştirilen yöntemler, ticari bir altyapıya bağımlı olmaksızın farklı dillerdeki Wikipedia sürümlerine veya başka açık bilgi tabanlarına uyarlanabilir niteliktedir.
+
+\textbf{Etik Boyut:}
+Sistem, kullanıcı profillemesi veya kişisel veri toplama gerektirmeden, yalnızca sorgu bazlı çalışacak şekilde tasarlanmaktadır. Bu yaklaşım, kullanıcı mahremiyetini koruyarak etik açıdan güvenli bir öneri sistemi sunmayı amaçlamaktadır.
+
+% =============================================================================
+% 6. LİTERATÜR TARAMASI
+% =============================================================================
+\section{Literatür Taraması}
+
+Bu bölümde, projenin dayandığı temel kavramlar ve ilgili çalışmalar tematik olarak incelenmiştir. İnceleme dört ana eksende düzenlenmiştir: graf sinir ağı mimarileri, metin temsili ve dil modelleri, çok kipli öneri sistemleri ve Wikipedia üzerine uygulamalı çalışmalar. Bölümün sonunda, incelenen on iki çalışmanın karşılaştırmalı bir özeti tablo halinde sunulmaktadır.
+
+% ---- 6.1 ----
+\subsection{Graf Sinir Ağı Mimarileri}
+
+Graf yapılı veriler üzerinde derin öğrenme yöntemlerinin uygulanması, son yıllarda hızla gelişen bir araştırma alanıdır. Bu alandaki temel mimariler, düğümler arasındaki bilgi yayılımını farklı stratejilerle gerçekleştirmektedir.
+
+Kipf ve Welling \cite{kipf2017semi} tarafından önerilen \textbf{Graph Convolutional Networks (GCN)}, spektral graf konvolüsyonlarının birinci dereceden yaklaşıklığını kullanarak graflar üzerinde yarı denetimli (semi-supervised) öğrenmeyi verimli hale getirmiştir. GCN'in yayılım kuralı
+\[
+    H^{(l+1)} = \sigma\!\left(\tilde{D}^{-\frac{1}{2}}\tilde{A}\,\tilde{D}^{-\frac{1}{2}}H^{(l)}W^{(l)}\right)
+\]
+biçiminde tanımlanır; burada $\tilde{A}$, self-loop eklenmiş komşuluk matrisidir. Model, Cora, Citeseer ve Pubmed atıf ağlarında önceki yarı denetimli yöntemleri geride bırakmış ve kenar sayısına göre doğrusal ($\mathcal{O}(|\mathcal{E}|)$) hesaplama karmaşıklığı sayesinde büyük graflarda hızlı eğitim olanağı sunmuştur. Bununla birlikte GCN, her komşuya düğümün derecesine göre normalize edilmiş aynı ağırlığı atfetmekte ve yönlü grafları doğrudan desteklememektedir.
+
+Bu sınırlamayı gidermek amacıyla Veličković vd.\@ \cite{velickovic2018graph} \textbf{Graph Attention Networks (GAT)} modelini önermiştir. GAT, Transformer mimarisindeki öz-dikkat (self-attention) mekanizmasını graf yapısına uyarlayarak her komşu düğüme farklı dikkat ağırlıkları atamaktadır. Çok başlıklı dikkat (multi-head attention) yapısı, modelin farklı alt uzaylardaki ilişkileri paralel olarak öğrenmesini sağlar. GAT, transdüktif atıf ağı görevlerinde GCN'e göre \%1,5--2 oranında iyileştirme sağlamış; indüktif PPI veri setinde ise GraphSAGE'e kıyasla \%20,5'lik bir performans artışı sergilemiştir. Dikkat ağırlıklarının görselleştirilebilir olması, modelin hangi bağlantılara odaklandığını yorumlanabilir kılmaktadır. Wikipedia bağlamında bu özellik kritik önem taşır: bir makaledeki her hiperlink içeriğin özüyle aynı derecede alakalı değildir ve GAT bu farkı otomatik olarak öğrenebilmektedir.
+
+Hamilton, Ying ve Leskovec \cite{hamilton2017inductive} tarafından geliştirilen \textbf{GraphSAGE} ise farklı bir tasarım felsefesi sunmaktadır. Model, tüm komşuları işlemek yerine sabit sayıda komşu örnekleyerek (sampling) bellek kullanımını kontrol altında tutar ve eğitilebilir birleştirme fonksiyonları (mean, LSTM, pooling aggregator) aracılığıyla düğüm temsillerini oluşturur. En önemli özelliği indüktif yapısıdır: eğitim sırasında hiç görülmemiş düğümler için de embedding üretebilmektedir. GraphSAGE, DeepWalk'a kıyasla F1 skorlarında ortalama \%51 artış sağlamıştır. Ancak rastgele komşu örneklemesi kritik komşuların göz ardı edilmesine yol açabilmekte ve performans artışı genellikle iki hop derinliğinden sonra durmaktadır.
+
+Bu projede birincil model olarak \textbf{GAT} tercih edilmiştir. Bunun başlıca nedeni, Wikipedia hiperlink grafındaki bağlantıların anlamsal ağırlıklarının farklılık göstermesi ve dikkat mekanizmasının bu farklılığı doğrudan modelleyebilmesidir. Karşılaştırma modeli (baseline) olarak ise GCN kullanılacaktır.
+
+% ---- 6.2 ----
+\subsection{Metin Temsili ve Dil Modelleri}
+
+Graf sinir ağlarının düğüm öznitelikleri olarak kullanılacak metin temsillerinin kalitesi, öneri sisteminin başarısını doğrudan etkilemektedir. Bu alandaki gelişmeler, Transformer mimarisi ile başlayan bir evrim sürecinin ürünüdür.
+
+Vaswani vd.\@ \cite{vaswani2017attention} tarafından önerilen \textbf{Transformer} mimarisi, yinelemeli (RNN) ve evrişimli (CNN) yapıları tamamen terk ederek yalnızca dikkat mekanizmalarına dayanan bir kodlayıcı-kod çözücü yapısı sunmuştur. Öz-dikkat (self-attention) katmanı,
+\[
+    \text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\]
+formülü ile dizideki her konumun diğer tüm konumlarla ilişkisini tek adımda hesaplar. Bu yapı, uzun mesafeli bağımlılıkların yakalanmasını kolaylaştırmış ve paralel hesaplama sayesinde eğitim süresini önemli ölçüde kısaltmıştır. WMT 2014 çeviri görevinde Transformer, önceki en iyi modellerin eğitim maliyetinin dörtte biriyle yeni performans rekorları kırmıştır.
+
+Devlin vd.\@ \cite{devlin2019bert}, Transformer'ın yalnızca kodlayıcı (encoder) katmanlarını kullanarak \textbf{BERT} modelini geliştirmiştir. Maskelenmiş Dil Modeli (Masked Language Model) ve Sonraki Cümle Tahmini (Next Sentence Prediction) görevleri ile çift yönlü ön eğitim yapan BERT, yayınlandığı dönemde 11 farklı NLP görevinde en iyi sonuçları (SOTA) elde etmiştir. BERT'in bağlamsal temsil gücü -- aynı kelimenin farklı cümlelerdeki anlamını ayırt edebilmesi -- metin gömme alanında bir dönüm noktası olmuştur. Ancak 512 token girdi sınırı ve yüksek hesaplama maliyeti, büyük ölçekli uygulamalarda doğrudan kullanımını zorlaştırmaktadır.
+
+BERT'in ardından gelen gelişmeler, cümle düzeyinde anlamsal benzerlik ve yoğun bilgi erişimi (dense retrieval) için özelleştirilmiş \textbf{cümle gömme modellerini} ortaya çıkarmıştır. Bu projede iki modern cümle gömme modeli karşılaştırmalı olarak değerlendirilmektedir:
+\begin{itemize}
+    \item \textbf{BAAI/bge-m3} \cite{chen2025bgem3}: Çok dillilik, çok işlevsellik ve çok ayrıntılılık (multi-linguality, multi-functionality, multi-granularity) ilkelerine göre tasarlanmış bir cümle gömme modelidir. Öz-bilgi damıtma (self-knowledge distillation) yöntemiyle eğitilen model, yoğun (dense), seyrek (sparse) ve çoklu vektör (multi-vector) erişim yöntemlerini tek bir çerçevede birleştirmektedir. 100'den fazla dili destekleyen bge-m3, MIRACL ve MKQA gibi çok dilli erişim kıyaslamalarında önceki en iyi sonuçları geride bırakmış ve 1024 boyutlu gömme vektörleri üretmektedir.
+    \item \textbf{Alibaba-NLP/gte-modernbert-base} \cite{zhang2024mgte}: GTE (General Text Embeddings) ailesi kapsamında geliştirilen mGTE, RoPE konum kodlaması ve unpadding optimizasyonu ile güçlendirilmiş bir metin kodlayıcı üzerine inşa edilmiştir. Model, 8192 token uzunluğunda doğal bağlam penceresiyle ön eğitim görmüş olup uzun belge erişiminde aynı boyuttaki önceki en iyi model XLM-R'yi geride bırakmıştır. Projede kullanılan ModernBERT tabanlı varyant, 768 boyutlu gömme vektörleri üretmektedir.
+\end{itemize}
+Bu modeller, Transformer ve BERT'in bağlamsal temsil gücünü miras alırken, cümle düzeyinde anlam yakalama ve büyük ölçekli vektör karşılaştırması için optimize edilmiştir. Her iki model de Wikipedia makale metinlerini yoğun vektörlere dönüştürerek GNN'e düğüm özniteliği olarak sağlamaktadır.
+
+% ---- 6.3 ----
+\subsection{Çok Kipli Öneri Sistemleri ve GNN ile Metin İşleme}
+
+Metin verisi ile graf yapısını birlikte kullanan çok kipli (multimodal) sistemlerin tasarımı, hem graf inşa stratejisi hem de modalite birleştirme (fusion) yöntemi açısından kritik kararlar gerektirmektedir. Bu alandaki iki kapsamlı literatür taraması, projenin mimari kararlarına doğrudan rehberlik etmiştir.
+
+Wang, Ding ve Han \cite{li2022graph} tarafından hazırlanan GNN tabanlı metin sınıflandırma taraması, modelleri graf oluşturma mekanizmalarına göre iki ana kategoriye ayırmaktadır: \textit{derlem seviyesi} (corpus-level) ve \textit{belge seviyesi} (document-level). Derlem seviyesi yaklaşımlar (TextGCN, BertGCN gibi) tüm veri setini tek bir büyük graf olarak modeller ve kelime-belge ilişkilerini (TF-IDF, PMI) kenar olarak kullanır. Belge seviyesi yaklaşımlar ise her belge için ayrı bir graf oluşturur. Tarama, harici ön eğitimli modellerin (BERT gibi) GNN ile birleştirildiği mimarilerin en yüksek başarıyı sağladığını; ancak derlem seviyesi modellerin büyük veri setlerinde bellek darboğazına yol açtığını ortaya koymaktadır. Bu proje bağlamında Wikipedia'nın doğal hiperlink yapısı, harici bir graf inşasına gerek kalmadan doğrudan kullanılabilmekte ve ön eğitimli cümle gömme modelleri ile birleştirilerek hibrit bir yaklaşım oluşturulmaktadır.
+
+Liu, Hu, Xiao vd.\@ \cite{zhou2023multimodal} tarafından sunulan çok kipli öneri sistemleri taraması ise bu alandaki modelleri üç aşamalı bir çerçevede sınıflandırmaktadır: \textit{modalite kodlama} (encoder), \textit{öznitelik etkileşimi} (interaction) ve \textit{öznitelik geliştirme} (enhancement). Öznitelik etkileşimi aşamasında graf yapılarının (kullanıcı-öğe ve öğe-öğe grafları) kullanımının, basit vektör birleştirmelerine (concatenation) göre çok daha etkili olduğu vurgulanmıştır. Ayrıca uçtan uca eğitimde büyük kodlayıcıların (BERT gibi) parametre maliyetinin yüksek olması nedeniyle iki aşamalı eğitim veya parametre dondurma stratejilerinin yaygın olarak tercih edildiği belirtilmiştir. Bu projede de benzer bir strateji izlenmektedir: cümle gömme modelleri önceden çalıştırılarak vektörler elde edilmekte ve GNN eğitimi bu sabit vektörler üzerinden gerçekleştirilmektedir.
+
+% ---- 6.4 ----
+\subsection{Wikipedia Üzerine Uygulamalı Çalışmalar}
+
+Projenin doğrudan ilişkili olduğu üç uygulama çalışması, veri seti inşası, mimari tasarım ve metin-graf entegrasyonu konularında somut referanslar sunmaktadır.
+
+Mernyei ve Cangea \cite{mernyei2020wikics} tarafından oluşturulan \textbf{Wiki-CS}, bilgisayar bilimi alanındaki 11.701 Wikipedia makalesini ve 216.123 hiperlinki içeren bir GNN kıyaslama veri setidir. Veri seti, Wikipedia'nın gürültülü kategori yapısının titizlikle temizlenmesiyle oluşturulmuş olup standart atıf ağlarına (Cora, Citeseer) göre çok daha yüksek bağlantı yoğunluğuna (ortalama derece: 36,94) sahiptir. Düğüm öznitelikleri olarak yalnızca GloVe kelime gömme ortalamalarının (300 boyutlu) kullanılması, metin temsilinin modern standartların gerisinde kalmasına neden olmaktadır. Bu proje, Wiki-CS'nin graf topolojisini temel alarak ancak metin temsilini modern cümle gömme modelleri ile yeniden oluşturarak \textbf{Custom-WikiCS} veri setini inşa etmiştir.
+
+Moskalenko, Parra ve Saez-Trumper \cite{wikirecnet2020} tarafından geliştirilen \textbf{WikiRecNet}, 5,2 milyon düğüm ve 458 milyon kenar içeren tam ölçekli İngilizce Wikipedia üzerinde çalışan bir öneri sistemidir. Metin temsili için Doc2Vec, yapısal öğrenme için GraphSAGE ve hızlı aday erişimi için FAISS kullanılmıştır. Yapısal bilginin dahil edilmesi, yalnızca metin tabanlı önerilere göre nDCG@100 metriğinde yaklaşık \%100 iyileştirme sağlamıştır. Bu sonuç, metin ve graf bilgisinin birleştirilmesinin öneri kalitesini önemli ölçüde artırdığını doğrulamaktadır. WikiRecNet'in temel kısıtı, metin kodlayıcı olarak Doc2Vec gibi bağlam duyarsız bir yöntem kullanmasıdır; yazarlar bunu açıkça ``gelecek çalışma'' olarak not etmiştir. Bu proje, WikiRecNet'in genel mimarisinden ilham alırken Doc2Vec'i modern cümle gömme modelleri ile değiştirmektedir.
+
+Javaji ve Sarode \cite{anime_hybrid_gnn_bert} tarafından sunulan hibrit öneri sistemi, Sentence-BERT gömmeleri ile GraphSAGE'i bir anime veri seti üzerinde birleştiren pratik bir uygulamadır. Çalışma, metin ve graf modalitelerinin kod düzeyinde nasıl entegre edileceğini (SequenceEncoder + GNNEncoder) somut olarak göstermektedir. Ancak test setinde yalnızca \%37 doğruluk elde edilmiş olması, hiperparametre optimizasyonu ve düzenlileştirme (regularization) eksikliğine işaret etmekte ve bu entegrasyonun dikkatli mühendislik gerektirdiğini ortaya koymaktadır.
+
+\vspace{0.5em}
+\noindent\textbf{Literatürün Genel Değerlendirmesi:}
+İncelenen çalışmalar bir bütün olarak değerlendirildiğinde, literatürdeki üç temel boşluk belirginleşmektedir: (1)~Wikipedia üzerine yapılan en kapsamlı çalışma olan WikiRecNet'in bağlam duyarsız bir metin kodlayıcı (Doc2Vec) kullanması, (2)~GCN gibi temel mimarilerin bağlantı ağırlıklandırma yapamaması ve (3)~mevcut öneri sistemlerinin sonuçları düz bir liste olarak sunup kavramsal hiyerarşiyi göz ardı etmesi. Bu proje, modern cümle gömme modelleri ile GAT'ın dikkat mekanizmasını birleştirerek ilk iki boşluğu, LLM destekli hiyerarşik sunum katmanı ile üçüncü boşluğu gidermeyi hedeflemektedir. Tablo~\ref{tab:lit-karsilastirma}, incelenen çalışmaların karşılaştırmalı bir özetini sunmaktadır.
+
+\begin{landscape}
+\footnotesize
+\setlength\tabcolsep{3pt}
+\renewcommand{\arraystretch}{1.4}
+
+\begin{longtable}{|p{2.0cm}|p{2.0cm}|p{2.8cm}|p{3.5cm}|p{3.0cm}|p{3.0cm}|p{3.8cm}|}
+
+\caption{İncelenen çalışmaların karşılaştırmalı analizi.} \label{tab:lit-karsilastirma} \\
+\hline
+\textbf{Çalışma} & \textbf{Veri} & \textbf{Yöntem} & \textbf{Temel Bulgular} & \textbf{Güçlü Yönler} & \textbf{Kısıtlar} & \textbf{Proje ile İlişkisi} \\
+\hline
+\endfirsthead
+
+\multicolumn{7}{c}{{\bfseries Tablo \thetable\ -- devamı}} \\
+\hline
+\textbf{Çalışma} & \textbf{Veri} & \textbf{Yöntem} & \textbf{Temel Bulgular} & \textbf{Güçlü Yönler} & \textbf{Kısıtlar} & \textbf{Proje ile İlişkisi} \\
+\hline
+\endhead
+
+\hline \multicolumn{7}{r}{{Devamı sonraki sayfada}} \\ \hline
+\endfoot
+
+\hline
+\endlastfoot
+
+GAT \cite{velickovic2018graph} &
+Cora, Citeseer, PPI &
+Masked self-attention, multi-head &
+GCN'e göre \%1,5--2 artış; PPI'da \%20,5 fark &
+Komşu ağırlıklandırma, yorumlanabilirlik &
+Head sayısı ile artan bellek maliyeti &
+\textit{Birincil GNN modeli}; hiperlink ağırlıklandırması için kullanılacak \\
+\hline
+
+GCN \cite{kipf2017semi} &
+Cora, Citeseer, Pubmed &
+Spektral konv.\ 1.\ derece yaklaşım &
+SOTA yarı denetimli sonuçlar; lineer ölçekleme &
+Verimli, uçtan uca eğitilebilir &
+Eşit ağırlık, yönlü graf desteği yok &
+\textit{Baseline model} olarak karşılaştırma ölçütü \\
+\hline
+
+GraphSAGE \cite{hamilton2017inductive} &
+Citation, Reddit, PPI &
+Komşu örnekleme ve birleştirme &
+F1'de ort.\ \%51 artış; indüktif başarı &
+İndüktif öğrenme, ölçeklenebilirlik &
+Örnekleme varyansı; 2-hop sonrası kazanç düşük &
+\textit{İlişkili çalışma}; ölçeklenebilir GNN tasarımına referans \\
+\hline
+
+Transformer \cite{vaswani2017attention} &
+WMT 2014 &
+Self-attention, encoder-decoder &
+1/4 maliyetle SOTA çeviri sonuçları &
+Paralel eğitim, uzun mesafe yakalama &
+$O(n^2)$ karmaşıklık &
+\textit{Teorik temel}; GAT ve BERT'in dayandığı mimari \\
+\hline
+
+BERT \cite{devlin2019bert} &
+Wikipedia + BooksCorpus &
+MLM, NSP; çift yönlü ön eğitim &
+11 NLP görevinde SOTA &
+Bağlamsal temsil, alan uyumu &
+512 token sınırı, yüksek hesaplama maliyeti &
+\textit{Kavramsal öncül}; cümle gömme modellerinin temelini oluşturur \\
+\hline
+
+bge-m3 \cite{chen2025bgem3} &
+MIRACL, MKQA, çok dilli &
+Self-knowledge distillation; dense+sparse+multi-vec &
+Çok dilli erişimde SOTA; 100+ dil desteği &
+Tek çerçevede üç erişim yöntemi &
+Yüksek boyut (1024), büyük model &
+\textit{Birincil gömme modeli}; makale metinlerini vektörleştirir \\
+\hline
+
+mGTE \cite{zhang2024mgte} &
+MTEB, çok dilli erişim &
+RoPE + unpadding; 8192 token bağlam &
+XLM-R'yi geride bırakır; uzun belgede avantaj &
+Uzun bağlam, yüksek verimlilik &
+Daha küçük boyut (768) &
+\textit{İkincil gömme modeli}; karşılaştırma için kullanılır \\
+\hline
+
+GNN Metin Taraması \cite{li2022graph} &
+20NG, MR, R8, SST-2 &
+Corpus-level vs.\ document-level GNN &
+BERT+GNN hibritleri en başarılı &
+Kapsamlı taksonomi, graf inşa analizi &
+Corpus-level bellek darboğazı &
+\textit{Mimari rehber}; corpus-level hibrit yaklaşımı destekler \\
+\hline
+
+Multimodal RecSys Taraması \cite{zhou2023multimodal} &
+Amazon, Tiktok, MovieLens &
+Encoder-interaction-fusion çerçevesi &
+Graf tabanlı etkileşim en etkili &
+Cold-start çözümü, modern teknikler &
+Gerçek zamanlı hesaplama karmaşıklığı &
+\textit{Yol haritası}; çok kipli füzyon stratejisine temel \\
+\hline
+
+Wiki-CS \cite{mernyei2020wikics} &
+Wikipedia CS (11.701 düğüm) &
+Veri seti oluşturma, düğüm sınıfl. &
+Yoğun yapı (ort.\ derece 36,94) &
+Gerçekçi Wikipedia yapısı, 20 split &
+GloVe ortalama temsili yetersiz &
+\textit{Veri seti tabanı}; Custom-WikiCS'nin graf topoloji kaynağı \\
+\hline
+
+WikiRecNet \cite{wikirecnet2020} &
+Wikipedia (5,2M düğüm) &
+Doc2Vec + GraphSAGE + FAISS &
+Yapısal bilgi ile \%100 nDCG artışı &
+Ölçeklenebilirlik, indüktif yapı &
+Eski metin kodlayıcı (Doc2Vec) &
+\textit{Mimari taslak}; Doc2Vec $\to$ cümle gömme modernizasyonu \\
+\hline
+
+Hibrit Öneri \cite{anime_hybrid_gnn_bert} &
+Anime Rec.\ DB (320K kullanıcı) &
+Sentence-BERT + GraphSAGE &
+Eğitimde \%52, testte \%37 doğruluk &
+Metin+graf entegrasyon örneği &
+Düşük genelleme, sınırlı metrikler &
+\textit{Uygulama örneği}; entegrasyon derslerini sunar \\
+\hline
+
+\end{longtable}
+\end{landscape}
+
+% =============================================================================
+% 7. SWOT ANALİZİ
+% =============================================================================
+\section{SWOT Analizi}
+
+\begin{itemize}
+    \item \textbf{Güçlü Yönler (Strengths):}
+    \begin{itemize}
+        \item Wikipedia'nın hiperlink yapısı, makaleler arası ilişkileri doğal bir graf olarak sunmaktadır; ayrıca bir graf inşa etmeye gerek yoktur.
+        \item Kullanılan cümle gömme modelleri (bge-m3 ve gte-modernbert-base), büyük ölçekli metin derlemleri üzerinde ön eğitimli olduğundan ek alan adaptasyonu gerektirmeden yüksek kaliteli anlamsal temsiller üretebilmektedir.
+        \item GAT'ın dikkat mekanizması, her bağlantının önemini otomatik olarak öğrenerek öneri kalitesini artırmaktadır.
+        \item Wiki-CS \cite{mernyei2020wikics} gibi hazır ve temizlenmiş kıyaslama veri setlerinin mevcut olması, modelin hızlıca test edilmesine olanak tanımaktadır.
+    \end{itemize}
+
+    \item \textbf{Zayıf Yönler (Weaknesses):}
+    \begin{itemize}
+        \item Cümle gömme modellerinin girdi uzunluğu sınırı, uzun Wikipedia makalelerinin tamamını işlemeyi engellemektedir; metin kesme veya özetleme stratejileri gerekecektir.
+        \item GNN ve gömme modellerinin birlikte çalıştırılması yüksek GPU belleği gerektirmektedir; bu durum donanım kısıtları nedeniyle darboğaz oluşturabilir.
+        \item Proje gerçeklenmek için hem veri mühendisliği hem de model geliştirme gibi iki farklı uzmanlık alanına ihtiyaç duymaktadır.
+    \end{itemize}
+
+    \item \textbf{Fırsatlar (Opportunities):}
+    \begin{itemize}
+        \item WikiRecNet \cite{wikirecnet2020} çalışmasının Doc2Vec kullandığı metin temsili katmanının modern cümle gömme modelleri ile modernize edilmesi, doğrudan bir iyileştirme fırsatı sunmaktadır.
+        \item LLM'lerin hiyerarşik sunum katmanı olarak kullanılması, literatürde henüz yaygın olarak ele alınmamış yeni bir araştırma alanıdır.
+        \item Geliştirilen yöntem, bilgisayar bilimi dışındaki Wikipedia alanlarına ve farklı dillere genişletilebilir potansiyele sahiptir.
+    \end{itemize}
+
+    \item \textbf{Tehditler ve Riskler (Threats):}
+    \begin{itemize}
+        \item Wikipedia'nın sürekli değişen yapısı, veri setinin zamanla güncelliğini yitirebilmesi riskini taşımaktadır.
+        \item Büyük ölçekli graf üzerinde GNN eğitimi sırasında bellek yetersizliği (OOM) sorunlarıyla karşılaşılabilir.
+        \item Öneri kalitesinin nicel olarak değerlendirilmesi için uygun bir ground-truth veri setinin bulunmaması, değerlendirme sürecini zorlaştırabilir.
+        \item LLM katmanının halüsinasyon (hallucination) riski, hiyerarşik sunumun güvenilirliğini olumsuz etkileyebilir.
+    \end{itemize}
+\end{itemize}
+
+% =============================================================================
+% 8. KULLANILMASI PLANLANAN YÖNTEMLER / TEKNOLOJİLER
+% =============================================================================
+\section{Kullanılması Planlanan Yöntemler ve Teknolojiler}
+
+\subsection{Yöntemler}
+
+\textbf{Veri Seti İnşası -- Custom-WikiCS:}
+Projede kullanılan veri seti, mevcut Wiki-CS \cite{mernyei2020wikics} kıyaslama veri setinin topolojisi temel alınarak yeniden inşa edilmiştir. Süreç şu adımlardan oluşmaktadır:
+\begin{enumerate}
+    \item Wiki-CS veri setinin graf topolojisi (11.701 düğüm, 291.039 yönlü kenar) alınmıştır.
+    \item Düğüm başlıkları işlenerek Wikipedia'daki gerçek makale başlıklarıyla eşleştirilmiştir.
+    \item Kaggle üzerinde bulunan ``Wikipedia STEM Corpus'' veri seti kullanılarak eşleşen makalelerin metinleri çıkarılmıştır.
+    \item Corpus'ta bulunmayan makalelerin metinleri Wikipedia API aracılığıyla tamamlanmıştır.
+    \item Elde edilen metinler, iki farklı cümle gömme modeli ile vektörleştirilerek düğüm öznitelikleri oluşturulmuştur.
+\end{enumerate}
+
+Bu yaklaşım, orijinal Wiki-CS'nin yalnızca GloVe ortalaması kullanan basit metin temsilini modern anlamsal gömme vektörleriyle değiştirirken, graf yapısının güvenilirliğini korumaktadır.
+
+\textbf{Cümle Gömme Modelleri:}
+Makale metinlerinin vektör temsilini oluşturmak için iki farklı ön eğitimli model karşılaştırmalı olarak değerlendirilmektedir:
+\begin{itemize}
+    \item \textbf{BAAI/bge-m3:} 1024 boyutlu gömme vektörleri üreten, çok dilli ve çok görevli bir model.
+    \item \textbf{Alibaba-NLP/gte-modernbert-base:} 768 boyutlu gömme vektörleri üreten, ModernBERT mimarisine dayalı bir model.
+\end{itemize}
+Hangi modelin GNN ile birleştirildiğinde daha iyi öneri performansı sağladığını belirlemek amacıyla deneyler sürdürülmektedir.
+
+\textbf{Graf Sinir Ağı -- GAT:}
+Makaleler arası yapısal ilişkileri öğrenmek için Graph Attention Networks (GAT) \cite{velickovic2018graph} kullanılacaktır. GAT, her komşu düğüme farklı dikkat ağırlıkları atayarak hangi bağlantının daha önemli olduğunu öğrenebilmektedir. Temel karşılaştırma modeli (baseline) olarak GCN \cite{kipf2017semi} kullanılacaktır.
+
+\textbf{Büyük Dil Modeli -- Hiyerarşik Sunum:}
+GNN tabanlı öneri sonuçlarının kullanıcıya hiyerarşik bir öğrenme patikası olarak sunulması için yerel olarak çalıştırılabilen açık kaynaklı bir Büyük Dil Modeli (örn. DeepSeek-R1 veya benzer bir model) kullanılması planlanmaktadır. Model seçiminde 8~GB VRAM sınırına uyumluluk gözetilmektedir.
+
+\subsection{Yazılım}
+
+\begin{itemize}
+    \item \textbf{Python:} Temel programlama dili.
+    \item \textbf{PyTorch \& PyTorch Geometric (PyG):} GNN modellerinin (GAT, GCN) oluşturulması ve eğitimi için.
+    \item \textbf{HuggingFace Transformers / Sentence-Transformers:} Cümle gömme modellerinin çalıştırılması için.
+    \item \textbf{NetworkX / iGraph:} Graf analizi ve görselleştirme için.
+    \item \textbf{Ollama:} Yerel LLM kullanımı için.
+\end{itemize}
+
+\subsection{Donanım}
+
+Deneyler, GPU hızlandırmalı bir dizüstü bilgisayar üzerinde yürütülmektedir:
+\begin{itemize}
+    \item \textbf{GPU:} NVIDIA RTX 4070 Laptop (8~GB VRAM) -- model eğitimi ve çıkarım için.
+    \item \textbf{CPU:} AMD Ryzen 9 8945HS (4~GHz) -- veri ön işleme ve graf analizi için.
+    \item \textbf{RAM:} 32~GB -- büyük graf yapılarının bellekte tutulması için.
+\end{itemize}
+
+% =============================================================================
+% 9. ÜST SEVİYE TASARIM
+% =============================================================================
+\section{Üst Seviye Tasarım}
+
+Sistemin üst seviye tasarımı, birbirini besleyen dört ana katmandan oluşmaktadır: Veri Hazırlama, Metin Kodlama, Graf Öğrenimi ve Öneri Sunumu.
+
+% TODO: buraya diyagram
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=\textwidth]{architecture.png}
+%     \caption{Sistemin üst seviye mimarisi.}
+%     \label{fig:architecture}
+% \end{figure}
+
+\subsection{Katman 1 -- Veri Hazırlama}
+
+Bu katman, ham Wikipedia verisini model eğitimine uygun bir yapıya dönüştürmekten sorumludur.
+
+\begin{enumerate}
+    \item Wiki-CS veri setinin graf topolojisi (komşuluk matrisi) alınır.
+    \item Düğüm başlıkları normalize edilerek Wikipedia'daki gerçek makale başlıklarıyla eşleştirilir.
+    \item Makale metinleri, öncelikle Wikipedia STEM Corpus üzerinden, bulunamayanlar ise Wikipedia API aracılığıyla elde edilir.
+    \item Elde edilen metinler temizlenerek bir sonraki katmana aktarılır.
+\end{enumerate}
+
+Çıktı: 11.701 düğümlü yönlü graf (komşuluk matrisi) ve her düğüme karşılık gelen makale metni.
+
+\subsection{Katman 2 -- Metin Kodlama}
+
+Bu katmanda, her makale metni ön eğitimli cümle gömme modelleri aracılığıyla yoğun vektörlere dönüştürülür. İki model karşılaştırmalı olarak değerlendirilmektedir:
+
+\begin{itemize}
+    \item BAAI/bge-m3 $\rightarrow$ 1024 boyutlu gömme vektörü
+    \item Alibaba-NLP/gte-modernbert-base $\rightarrow$ 768 boyutlu gömme vektörü
+\end{itemize}
+
+Bu vektörler, graf üzerindeki düğüm öznitelikleri (node features) olarak kullanılacaktır.
+
+Çıktı: Düğüm öznitelik matrisi $\mathbf{X} \in \mathbb{R}^{N \times d}$ (burada $N = 11.701$, $d \in \{768, 1024\}$).
+
+\subsection{Katman 3 -- Graf Öğrenimi (GAT)}
+
+Bu katman, metin gömme vektörlerini graf yapısıyla birleştirerek zenginleştirilmiş düğüm temsillerini öğrenir.
+
+\begin{enumerate}
+    \item Düğüm öznitelik matrisi $\mathbf{X}$ ve komşuluk matrisi $\mathbf{A}$, GAT modeline girdi olarak verilir.
+    \item GAT'ın çok başlıklı dikkat mekanizması (multi-head attention), her kenar için önem ağırlığını hesaplar.
+    \item Birden fazla GAT katmanı ardışık olarak uygulanarak, her düğüm çok adımlı komşuluk bilgisini içeren zenginleştirilmiş bir temsil elde eder.
+    \item GCN aynı girdi üzerinde baseline model olarak ayrıca eğitilir ve sonuçlar karşılaştırılır.
+\end{enumerate}
+
+Çıktı: Zenginleştirilmiş düğüm gömme matrisi $\mathbf{Z} \in \mathbb{R}^{N \times d'}$, burada her vektör hem makalenin anlamsal içeriğini hem de graf yapısındaki konumunu yansıtır.
+
+\subsection{Katman 4 -- Öneri ve Hiyerarşik Sunum}
+
+Bu katman, kullanıcı sorgusunu alarak nihai öneriyi üretir.
+
+\begin{enumerate}
+    \item Kullanıcı sorgusu, aynı cümle gömme modeli ile vektörleştirilir.
+    \item Sorgu vektörü ile düğüm gömme vektörleri ($\mathbf{Z}$) arasında benzerlik hesaplanarak (kosinüs benzerliği) en yakın $k$ makale aday olarak belirlenir.
+    \item Aday makaleler, yerel olarak çalıştırılan bir LLM'e (DeepSeek-R1 veya benzeri) iletilir.
+    \item LLM, aday makaleleri kavramsal ön koşul ilişkilerine göre hiyerarşik bir öğrenme patikası olarak düzenler ve kullanıcıya sunar.
+\end{enumerate}
+
+Çıktı: Kullanıcıya sunulan, ``nereden başlamalıyım'' sorusuna yanıt veren yapılandırılmış bir makale öğrenme yolu.
+
+% =============================================================================
+% 10. ÇALIŞMA TAKVİMİ
+% =============================================================================
+\section{Çalışma Takvimi}
+
+Proje, Kasım 2025'te başlamış olup Mayıs 2026 sonunda tamamlanması planlanmaktadır. Aşağıdaki tabloda tüm görevler ve tarihleri özetlenmiş, ardından Gantt diyagramı ile görselleştirilmiştir. Yeşil çubuklar tamamlanan, mavi çubuklar planlanan görevleri temsil etmektedir.
+
+\begin{table}[htbp]
+\centering
+\caption{Görev listesi ve tarihleri.}
+\label{tab:gorevler}
+\begin{tabular}{clll}
+\toprule
+\textbf{No} & \textbf{Görev} & \textbf{Başlangıç} & \textbf{Bitiş} \\
+\midrule
+1  & Literatür taraması                   & 03.11.2025 & 05.01.2026 \\
+2  & Veri seti oluşturma (Custom-WikiCS)  & 25.12.2025 & 16.02.2026 \\
+3  & Graf yapısı analizi                  & 02.02.2026 & 09.03.2026 \\
+4  & Gömme modeli karşılaştırması         & 16.02.2026 & 05.04.2026 \\
+5  & 1. Ara Rapor yazımı                  & 02.03.2026 & 08.03.2026 \\
+\midrule
+6  & GAT/GCN model eğitimi               & 09.03.2026 & 30.03.2026 \\
+7  & 2. Ara Rapor yazımı                  & 29.03.2026 & 05.04.2026 \\
+8  & Öneri sistemi geliştirme             & 06.04.2026 & 20.04.2026 \\
+9  & LLM entegrasyonu                     & 14.04.2026 & 30.04.2026 \\
+10 & 3. Ara Rapor yazımı                  & 26.04.2026 & 03.05.2026 \\
+11 & Son değerlendirme ve iyileştirme     & 03.05.2026 & 11.05.2026 \\
+12 & Bitirme kitapçığı hazırlığı          & 11.05.2026 & 22.05.2026 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{landscape}
+\begin{center}
+% Haftalar: 1=3 Kas 2025, ..., 29=18 May 2026
+{%
+\shorthandoff{=}% Turkish babel fix for pgfgantt
+\begin{ganttchart}[
+    hgrid,
+    vgrid={*{3}{draw=none}, dotted},
+    x unit=0.55cm,
+    y unit chart=0.5cm,
+    title height=1,
+    bar height=0.5,
+    bar label font=\footnotesize,
+    title label font=\footnotesize,
+    milestone label font=\footnotesize\bfseries,
+    bar/.append style={fill=blue!30},
+    milestone/.append style={fill=red!70},
+    today=18,
+    today rule/.style={draw=red!60, ultra thick, dashed},
+    today label font=\small\itshape,
+    today label=Bug\"un,
+]{1}{29}
+
+% Ay ba\c{s}l{\i}klar{\i}
+\gantttitle{Kas}{4}\gantttitle{Ara}{5}\gantttitle{Oca}{4}\gantttitle{Sub}{4}\gantttitle{Mar}{5}\gantttitle{Nis}{4}\gantttitle{May}{3} \\
+
+% --- Tamamlanan g\"orevler (ye\c{s}il) ---
+\ganttbar[bar/.append style={fill=green!40}]{1. Literat\"ur Taramas{\i}}{1}{10} \\
+\ganttbar[bar/.append style={fill=green!40}]{2. Veri Seti Olu\c{s}turma}{8}{16} \\
+\ganttbar[bar/.append style={fill=green!40}]{3. Graf Yap{\i}s{\i} Analizi}{13}{19} \\
+
+% --- Devam eden / planlanan g\"orevler (mavi) ---
+\ganttbar{4. G\"omme Kar\c{s}{\i}la\c{s}t{\i}rmas{\i}}{16}{22} \\
+\ganttbar[bar/.append style={fill=green!40}]{5. 1. Ara Rapor}{18}{19} \\
+\ganttmilestone{1. Ara Rapor Teslim (08.03)}{19} \\
+\ganttbar{6. GAT/GCN Model E\u{g}itimi}{19}{22} \\
+\ganttbar{7. 2. Ara Rapor}{21}{22} \\
+\ganttmilestone{2. Ara Rapor Teslim (05.04)}{22} \\
+\ganttbar{8. \"Oneri Sistemi Geli\c{s}tirme}{23}{25} \\
+\ganttbar{9. LLM Entegrasyonu}{24}{26} \\
+\ganttbar{10. 3. Ara Rapor}{25}{26} \\
+\ganttmilestone{3. Ara Rapor Teslim (03.05)}{26} \\
+\ganttbar{11. Son De\u{g}erlendirme}{27}{28} \\
+\ganttbar{12. Bitirme Kitap\c{c}{\i}\u{g}{\i}}{28}{29} \\
+\ganttmilestone{Final Teslim (22.05)}{29}
+
+\end{ganttchart}
+}% end \shorthandoff group
+\end{center}
+\end{landscape}
+
+% =============================================================================
+% KAYNAKÇA
+% =============================================================================
+\newpage
+\renewcommand{\refname}{Kaynakça}
+\bibliographystyle{unsrtnat}
+\bibliography{refs}
+
+\end{document}
