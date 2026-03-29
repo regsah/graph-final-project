@@ -1,0 +1,49 @@
+\chapter{MÉTHODES ET TECHNOLOGIES PRÉVUES}
+\thispagestyle{empty}
+
+\section{Méthodes}
+
+\textbf{Construction du jeu de données -- Custom-WikiCS :}
+Le jeu de données utilisé dans le projet a été reconstruit en se basant sur la topologie du jeu de données de référence Wiki-CS \cite{mernyei2020wikics}. Le processus se compose des étapes suivantes :
+\begin{enumerate}
+    \item La topologie de graphe du jeu de données Wiki-CS (11 701 n\oe uds, 291 039 arêtes orientées) a été extraite.
+    \item Les titres des n\oe uds ont été traités et mis en correspondance avec les titres réels des articles sur Wikipédia.
+    \item Les textes des articles correspondants ont été extraits à l'aide du jeu de données ``Wikipedia STEM Corpus'' disponible sur Kaggle.
+    \item Les textes des articles absents du corpus ont été complétés via l'API Wikipédia.
+    \item Les textes obtenus ont été vectorisés avec deux modèles de plongements de phrases différents pour créer les attributs de n\oe uds.
+\end{enumerate}
+
+Cette approche remplace la simple représentation textuelle par moyenne de GloVe du Wiki-CS original par des vecteurs de plongements sémantiques modernes, tout en préservant la fiabilité de la structure de graphe.
+
+\textbf{Modèles de plongements de phrases :}
+Deux modèles pré-entraînés différents sont évalués de manière comparative pour créer la représentation vectorielle des textes des articles :
+\begin{itemize}
+    \item \textbf{BAAI/bge-m3 :} un modèle multilingue et multitâche produisant des vecteurs de plongement de 1024 dimensions.
+    \item \textbf{Alibaba-NLP/gte-modernbert-base :} un modèle basé sur l'architecture ModernBERT produisant des vecteurs de plongement de 768 dimensions.
+\end{itemize}
+Des expériences sont en cours pour déterminer quel modèle fournit les meilleures performances de recommandation lorsqu'il est combiné avec le GNN.
+
+\textbf{Réseau de neurones sur graphes -- GAT :}
+Les Graph Attention Networks (GAT) \cite{velickovic2018graph} seront utilisés pour apprendre les relations structurelles entre les articles. Le GAT est capable d'apprendre quel lien est le plus important en attribuant des poids d'attention différents à chaque n\oe ud voisin. Le GCN \cite{kipf2017semi} sera utilisé comme modèle de référence (baseline) pour la comparaison.
+
+\textbf{Grand modèle de langage -- Présentation hiérarchique :}
+L'utilisation d'un grand modèle de langage open-source exécutable localement (par ex. DeepSeek-R1 ou un modèle similaire) est prévue pour présenter les résultats de recommandation basés sur le GNN à l'utilisateur sous forme de parcours d'apprentissage hiérarchique. La compatibilité avec une limite de 8 Go de VRAM est prise en compte dans le choix du modèle.
+
+\section{Logiciels}
+
+\begin{itemize}
+    \item \textbf{Python :} langage de programmation principal.
+    \item \textbf{PyTorch \& PyTorch Geometric (PyG) :} pour la construction et l'entraînement des modèles GNN (GAT, GCN).
+    \item \textbf{HuggingFace Transformers / Sentence-Transformers :} pour l'exécution des modèles de plongements de phrases.
+    \item \textbf{NetworkX / iGraph :} pour l'analyse et la visualisation de graphes.
+    \item \textbf{Ollama :} pour l'utilisation locale de LLM.
+\end{itemize}
+
+\section{Matériel}
+
+Les expériences sont menées sur un ordinateur portable équipé d'accélération GPU :
+\begin{itemize}
+    \item \textbf{GPU :} NVIDIA RTX 4070 Laptop (8~Go VRAM) -- pour l'entraînement et l'inférence des modèles.
+    \item \textbf{CPU :} AMD Ryzen 9 8945HS (4~GHz) -- pour le prétraitement des données et l'analyse de graphes.
+    \item \textbf{RAM :} 32~Go -- pour le stockage en mémoire des grandes structures de graphe.
+\end{itemize}

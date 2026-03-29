@@ -1,0 +1,64 @@
+\chapter{CONCEPTION DE HAUT NIVEAU}
+\thispagestyle{empty}
+
+La conception de haut niveau du système se compose de quatre couches principales qui s'alimentent mutuellement : Préparation des Données, Encodage Textuel, Apprentissage sur Graphe et Présentation des Recommandations.
+
+% TODO: ajouter un diagramme ici
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=\textwidth]{architecture.png}
+%     \caption{Architecture de haut niveau du système.}
+%     \label{fig:architecture}
+% \end{figure}
+
+\section{Couche 1 -- Préparation des données}
+
+Cette couche est responsable de la transformation des données brutes de Wikipédia en une structure adaptée à l'entraînement du modèle.
+
+\begin{enumerate}
+    \item La topologie de graphe (matrice d'adjacence) du jeu de données Wiki-CS est extraite.
+    \item Les titres des n\oe uds sont normalisés et mis en correspondance avec les titres réels des articles sur Wikipédia.
+    \item Les textes des articles sont obtenus en priorité à partir du Wikipedia STEM Corpus, et ceux non trouvés sont complétés via l'API Wikipédia.
+    \item Les textes obtenus sont nettoyés et transmis à la couche suivante.
+\end{enumerate}
+
+Sortie : un graphe orienté de 11 701 n\oe uds (matrice d'adjacence) et le texte de l'article correspondant à chaque n\oe ud.
+
+\section{Couche 2 -- Encodage textuel}
+
+Dans cette couche, le texte de chaque article est transformé en vecteurs denses via des modèles pré-entraînés de plongements de phrases. Deux modèles sont évalués de manière comparative :
+
+\begin{itemize}
+    \item BAAI/bge-m3 $\rightarrow$ vecteur de plongement de 1024 dimensions
+    \item Alibaba-NLP/gte-modernbert-base $\rightarrow$ vecteur de plongement de 768 dimensions
+\end{itemize}
+
+Ces vecteurs seront utilisés comme attributs de n\oe uds (node features) sur le graphe.
+
+Sortie : matrice d'attributs des n\oe uds $\mathbf{X} \in \mathbb{R}^{N \times d}$ (où $N = 11\,701$, $d \in \{768, 1024\}$).
+
+\section{Couche 3 -- Apprentissage sur graphe (GAT)}
+
+Cette couche combine les vecteurs de plongement textuel avec la structure de graphe pour apprendre des représentations enrichies des n\oe uds.
+
+\begin{enumerate}
+    \item La matrice d'attributs des n\oe uds $\mathbf{X}$ et la matrice d'adjacence $\mathbf{A}$ sont fournies en entrée au modèle GAT.
+    \item Le mécanisme d'attention multi-têtes du GAT calcule le poids d'importance pour chaque arête.
+    \item Plusieurs couches GAT sont appliquées séquentiellement, permettant à chaque n\oe ud d'obtenir une représentation enrichie intégrant l'information de voisinage multi-sauts.
+    \item Le GCN est entraîné séparément sur les mêmes données comme modèle baseline, et les résultats sont comparés.
+\end{enumerate}
+
+Sortie : matrice de plongements enrichis des n\oe uds $\mathbf{Z} \in \mathbb{R}^{N \times d'}$, où chaque vecteur reflète à la fois le contenu sémantique de l'article et sa position dans la structure du graphe.
+
+\section{Couche 4 -- Recommandation et présentation hiérarchique}
+
+Cette couche prend la requête de l'utilisateur et produit la recommandation finale.
+
+\begin{enumerate}
+    \item La requête de l'utilisateur est vectorisée avec le même modèle de plongements de phrases.
+    \item La similarité entre le vecteur de requête et les vecteurs de plongement des n\oe uds ($\mathbf{Z}$) est calculée (similarité cosinus) et les $k$ articles les plus proches sont identifiés comme candidats.
+    \item Les articles candidats sont transmis à un LLM exécuté localement (DeepSeek-R1 ou similaire).
+    \item Le LLM organise les articles candidats en un parcours d'apprentissage hiérarchique selon les relations conceptuelles de prérequis et les présente à l'utilisateur.
+\end{enumerate}
+
+Sortie : un parcours structuré d'apprentissage d'articles présenté à l'utilisateur, répondant à la question ``par où commencer ?''.

@@ -1,0 +1,197 @@
+\chapter{REVUE DE LITTÉRATURE}
+\thispagestyle{empty}
+
+Cette section présente les concepts fondamentaux sur lesquels repose le projet ainsi que les travaux connexes, organisés de manière thématique. L'analyse est structurée autour de quatre axes principaux : les architectures de réseaux de neurones sur graphes, la représentation textuelle et les modèles de langage, les systèmes de recommandation multimodaux et les travaux appliqués sur Wikipédia. À la fin de cette section, un résumé comparatif des douze travaux examinés est présenté sous forme de tableau.
+
+\section{Architectures de réseaux de neurones sur graphes}
+
+L'application de méthodes d'apprentissage profond aux données structurées en graphes constitue un domaine de recherche en pleine expansion ces dernières années. Les architectures fondamentales dans ce domaine réalisent la propagation d'information entre les n\oe uds selon différentes stratégies.
+
+Le modèle \textbf{Graph Convolutional Networks (GCN)}, proposé par Kipf et Welling \cite{kipf2017semi}, rend efficace l'apprentissage semi-supervisé sur les graphes en utilisant une approximation du premier ordre des convolutions spectrales sur graphes. La règle de propagation du GCN est définie par
+\[
+    H^{(l+1)} = \sigma\!\left(\tilde{D}^{-\frac{1}{2}}\tilde{A}\,\tilde{D}^{-\frac{1}{2}}H^{(l)}W^{(l)}\right)
+\]
+où $\tilde{A}$ est la matrice d'adjacence avec self-loops ajoutés. Le modèle a surpassé les méthodes semi-supervisées antérieures sur les réseaux de citations Cora, Citeseer et Pubmed, et a offert la possibilité d'un entraînement rapide sur de grands graphes grâce à une complexité calculatoire linéaire par rapport au nombre d'arêtes ($\mathcal{O}(|\mathcal{E}|)$). Cependant, le GCN attribue le même poids normalisé par le degré du n\oe ud à chaque voisin et ne supporte pas directement les graphes orientés.
+
+Afin de surmonter cette limitation, Veličković et al.\@ \cite{velickovic2018graph} ont proposé le modèle \textbf{Graph Attention Networks (GAT)}. Le GAT adapte le mécanisme d'auto-attention (self-attention) de l'architecture Transformer à la structure de graphe, attribuant des poids d'attention différents à chaque n\oe ud voisin. La structure d'attention multi-têtes (multi-head attention) permet au modèle d'apprendre en parallèle les relations dans différents sous-espaces. Le GAT a apporté une amélioration de 1,5 à 2\% par rapport au GCN sur les tâches de réseaux de citations transductifs, et une amélioration de performance de 20,5\% par rapport à GraphSAGE sur le jeu de données inductif PPI. La possibilité de visualiser les poids d'attention rend interprétable les liens sur lesquels le modèle se concentre. Dans le contexte de Wikipédia, cette caractéristique est d'une importance critique : chaque hyperlien dans un article n'est pas également pertinent par rapport au sujet principal, et le GAT peut apprendre automatiquement cette différence.
+
+Le modèle \textbf{GraphSAGE}, développé par Hamilton, Ying et Leskovec \cite{hamilton2017inductive}, propose une philosophie de conception différente. Au lieu de traiter tous les voisins, le modèle échantillonne un nombre fixe de voisins (sampling), contrôlant ainsi l'utilisation de la mémoire, et construit les représentations des n\oe uds via des fonctions d'agrégation entraînables (mean, LSTM, pooling aggregator). Sa caractéristique la plus importante est sa nature inductive : il peut produire des embeddings pour des n\oe uds jamais observés pendant l'entraînement. GraphSAGE a obtenu une amélioration moyenne de 51\% des scores F1 par rapport aux attributs de nœuds seuls. Cependant, l'échantillonnage aléatoire des voisins peut conduire à ignorer des voisins critiques, et le gain de performance s'arrête généralement après deux sauts (hops).
+
+Dans ce projet, le \textbf{GAT} a été choisi comme modèle principal. La raison principale en est que les poids sémantiques des liens dans le graphe d'hyperliens de Wikipédia varient et que le mécanisme d'attention peut modéliser directement cette variabilité. Le GCN sera utilisé comme modèle de référence (baseline) pour la comparaison.
+
+\section{Représentation textuelle et modèles de langage}
+
+La qualité des représentations textuelles qui seront utilisées comme attributs de n\oe uds pour les réseaux de neurones sur graphes affecte directement le succès du système de recommandation. Les avancées dans ce domaine sont le produit d'un processus d'évolution initié par l'architecture Transformer.
+
+L'architecture \textbf{Transformer}, proposée par Vaswani et al.\@ \cite{vaswani2017attention}, abandonne entièrement les structures récurrentes (RNN) et convolutionnelles (CNN) pour proposer une architecture encodeur-décodeur reposant uniquement sur les mécanismes d'attention. La couche d'auto-attention (self-attention),
+\[
+    \text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\]
+calcule en une seule étape la relation de chaque position de la séquence avec toutes les autres positions. Cette structure a facilité la capture des dépendances à longue distance et a considérablement réduit le temps d'entraînement grâce au calcul parallèle. Sur la tâche de traduction WMT 2014, le Transformer a établi de nouveaux records de performance avec un quart du coût d'entraînement des meilleurs modèles précédents.
+
+Devlin et al.\@ \cite{devlin2019bert} ont développé le modèle \textbf{BERT} en utilisant uniquement les couches encodeur du Transformer. Avec un pré-entraînement bidirectionnel via les tâches de Masked Language Model (MLM) et de Next Sentence Prediction (NSP), BERT a obtenu les meilleurs résultats (SOTA) sur 11 tâches NLP différentes au moment de sa publication. La capacité de représentation contextuelle de BERT --- capable de distinguer le sens d'un même mot dans différentes phrases --- a constitué un tournant dans le domaine des plongements textuels. Cependant, la limite de 512 tokens en entrée et le coût de calcul élevé rendent son utilisation directe difficile dans les applications à grande échelle.
+
+Les développements qui ont suivi BERT ont donné naissance à des \textbf{modèles de plongements de phrases} spécialisés pour la similarité sémantique au niveau des phrases et la recherche d'information dense (dense retrieval). Deux modèles modernes de plongements de phrases sont évalués de manière comparative dans ce projet :
+\begin{itemize}
+    \item \textbf{BAAI/bge-m3} \cite{chen2025bgem3} : un modèle de plongements de phrases conçu selon les principes de multilinguisme, multi-fonctionnalité et multi-granularité. Entraîné par auto-distillation de connaissances (self-knowledge distillation), le modèle unifie les méthodes de recherche dense, sparse et multi-vecteurs dans un seul cadre. Supportant plus de 100 langues, bge-m3 a surpassé les meilleurs résultats précédents sur les benchmarks de recherche multilingue MIRACL et MKQA, et produit des vecteurs de plongement de 1024 dimensions.
+    \item \textbf{Alibaba-NLP/gte-modernbert-base} \cite{zhang2024mgte} : développé dans le cadre de la famille GTE (General Text Embeddings), mGTE est construit sur un encodeur textuel renforcé par l'encodage positionnel RoPE et l'optimisation unpadding. Le modèle a été pré-entraîné avec une fenêtre de contexte naturelle de 8192 tokens et a surpassé le précédent meilleur modèle de même taille, XLM-R, en recherche de documents longs. La variante basée sur ModernBERT utilisée dans le projet produit des vecteurs de plongement de 768 dimensions.
+\end{itemize}
+Ces modèles héritent de la puissance de représentation contextuelle du Transformer et de BERT, tout en étant optimisés pour la capture de sens au niveau des phrases et la comparaison de vecteurs à grande échelle. Les deux modèles transforment les textes des articles Wikipédia en vecteurs denses et les fournissent comme attributs de n\oe uds au GNN.
+
+\section{Systèmes de recommandation multimodaux et traitement de texte par GNN}
+
+La conception de systèmes multimodaux utilisant conjointement les données textuelles et la structure de graphe nécessite des décisions critiques tant en matière de stratégie de construction du graphe que de méthode de fusion des modalités. Deux revues de littérature complètes dans ce domaine ont directement guidé les décisions architecturales du projet.
+
+La revue sur la classification de texte par GNN, préparée par Wang, Ding et Han \cite{li2022graph}, catégorise les modèles en deux classes principales selon leurs mécanismes de construction de graphe : \textit{niveau corpus} (corpus-level) et \textit{niveau document} (document-level). Les approches au niveau corpus (comme TextGCN, BertGCN) modélisent l'ensemble du jeu de données comme un seul grand graphe et utilisent les relations mot-document (TF-IDF, PMI) comme arêtes. Les approches au niveau document construisent un graphe séparé pour chaque document. La revue révèle que les architectures combinant des modèles pré-entraînés externes (tels que BERT) avec les GNN obtiennent les meilleurs résultats, mais que les modèles au niveau corpus créent des goulets d'étranglement mémoire sur les grands jeux de données. Dans le cadre de ce projet, la structure naturelle d'hyperliens de Wikipédia peut être utilisée directement sans nécessiter de construction de graphe externe, et est combinée avec des modèles pré-entraînés de plongements de phrases pour former une approche hybride.
+
+La revue sur les systèmes de recommandation multimodaux, présentée par Liu, Hu, Xiao et al.\@ \cite{zhou2023multimodal}, classe les modèles dans ce domaine selon un cadre en trois étapes : \textit{encodage des modalités} (encoder), \textit{interaction des attributs} (interaction) et \textit{enrichissement des attributs} (enhancement). Il est souligné qu'à l'étape d'interaction des attributs, l'utilisation de structures de graphe (graphes utilisateur-item et item-item) est beaucoup plus efficace que les simples concaténations de vecteurs. De plus, en raison du coût paramétrique élevé des grands encodeurs (tels que BERT) dans l'entraînement de bout en bout, les stratégies d'entraînement en deux étapes ou de gel de paramètres sont largement privilégiées. Une stratégie similaire est adoptée dans ce projet : les modèles de plongements de phrases sont exécutés au préalable pour obtenir les vecteurs, et l'entraînement du GNN est effectué sur ces vecteurs figés.
+
+\section{Travaux appliqués sur Wikipédia}
+
+Trois travaux applicatifs directement liés au projet fournissent des références concrètes en matière de construction de jeux de données, de conception architecturale et d'intégration texte-graphe.
+
+\textbf{Wiki-CS}, créé par Mernyei et Cangea \cite{mernyei2020wikics}, est un jeu de données de référence pour les GNN contenant 11 701 articles Wikipédia dans le domaine de l'informatique et 216 123 hyperliens. Construit par un nettoyage minutieux de la structure de catégories bruitée de Wikipédia, le jeu de données présente une densité de connexions bien supérieure (degré moyen : 36,94) aux réseaux de citations standards (Cora, Citeseer). L'utilisation de simples moyennes de plongements de mots GloVe (300 dimensions) comme attributs de n\oe uds fait que la représentation textuelle est en deçà des standards modernes. Ce projet a construit le jeu de données \textbf{Custom-WikiCS} en se basant sur la topologie de graphe de Wiki-CS mais en recréant la représentation textuelle avec des modèles modernes de plongements de phrases.
+
+\textbf{WikiRecNet}, développé par Moskalenko, Parra et Saez-Trumper \cite{wikirecnet2020}, est un système de recommandation opérant sur l'intégralité de Wikipédia anglophone à grande échelle, avec 5,2 millions de n\oe uds et 458 millions d'arêtes. Doc2Vec est utilisé pour la représentation textuelle, GraphSAGE pour l'apprentissage structurel et FAISS pour la recherche rapide de candidats. L'inclusion de l'information structurelle a apporté une amélioration d'environ 100\% de la métrique nDCG@100 par rapport aux recommandations basées uniquement sur le texte. Ce résultat confirme que la combinaison des informations textuelles et de graphe améliore significativement la qualité des recommandations. La principale limitation de WikiRecNet est l'utilisation de Doc2Vec, une méthode insensible au contexte, comme encodeur textuel ; les auteurs ont explicitement noté cela comme un ``travail futur''. Ce projet s'inspire de l'architecture générale de WikiRecNet tout en remplaçant Doc2Vec par des modèles modernes de plongements de phrases.
+
+Le système de recommandation hybride présenté par Javaji et Sarode \cite{anime_hybrid_gnn_bert} est une application pratique combinant les plongements Sentence-BERT avec GraphSAGE sur un jeu de données d'anime. Le travail démontre concrètement comment les modalités texte et graphe peuvent être intégrées au niveau du code (SequenceEncoder + GNNEncoder). Cependant, la précision de seulement 37\% obtenue sur le jeu de test indique un manque d'optimisation des hyperparamètres et de régularisation, et met en évidence que cette intégration nécessite une ingénierie soignée.
+
+\vspace{0.5em}
+\noindent\textbf{Évaluation générale de la littérature :}
+L'examen global des travaux étudiés fait ressortir trois lacunes fondamentales dans la littérature : (1)~le travail le plus complet sur Wikipédia, WikiRecNet, utilise un encodeur textuel insensible au contexte (Doc2Vec), (2)~les architectures de base comme le GCN sont incapables de pondérer les liens, et (3)~les systèmes de recommandation existants présentent leurs résultats sous forme de liste plate en ignorant la hiérarchie conceptuelle. Ce projet vise à combler les deux premières lacunes en combinant des modèles modernes de plongements de phrases avec le mécanisme d'attention du GAT, et la troisième lacune grâce à une couche de présentation hiérarchique assistée par LLM. Le Tableau~\ref{tab:lit-karsilastirma} présente un résumé comparatif des travaux examinés.
+
+\begin{landscape}
+\footnotesize
+\setlength\tabcolsep{3pt}
+\renewcommand{\arraystretch}{1.4}
+
+\begin{longtable}{|p{2.0cm}|p{2.0cm}|p{2.8cm}|p{3.5cm}|p{3.0cm}|p{3.0cm}|p{3.8cm}|}
+
+\caption{Analyse comparative des travaux examinés.} \label{tab:lit-karsilastirma} \\
+\hline
+\textbf{Travail} & \textbf{Données} & \textbf{Méthode} & \textbf{Résultats clés} & \textbf{Points forts} & \textbf{Limites} & \textbf{Relation avec le projet} \\
+\hline
+\endfirsthead
+
+\multicolumn{7}{c}{{\bfseries Tableau \thetable\ -- suite}} \\
+\hline
+\textbf{Travail} & \textbf{Données} & \textbf{Méthode} & \textbf{Résultats clés} & \textbf{Points forts} & \textbf{Limites} & \textbf{Relation avec le projet} \\
+\hline
+\endhead
+
+\hline \multicolumn{7}{r}{{Suite à la page suivante}} \\ \hline
+\endfoot
+
+\hline
+\endlastfoot
+
+GAT \cite{velickovic2018graph} &
+Cora, Citeseer, PPI &
+Self-attention masquée, multi-têtes &
++1,5--2\% vs GCN ; +20,5\% sur PPI &
+Pondération des voisins, interprétabilité &
+Coût mémoire croissant avec le nombre de têtes &
+\textit{Modèle GNN principal} ; utilisé pour la pondération des hyperliens \\
+\hline
+
+GCN \cite{kipf2017semi} &
+Cora, Citeseer, Pubmed &
+Approx.\ spectrale du 1\textsuperscript{er} ordre &
+Résultats SOTA semi-supervisés ; passage à l'échelle linéaire &
+Efficace, entraînable de bout en bout &
+Poids égaux, pas de support des graphes orientés &
+\textit{Modèle baseline} pour la comparaison \\
+\hline
+
+GraphSAGE \cite{hamilton2017inductive} &
+Citation, Reddit, PPI &
+Échantillonnage et agrégation de voisins &
++51\% F1 en moy.\ vs attributs seuls ; succès inductif &
+Apprentissage inductif, passage à l'échelle &
+Variance d'échantillonnage ; gain faible au-delà de 2 hops &
+\textit{Travail connexe} ; référence pour la conception de GNN évolutifs \\
+\hline
+
+Transformer \cite{vaswani2017attention} &
+WMT 2014 &
+Self-attention, encodeur-décodeur &
+Résultats SOTA en traduction à 1/4 du coût &
+Entraînement parallèle, capture longue distance &
+Complexité $O(n^2)$ &
+\textit{Base théorique} ; architecture sous-jacente au GAT et à BERT \\
+\hline
+
+BERT \cite{devlin2019bert} &
+Wikipedia + BooksCorpus &
+MLM, NSP ; pré-entraînement bidirectionnel &
+SOTA sur 11 tâches NLP &
+Représentation contextuelle, adaptation au domaine &
+Limite de 512 tokens, coût de calcul élevé &
+\textit{Précurseur conceptuel} ; fondement des modèles de plongements de phrases \\
+\hline
+
+bge-m3 \cite{chen2025bgem3} &
+MIRACL, MKQA, multilingue &
+Auto-distillation ; dense+sparse+multi-vec &
+SOTA en recherche multilingue ; 100+ langues &
+Trois méthodes de recherche en un seul cadre &
+Grande dimension (1024), modèle volumineux &
+\textit{Modèle de plongement principal} ; vectorise les textes des articles \\
+\hline
+
+mGTE \cite{zhang2024mgte} &
+MTEB, recherche multilingue &
+RoPE + unpadding ; contexte de 8192 tokens &
+Surpasse XLM-R ; avantage sur les documents longs &
+Long contexte, haute efficacité &
+Dimension plus petite (768) &
+\textit{Modèle de plongement secondaire} ; utilisé pour la comparaison \\
+\hline
+
+Revue GNN-Texte \cite{li2022graph} &
+20NG, MR, R8, SST-2 &
+GNN niveau corpus vs.\ niveau document &
+Les hybrides BERT+GNN sont les plus performants &
+Taxonomie complète, analyse de construction de graphe &
+Goulet d'étranglement mémoire au niveau corpus &
+\textit{Guide architectural} ; soutient l'approche hybride niveau corpus \\
+\hline
+
+Revue RecSys Multimodal \cite{zhou2023multimodal} &
+Amazon, Tiktok, MovieLens &
+Cadre encodeur-interaction-fusion &
+L'interaction par graphe est la plus efficace &
+Solution au démarrage à froid, techniques modernes &
+Complexité de calcul en temps réel &
+\textit{Feuille de route} ; base de la stratégie de fusion multimodale \\
+\hline
+
+Wiki-CS \cite{mernyei2020wikics} &
+Wikipedia CS (11 701 n\oe uds) &
+Construction de jeu de données, classif.\ de n\oe uds &
+Structure dense (degré moy.\ 36,94) &
+Structure Wikipédia réaliste, 20 splits &
+Représentation par moyenne GloVe insuffisante &
+\textit{Base du jeu de données} ; source de la topologie de graphe de Custom-WikiCS \\
+\hline
+
+WikiRecNet \cite{wikirecnet2020} &
+Wikipedia (5,2M n\oe uds) &
+Doc2Vec + GraphSAGE + FAISS &
++100\% nDCG avec l'info structurelle &
+Passage à l'échelle, structure inductive &
+Ancien encodeur textuel (Doc2Vec) &
+\textit{Ébauche architecturale} ; modernisation Doc2Vec $\to$ plongements de phrases \\
+\hline
+
+Recommandation Hybride \cite{anime_hybrid_gnn_bert} &
+Anime Rec.\ DB (320K utilisateurs) &
+Sentence-BERT + GraphSAGE &
+52\% entraîn., 37\% test en précision &
+Exemple d'intégration texte+graphe &
+Faible généralisation, métriques limitées &
+\textit{Exemple applicatif} ; leçons d'intégration \\
+\hline
+
+\end{longtable}
+\end{landscape}

@@ -1,0 +1,59 @@
+\chapter{INTRODUCTION}
+\thispagestyle{empty} % pour effacer le numero de page
+
+\section{Titre du projet}
+
+\textbf{En français :} Recommandation d'articles Wikipédia par réseaux de neurones sur graphes
+
+\textbf{En turc :} Graf Sinir Ağları ile Vikipedi Makale Önerisi
+
+\section{Sujet du projet}
+
+De nos jours, le volume de sources encyclopédiques massives telles que Wikipédia croît de manière exponentielle. Le principal défi pour les utilisateurs n'est plus d'accéder à l'information, mais de tracer un parcours d'apprentissage pertinent au sein de cette masse de données. Les moteurs de recherche et les systèmes de recommandation traditionnels reposent généralement sur la correspondance par mots-clés ou le filtrage collaboratif ; cependant, ces méthodes s'avèrent insuffisantes pour comprendre l'intention d'un utilisateur souhaitant ``apprendre un sujet à partir de zéro'' et pour modéliser les relations hiérarchiques ou sémantiques entre les concepts (par exemple, la nécessité de connaître l'``algèbre linéaire'' avant de comprendre le ``deep learning'').
+
+Dans le cadre de ce projet, l'objectif est de développer un cadre de recommandation multimodal basé sur les graphes, combinant des données textuelles et des données de liens structurels. Le système modélisera la structure des hyperliens entre les articles Wikipédia sous forme de graphe et vectorisera le contenu sémantique de chaque article à l'aide de modèles pré-entraînés de plongements de phrases (sentence embedding models). Ces deux sources d'information seront combinées via des réseaux de neurones sur graphes (GNN) pour générer les recommandations d'articles les plus pertinentes en réponse à la requête de l'utilisateur, qui seront ensuite présentées de manière hiérarchique à l'aide de grands modèles de langage (LLMs).
+
+Le périmètre du projet se limite au développement d'un prototype de système de recommandation opérant sur les articles Wikipédia en anglais dans le domaine de l'informatique. Le support multilingue, le suivi des interactions utilisateur en temps réel et une architecture de service prête pour la production sont en dehors du périmètre de cette étude.
+
+\section{Objectifs du projet}
+
+L'objectif principal de ce projet est de développer un système de recommandation multimodal utilisant conjointement le texte et la structure de graphe, opérant sur les articles Wikipédia dans le domaine de l'informatique. Le système identifiera les articles les plus pertinents d'un point de vue sémantique en réponse à une requête ou un domaine d'intérêt saisi par l'utilisateur, et les présentera dans une hiérarchie conceptuelle.
+
+Les résultats attendus à l'issue du projet sont les suivants :
+
+\begin{itemize}
+    \item Modélisation de la structure des hyperliens des articles Wikipédia sous forme de graphe et apprentissage de représentations de n\oe uds (node embeddings) basées sur GAT (Graph Attention Networks) sur ce graphe.
+    \item Transformation des textes des articles en vecteurs sémantiques à l'aide de modèles pré-entraînés de plongements de phrases (BAAI/bge-m3 et Alibaba-NLP/gte-modernbert-base) et fusion de ces vecteurs avec la structure de graphe (fusion multimodale).
+    \item Classement et recommandation des articles les plus pertinents en réponse à la requête de l'utilisateur.
+    \item Présentation des articles recommandés sous forme de parcours d'apprentissage hiérarchique à l'aide de grands modèles de langage (LLM).
+\end{itemize}
+
+Le problème fondamental identifié est que les mécanismes actuels de recherche et de recommandation de Wikipédia ignorent les relations structurelles entre les concepts. Lorsqu'un utilisateur recherche ``apprentissage automatique'', le système se contente d'une correspondance par mots-clés et ne suggère pas des concepts prérequis tels que la ``théorie des probabilités'' ou l'``optimisation''. La solution proposée dans ce projet consiste à combler cette lacune en combinant l'information structurelle du graphe d'hyperliens avec la profondeur sémantique du contenu textuel.
+
+\section{Valeur originale du projet}
+
+Les aspects qui distinguent ce projet des applications existantes et qui lui confèrent une valeur originale sont énumérés ci-dessous :
+
+\begin{itemize}
+    \item \textbf{Combinaison de représentations textuelles modernes avec la structure de graphe :} Le travail le plus proche dans la littérature, WikiRecNet \cite{wikirecnet2020}, utilise Doc2Vec, une méthode de représentation textuelle de génération précédente. Ce projet vise à obtenir une représentation multimodale plus puissante en combinant des modèles modernes de plongements de phrases capables de capturer le sens contextuel (BAAI/bge-m3 et Alibaba-NLP/gte-modernbert-base) avec l'architecture GNN, en remplacement de Doc2Vec.
+
+    \item \textbf{Pondération des liens par mécanisme d'attention :} Les modèles GCN standards considèrent toutes les références d'un article comme ayant la même importance. Or, dans un article Wikipédia, chaque hyperlien n'est pas également pertinent par rapport au sujet principal. Dans ce projet, le mécanisme d'attention du GAT sera utilisé pour apprendre le poids sémantique de chaque lien et ainsi améliorer la qualité des recommandations.
+
+    \item \textbf{Présentation hiérarchique assistée par LLM :} Les systèmes de recommandation existants renvoient généralement leurs résultats sous forme de liste plate. Dans ce projet, les résultats de recommandation basés sur le GNN seront transformés en un parcours d'apprentissage hiérarchique à l'aide d'un grand modèle de langage, offrant à l'utilisateur une feuille de route conceptuelle.
+\end{itemize}
+
+\section{Contribution sociale du projet}
+
+Les contributions sociales de ce projet sont abordées ci-dessous selon leurs dimensions scientifique, technologique et socio-économique.
+
+\textbf{Contribution scientifique et technologique :}
+Le projet contribue directement au domaine des systèmes de recommandation sur les graphes en proposant un cadre combinant les réseaux de neurones sur graphes avec des modèles de langage basés sur Transformer dans le contexte de Wikipédia. Les résultats obtenus et les analyses comparatives serviront de référence pour les chercheurs dans ce domaine.
+
+\textbf{Accès à l'éducation et démocratisation du savoir :}
+Wikipédia est l'une des plus grandes sources d'information gratuitement accessibles dans le monde. Cependant, ce contenu massif peut s'avérer écrasant, en particulier pour les utilisateurs souhaitant apprendre un sujet à partir de zéro. Ce projet vise à faciliter les processus d'auto-apprentissage en proposant aux utilisateurs un parcours d'apprentissage conceptuel, contribuant ainsi à réduire les inégalités d'accès au savoir.
+
+\textbf{Durabilité :}
+Le projet est entièrement construit sur des données ouvertes et gratuites (Wikipédia). Les méthodes développées sont de nature à pouvoir être adaptées aux versions de Wikipédia dans différentes langues ou à d'autres bases de connaissances ouvertes, sans dépendance à une infrastructure commerciale.
+
+\textbf{Dimension éthique :}
+Le système est conçu pour fonctionner exclusivement sur la base de requêtes, sans nécessiter de profilage utilisateur ni de collecte de données personnelles. Cette approche vise à offrir un système de recommandation éthiquement sûr en préservant la vie privée des utilisateurs.

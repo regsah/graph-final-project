@@ -1,0 +1,59 @@
+\chapter{INTRODUCTION}
+\thispagestyle{empty} % pour effacer le numero de page
+
+\section{Proje Başlığı}
+
+\textbf{Türkçe:} Graf Sinir Ağları ile Vikipedi Makale Önerisi
+
+\textbf{Fransızca:} Recommandation d'articles Wikipédia par réseaux de neurones sur graphes
+
+\section{Proje Konusu}
+
+Günümüzde Wikipedia gibi devasa ansiklopedik kaynakların hacmi katlanarak artmaktadır. Kullanıcılar için temel sorun artık bilgiye erişmek değil, bu veri yığını içinde hedefe yönelik doğru öğrenme patikasını çizebilmektir. Geleneksel arama motorları ve öneri sistemleri genellikle anahtar kelime eşleşmesine veya işbirlikçi filtrelemeye (collaborative filtering) dayanmakta; ancak bu yöntemler, kullanıcının ``bir konuyu sıfırdan öğrenme'' niyetini anlamakta ve kavramlar arasındaki hiyerarşik ya da anlamsal ilişkileri (örneğin ``Derin Öğrenme''yi anlamak için önce ``Lineer Cebir''in bilinmesi gerekliliği) modellemekte yetersiz kalmaktadır.
+
+Bu proje kapsamında, metin verisi ile yapısal bağlantı verisini birleştiren, çok kipli (multimodal) ve graf tabanlı bir öneri çerçevesi geliştirilmesi hedeflenmektedir. Sistem, Wikipedia veri setini temel alarak makaleler arasındaki hiperlink yapısını bir graf olarak modelleyecek ve her makalenin anlamsal içeriğini ön eğitimli cümle gömme modelleri (sentence embedding models) ile vektörleştirecektir. Bu iki bilgi kaynağı, Graf Sinir Ağları (GNN) aracılığıyla birleştirilerek kullanıcının sorgusuna en uygun makale önerileri üretilecek ve sonrasında da Büyük Dil Modelleri (LLMs) kullanılarak hiyerarşik bir yapıda kullanıcıya sunulacaktır.
+
+Projenin kapsamı, Bilgisayar bilimi üzerine olan İngilizce Wikipedia makaleleri üzerinde çalışan bir öneri sistemi prototipi geliştirmekle sınırlıdır. Çoklu dil desteği, gerçek zamanlı kullanıcı etkileşimi takibi ve üretime hazır bir servis mimarisi bu çalışmanın kapsamı dışındadır.
+
+\section{Projenin Amacı ve Hedefleri}
+
+Bu projenin temel amacı, Wikipedia'nın bilgisayar bilimi alanındaki makaleleri üzerinde çalışan, metin ve graf yapısını birlikte kullanan çok kipli (multimodal) bir öneri sistemi geliştirmektir. Sistem; kullanıcının girdiği bir sorguya veya ilgi alanına karşılık, anlamsal olarak en ilişkili makaleleri tespit edecek ve bu makaleleri kavramsal bir hiyerarşi içinde sunacaktır.
+
+Proje sonunda elde edilmesi beklenen sonuçlar şunlardır:
+
+\begin{itemize}
+    \item Wikipedia makalelerinin hiperlink yapısının bir graf olarak modellenmesi ve bu graf üzerinde GAT (Graph Attention Networks) tabanlı düğüm temsillerinin (node embeddings) öğrenilmesi.
+    \item Makale metinlerinin ön eğitimli cümle gömme modelleri (BAAI/bge-m3 ve Alibaba-NLP/gte-modernbert-base) ile anlamsal vektörlere dönüştürülmesi ve bu vektörlerin graf yapısıyla birleştirilmesi (multimodal fusion).
+    \item Kullanıcı sorgusuna en uygun makalelerin sıralanarak önerilmesi.
+    \item Önerilen makalelerin Büyük Dil Modelleri (LLM) aracılığıyla hiyerarşik bir öğrenme patikası şeklinde kullanıcıya sunulması.
+\end{itemize}
+
+Tespit edilen temel sorun, mevcut Wikipedia arama ve öneri mekanizmalarının kavramlar arası yapısal ilişkileri göz ardı etmesidir. Bir kullanıcı ``makine öğrenmesi'' araştırdığında, sistem yalnızca anahtar kelime eşleşmesi yapmakta; ``olasılık teorisi'' veya ``optimizasyon'' gibi ön koşul niteliğindeki kavramları önermemektedir. Bu projede önerilen çözüm, hiperlink grafındaki yapısal bilgiyi metin içeriğinin anlamsal derinliğiyle birleştirerek bu eksikliği gidermektir.
+
+\section{Proje Konusunun Özgün Değeri}
+
+Bu projenin mevcut uygulamalardan ayrılan ve özgün değer taşıyan yönleri aşağıda sıralanmıştır:
+
+\begin{itemize}
+    \item \textbf{Modern metin temsili ile graf yapısının birleştirilmesi:} Literatürdeki en yakın çalışma olan WikiRecNet \cite{wikirecnet2020}, metin temsili için Doc2Vec gibi eski nesil bir yöntem kullanmaktadır. Bu proje, Doc2Vec yerine bağlamsal anlam yakalayabilen modern cümle gömme modellerini (BAAI/bge-m3 ve Alibaba-NLP/gte-modernbert-base) GNN mimarisiyle birleştirerek daha güçlü bir multimodal temsil elde etmeyi hedeflemektedir.
+
+    \item \textbf{Dikkat mekanizmasıyla bağlantı ağırlıklandırma:} Standart GCN modelleri bir makaleye verilen tüm referansları eşit önemde kabul etmektedir. Oysa bir Wikipedia makalesindeki her hiperlink, konunun özüyle aynı derecede alakalı değildir. Bu projede GAT'ın dikkat (attention) mekanizması kullanılarak her bağlantının anlamsal ağırlığı öğrenilecek ve öneri kalitesi artırılacaktır.
+
+    \item \textbf{LLM destekli hiyerarşik sunum:} Mevcut öneri sistemleri genellikle düz bir liste halinde sonuç döndürmektedir. Bu projede, GNN tabanlı öneri sonuçları bir Büyük Dil Modeli aracılığıyla hiyerarşik bir öğrenme patikasına dönüştürülerek kullanıcıya kavramsal bir yol haritası sunulacaktır.
+\end{itemize}
+
+\section{Projenin Toplumsal Katkısı}
+
+Bu projenin toplumsal katkıları bilimsel, teknolojik ve sosyo-ekonomik boyutlarıyla aşağıda ele alınmıştır.
+
+\textbf{Bilimsel ve Teknolojik Katkı:}
+Proje, Graf Sinir Ağları ile Transformer tabanlı dil modellerini Wikipedia bağlamında birleştiren bir çerçeve sunarak, graflar üzerinde öneri sistemleri alanına doğrudan katkıda bulunmaktadır. Elde edilecek sonuçlar ve karşılaştırmalı analizler, bu alandaki araştırmacılara referans niteliğinde olacaktır.
+
+\textbf{Eğitime Erişim ve Bilgi Demokratizasyonu:}
+Wikipedia, dünya genelinde ücretsiz erişilebilen en büyük bilgi kaynaklarından biridir. Ancak bu devasa içerik, özellikle bir konuyu sıfırdan öğrenmek isteyen kullanıcılar için bunaltıcı olabilmektedir. Bu proje, kullanıcılara kavramsal bir öğrenme patikası sunarak kendi kendine öğrenme süreçlerini kolaylaştırmayı ve bilgiye erişimdeki eşitsizliği azaltmayı hedeflemektedir.
+
+\textbf{Sürdürülebilirlik:}
+Proje tamamen açık ve ücretsiz veriler (Wikipedia) üzerine inşa edilmektedir. Geliştirilen yöntemler, ticari bir altyapıya bağımlı olmaksızın farklı dillerdeki Wikipedia sürümlerine veya başka açık bilgi tabanlarına uyarlanabilir niteliktedir.
+
+\textbf{Etik Boyut:}
+Sistem, kullanıcı profillemesi veya kişisel veri toplama gerektirmeden, yalnızca sorgu bazlı çalışacak şekilde tasarlanmaktadır. Bu yaklaşım, kullanıcı mahremiyetini koruyarak etik açıdan güvenli bir öneri sistemi sunmayı amaçlamaktadır.

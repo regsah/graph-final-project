@@ -1,0 +1,140 @@
+% ATTENTION: Si vous n'êtes pas familier de Latex, NE MODIFIEZ PAS le contenu de ce document!!!
+\documentclass[12pt,oneside]{book}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ left=35mm,
+ right=25mm,
+ top=35mm,
+ bottom=25mm,
+ }
+\linespread{1.50}
+    
+\usepackage[list=off]{subcaption} % pour les subfigures
+\usepackage[figurename = Figure, tablename = Tableau]{caption} % pour les noms de figures et des tableaux
+\usepackage{tocbibind} % pour ajouter la biblio, la table des matières (TOC), liste des figures (LOF) et liste des tableaux (LOT)
+\usepackage{tocloft} % pour TOC, LOF & LOT 
+\usepackage{float} % pour forcer les positions des figures
+\usepackage{mathptmx}% TIMES NEW ROMAN 
+\usepackage{graphicx} % pour ajouter des figures
+\usepackage[utf8]{inputenc} % pour le codage de caractères
+\usepackage[T1]{fontenc} % pour le codage de caractères
+\usepackage{amsmath,amssymb} % pour les équations et les symboles mathématiques
+\usepackage{booktabs} % pour les tableaux avec lignes horizontales
+\usepackage{longtable} % pour les tableaux longs
+\usepackage{tabularx} % pour les tableaux avec colonnes flexibles
+\usepackage{array} % pour les options de colonnes dans les tableaux
+\usepackage{pdflscape} % pour les pages en mode paysage
+\usepackage{pgfgantt} % pour les diagrammes de Gantt
+\usepackage{hyperref} % pour les liens hypertextes
+\usepackage{enumitem} % pour les listes personnalisées
+\usepackage[intoc]{nomencl} % pour la liste des notations
+\usepackage{titlesec} % pour les titres de différents niveaux
+\usepackage{fancyhdr} % pour gérer les numéros de pages
+\usepackage{natbib} % pour la bibliographie
+\usepackage{multirow} % pour des tableaux multi-colonnes & multi-lignes
+\usepackage{algorithm2e} % pour pseudo-codes
+\usepackage{fancyvrb} % pour les codages
+\usepackage{listings} % pour les codages
+\usepackage{lipsum} % pour générer des chapitres avec un contenu alléatoire
+
+\pagestyle{plain} % pour numéroter les pages
+
+% Pour changer les noms par défauts
+\AtBeginDocument{
+	\renewcommand\contentsname{Table des Matières}
+    \renewcommand\nomname{Liste des Notations}
+	\renewcommand\listfigurename{Liste des Figures}
+	\renewcommand\listtablename{Liste des Tableaux}
+    \renewcommand\bibname{Bibliographie}
+}
+\setlength\parindent{0pt} % Pas d'espace au debut de paragraphe
+
+% Pour les titres de niveau 4
+\setcounter{secnumdepth}{4}
+
+% Pour la taille des fonts dans les section-subsection-subsubsection
+\titleformat{\section}
+  {\normalfont\fontsize{12}{15}\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\fontsize{12}{15}\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalfont\fontsize{12}{15}}{\thesubsubsection}{1em}{}
+
+% Pour les chapitres
+\renewcommand\cftchapdotsep{\cftdotsep}
+\renewcommand\cftchapnumwidth{3em}
+\renewcommand\cftsecindent{3em}
+\renewcommand\thechapter{\arabic{chapter}}
+\renewcommand\thesection{\arabic{chapter}.\arabic{section}}
+
+% Pour numéroter les équations
+\renewcommand{\theequation}{\arabic{equation}}
+
+% TOC - Table des matières
+\setcounter{tocdepth}{4}
+\setlength{\cftbeforetoctitleskip}{-3em}
+\setlength{\cftaftertoctitleskip}{12pt}
+\renewcommand\cfttoctitlefont{\large\bf}
+
+% LOF - Liste des figures
+\setlength{\cftbeforeloftitleskip}{-3em}
+\setlength{\cftafterloftitleskip}{12pt}
+\renewcommand\cftloftitlefont{\large\bf}
+
+% LOT - Liste des tableaux
+\setlength{\cftbeforelottitleskip}{-3em}
+\setlength{\cftafterlottitleskip}{12pt}
+\renewcommand\cftlottitlefont{\large\bf}
+
+% Les espaces et les fonts des titres
+\setlength{\parskip}{12pt plus 1pt minus 1pt}
+\titlespacing{\chapter}{0pt}{-50pt}{36pt}
+\titlespacing{\section}{0pt}{24pt}{0pt}
+\titlespacing{\subsection}{0pt}{0pt}{0cm}
+\titlespacing{\subsubsection}{0pt}{0pt}{0cm}
+\titleformat{\chapter}{\normalfont\large\bf}{\thechapter}{14pt}{\large\bf} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\input{titlepage}
+\frontmatter
+\clearpage
+\tableofcontents
+%%% si vous n'avez pas de liste des notations, alors effacez les 3 lignes suivantes
+\clearpage
+\makenomenclature
+\printnomenclature %%% 
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+\mainmatter
+
+% pour placer le numéro de page au dessus
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyhead{}
+\fancyfoot{}
+\chead{\arabic{page}}
+
+% Les chapitres
+\input{Chapter1}
+\input{Chapter2}
+\input{Chapter3}
+\input{Chapter4}
+\input{Chapter5}
+\input{Chapter6}
+\backmatter
+
+% La bibliographie
+\thispagestyle{empty}
+\bibliographystyle{apalike2}
+\thispagestyle{empty}
+\bibliography{ref}
+\thispagestyle{empty}
+
+\end{document}

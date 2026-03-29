@@ -1,0 +1,34 @@
+\chapter{SWOT ANALİZİ}
+\thispagestyle{empty}
+
+\begin{itemize}
+    \item \textbf{Güçlü Yönler (Strengths):}
+    \begin{itemize}
+        \item Wikipedia'nın hiperlink yapısı, makaleler arası ilişkileri doğal bir graf olarak sunmaktadır; ayrıca bir graf inşa etmeye gerek yoktur.
+        \item Kullanılan cümle gömme modelleri (bge-m3 ve gte-modernbert-base), büyük ölçekli metin derlemleri üzerinde ön eğitimli olduğundan ek alan adaptasyonu gerektirmeden yüksek kaliteli anlamsal temsiller üretebilmektedir.
+        \item GAT'ın dikkat mekanizması, her bağlantının önemini otomatik olarak öğrenerek öneri kalitesini artırmaktadır.
+        \item Wiki-CS \cite{mernyei2020wikics} gibi hazır ve temizlenmiş kıyaslama veri setlerinin mevcut olması, modelin hızlıca test edilmesine olanak tanımaktadır.
+    \end{itemize}
+
+    \item \textbf{Zayıf Yönler (Weaknesses):}
+    \begin{itemize}
+        \item Cümle gömme modellerinin girdi uzunluğu sınırı, uzun Wikipedia makalelerinin tamamını işlemeyi engellemektedir; metin kesme veya özetleme stratejileri gerekecektir.
+        \item GNN ve gömme modellerinin birlikte çalıştırılması yüksek GPU belleği gerektirmektedir; bu durum donanım kısıtları nedeniyle darboğaz oluşturabilir.
+        \item Proje gerçeklenmek için hem veri mühendisliği hem de model geliştirme gibi iki farklı uzmanlık alanına ihtiyaç duymaktadır.
+    \end{itemize}
+
+    \item \textbf{Fırsatlar (Opportunities):}
+    \begin{itemize}
+        \item WikiRecNet \cite{wikirecnet2020} çalışmasının Doc2Vec kullandığı metin temsili katmanının modern cümle gömme modelleri ile modernize edilmesi, doğrudan bir iyileştirme fırsatı sunmaktadır.
+        \item LLM'lerin hiyerarşik sunum katmanı olarak kullanılması, literatürde henüz yaygın olarak ele alınmamış yeni bir araştırma alanıdır.
+        \item Geliştirilen yöntem, bilgisayar bilimi dışındaki Wikipedia alanlarına ve farklı dillere genişletilebilir potansiyele sahiptir.
+    \end{itemize}
+
+    \item \textbf{Tehditler ve Riskler (Threats):}
+    \begin{itemize}
+        \item Wikipedia'nın sürekli değişen yapısı, veri setinin zamanla güncelliğini yitirebilmesi riskini taşımaktadır.
+        \item Büyük ölçekli graf üzerinde GNN eğitimi sırasında bellek yetersizliği (OOM) sorunlarıyla karşılaşılabilir.
+        \item Öneri kalitesinin nicel olarak değerlendirilmesi için uygun bir ground-truth veri setinin bulunmaması, değerlendirme sürecini zorlaştırabilir.
+        \item LLM katmanının halüsinasyon (hallucination) riski, hiyerarşik sunumun güvenilirliğini olumsuz etkileyebilir.
+    \end{itemize}
+\end{itemize}

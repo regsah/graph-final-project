@@ -1,0 +1,80 @@
+\chapter{ÇALIŞMA TAKVİMİ}
+\thispagestyle{empty}
+
+Proje, Kasım 2025'te başlamış olup Mayıs 2026 sonunda tamamlanması planlanmaktadır. Aşağıdaki tabloda tüm görevler ve tarihleri özetlenmiş, ardından Gantt diyagramı ile görselleştirilmiştir. Yeşil çubuklar tamamlanan, mavi çubuklar planlanan görevleri temsil etmektedir.
+
+\begin{table}[htbp]
+\centering
+\caption{Görev listesi ve tarihleri.}
+\label{tab:gorevler}
+\begin{tabular}{clll}
+\toprule
+\textbf{No} & \textbf{Görev} & \textbf{Başlangıç} & \textbf{Bitiş} \\
+\midrule
+1  & Literatür taraması                   & 03.11.2025 & 05.01.2026 \\
+2  & Veri seti oluşturma (Custom-WikiCS)  & 25.12.2025 & 16.02.2026 \\
+3  & Graf yapısı analizi                  & 02.02.2026 & 09.03.2026 \\
+4  & Gömme modeli karşılaştırması         & 16.02.2026 & 05.04.2026 \\
+5  & 1. Ara Rapor yazımı                  & 02.03.2026 & 08.03.2026 \\
+\midrule
+6  & GAT/GCN model eğitimi               & 09.03.2026 & 30.03.2026 \\
+7  & 2. Ara Rapor yazımı                  & 29.03.2026 & 05.04.2026 \\
+8  & Öneri sistemi geliştirme             & 06.04.2026 & 20.04.2026 \\
+9  & LLM entegrasyonu                     & 14.04.2026 & 30.04.2026 \\
+10 & 3. Ara Rapor yazımı                  & 26.04.2026 & 03.05.2026 \\
+11 & Son değerlendirme ve iyileştirme     & 03.05.2026 & 11.05.2026 \\
+12 & Bitirme kitapçığı hazırlığı          & 11.05.2026 & 22.05.2026 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{landscape}
+\begin{center}
+% Haftalar: 1=3 Kas 2025, ..., 29=18 May 2026
+{%
+% \shorthandoff{=}% Turkish babel fix for pgfgantt
+\begin{ganttchart}[
+    hgrid,
+    vgrid={*{3}{draw=none}, dotted},
+    x unit=0.55cm,
+    y unit chart=0.5cm,
+    title height=1,
+    bar height=0.5,
+    bar label font=\footnotesize,
+    title label font=\footnotesize,
+    milestone label font=\footnotesize\bfseries,
+    bar/.append style={fill=blue!30},
+    milestone/.append style={fill=red!70},
+    today=18,
+    today rule/.style={draw=red!60, ultra thick, dashed},
+    today label font=\small\itshape,
+    today label=Bug\"un,
+]{1}{29}
+
+% Ay ba\c{s}l{\i}klar{\i}
+\gantttitle{Kas}{4}\gantttitle{Ara}{5}\gantttitle{Oca}{4}\gantttitle{Sub}{4}\gantttitle{Mar}{5}\gantttitle{Nis}{4}\gantttitle{May}{3} \\
+
+% --- Tamamlanan g\"orevler (ye\c{s}il) ---
+\ganttbar[bar/.append style={fill=green!40}]{1. Literat\"ur Taramas{\i}}{1}{10} \\
+\ganttbar[bar/.append style={fill=green!40}]{2. Veri Seti Olu\c{s}turma}{8}{16} \\
+\ganttbar[bar/.append style={fill=green!40}]{3. Graf Yap{\i}s{\i} Analizi}{13}{19} \\
+
+% --- Devam eden / planlanan g\"orevler (mavi) ---
+\ganttbar{4. G\"omme Kar\c{s}{\i}la\c{s}t{\i}rmas{\i}}{16}{22} \\
+\ganttbar[bar/.append style={fill=green!40}]{5. 1. Ara Rapor}{18}{19} \\
+\ganttmilestone{1. Ara Rapor Teslim (08.03)}{19} \\
+\ganttbar{6. GAT/GCN Model E\u{g}itimi}{19}{22} \\
+\ganttbar{7. 2. Ara Rapor}{21}{22} \\
+\ganttmilestone{2. Ara Rapor Teslim (05.04)}{22} \\
+\ganttbar{8. \"Oneri Sistemi Geli\c{s}tirme}{23}{25} \\
+\ganttbar{9. LLM Entegrasyonu}{24}{26} \\
+\ganttbar{10. 3. Ara Rapor}{25}{26} \\
+\ganttmilestone{3. Ara Rapor Teslim (03.05)}{26} \\
+\ganttbar{11. Son De\u{g}erlendirme}{27}{28} \\
+\ganttbar{12. Bitirme Kitap\c{c}{\i}\u{g}{\i}}{28}{29} \\
+\ganttmilestone{Final Teslim (22.05)}{29}
+
+\end{ganttchart}
+}% end \shorthandoff group
+\end{center}
+\end{landscape}

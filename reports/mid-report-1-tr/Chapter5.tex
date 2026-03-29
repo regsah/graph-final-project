@@ -1,0 +1,64 @@
+\chapter{ÜST SEVİYE TASARIM}
+\thispagestyle{empty}
+
+Sistemin üst seviye tasarımı, birbirini besleyen dört ana katmandan oluşmaktadır: Veri Hazırlama, Metin Kodlama, Graf Öğrenimi ve Öneri Sunumu.
+
+% TODO: buraya diyagram
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=\textwidth]{architecture.png}
+%     \caption{Sistemin üst seviye mimarisi.}
+%     \label{fig:architecture}
+% \end{figure}
+
+\section{Katman 1 -- Veri Hazırlama}
+
+Bu katman, ham Wikipedia verisini model eğitimine uygun bir yapıya dönüştürmekten sorumludur.
+
+\begin{enumerate}
+    \item Wiki-CS veri setinin graf topolojisi (komşuluk matrisi) alınır.
+    \item Düğüm başlıkları normalize edilerek Wikipedia'daki gerçek makale başlıklarıyla eşleştirilir.
+    \item Makale metinleri, öncelikle Wikipedia STEM Corpus üzerinden, bulunamayanlar ise Wikipedia API aracılığıyla elde edilir.
+    \item Elde edilen metinler temizlenerek bir sonraki katmana aktarılır.
+\end{enumerate}
+
+Çıktı: 11.701 düğümlü yönlü graf (komşuluk matrisi) ve her düğüme karşılık gelen makale metni.
+
+\section{Katman 2 -- Metin Kodlama}
+
+Bu katmanda, her makale metni ön eğitimli cümle gömme modelleri aracılığıyla yoğun vektörlere dönüştürülür. İki model karşılaştırmalı olarak değerlendirilmektedir:
+
+\begin{itemize}
+    \item BAAI/bge-m3 $\rightarrow$ 1024 boyutlu gömme vektörü
+    \item Alibaba-NLP/gte-modernbert-base $\rightarrow$ 768 boyutlu gömme vektörü
+\end{itemize}
+
+Bu vektörler, graf üzerindeki düğüm öznitelikleri (node features) olarak kullanılacaktır.
+
+Çıktı: Düğüm öznitelik matrisi $\mathbf{X} \in \mathbb{R}^{N \times d}$ (burada $N = 11.701$, $d \in \{768, 1024\}$).
+
+\section{Katman 3 -- Graf Öğrenimi (GAT)}
+
+Bu katman, metin gömme vektörlerini graf yapısıyla birleştirerek zenginleştirilmiş düğüm temsillerini öğrenir.
+
+\begin{enumerate}
+    \item Düğüm öznitelik matrisi $\mathbf{X}$ ve komşuluk matrisi $\mathbf{A}$, GAT modeline girdi olarak verilir.
+    \item GAT'ın çok başlıklı dikkat mekanizması (multi-head attention), her kenar için önem ağırlığını hesaplar.
+    \item Birden fazla GAT katmanı ardışık olarak uygulanarak, her düğüm çok adımlı komşuluk bilgisini içeren zenginleştirilmiş bir temsil elde eder.
+    \item GCN aynı girdi üzerinde baseline model olarak ayrıca eğitilir ve sonuçlar karşılaştırılır.
+\end{enumerate}
+
+Çıktı: Zenginleştirilmiş düğüm gömme matrisi $\mathbf{Z} \in \mathbb{R}^{N \times d'}$, burada her vektör hem makalenin anlamsal içeriğini hem de graf yapısındaki konumunu yansıtır.
+
+\section{Katman 4 -- Öneri ve Hiyerarşik Sunum}
+
+Bu katman, kullanıcı sorgusunu alarak nihai öneriyi üretir.
+
+\begin{enumerate}
+    \item Kullanıcı sorgusu, aynı cümle gömme modeli ile vektörleştirilir.
+    \item Sorgu vektörü ile düğüm gömme vektörleri ($\mathbf{Z}$) arasında benzerlik hesaplanarak (kosinüs benzerliği) en yakın $k$ makale aday olarak belirlenir.
+    \item Aday makaleler, yerel olarak çalıştırılan bir LLM'e (DeepSeek-R1 veya benzeri) iletilir.
+    \item LLM, aday makaleleri kavramsal ön koşul ilişkilerine göre hiyerarşik bir öğrenme patikası olarak düzenler ve kullanıcıya sunar.
+\end{enumerate}
+
+Çıktı: Kullanıcıya sunulan, ``nereden başlamalıyım'' sorusuna yanıt veren yapılandırılmış bir makale öğrenme yolu.

@@ -1,0 +1,49 @@
+\chapter{KULLANILMASI PLANLANAN YÖNTEMLER VE TEKNOLOJİLER}
+\thispagestyle{empty}
+
+\section{Yöntemler}
+
+\textbf{Veri Seti İnşası -- Custom-WikiCS:}
+Projede kullanılan veri seti, mevcut Wiki-CS \cite{mernyei2020wikics} kıyaslama veri setinin topolojisi temel alınarak yeniden inşa edilmiştir. Süreç şu adımlardan oluşmaktadır:
+\begin{enumerate}
+    \item Wiki-CS veri setinin graf topolojisi (11.701 düğüm, 291.039 yönlü kenar) alınmıştır.
+    \item Düğüm başlıkları işlenerek Wikipedia'daki gerçek makale başlıklarıyla eşleştirilmiştir.
+    \item Kaggle üzerinde bulunan ``Wikipedia STEM Corpus'' veri seti kullanılarak eşleşen makalelerin metinleri çıkarılmıştır.
+    \item Corpus'ta bulunmayan makalelerin metinleri Wikipedia API aracılığıyla tamamlanmıştır.
+    \item Elde edilen metinler, iki farklı cümle gömme modeli ile vektörleştirilerek düğüm öznitelikleri oluşturulmuştur.
+\end{enumerate}
+
+Bu yaklaşım, orijinal Wiki-CS'nin yalnızca GloVe ortalaması kullanan basit metin temsilini modern anlamsal gömme vektörleriyle değiştirirken, graf yapısının güvenilirliğini korumaktadır.
+
+\textbf{Cümle Gömme Modelleri:}
+Makale metinlerinin vektör temsilini oluşturmak için iki farklı ön eğitimli model karşılaştırmalı olarak değerlendirilmektedir:
+\begin{itemize}
+    \item \textbf{BAAI/bge-m3:} 1024 boyutlu gömme vektörleri üreten, çok dilli ve çok görevli bir model.
+    \item \textbf{Alibaba-NLP/gte-modernbert-base:} 768 boyutlu gömme vektörleri üreten, ModernBERT mimarisine dayalı bir model.
+\end{itemize}
+Hangi modelin GNN ile birleştirildiğinde daha iyi öneri performansı sağladığını belirlemek amacıyla deneyler sürdürülmektedir.
+
+\textbf{Graf Sinir Ağı -- GAT:}
+Makaleler arası yapısal ilişkileri öğrenmek için Graph Attention Networks (GAT) \cite{velickovic2018graph} kullanılacaktır. GAT, her komşu düğüme farklı dikkat ağırlıkları atayarak hangi bağlantının daha önemli olduğunu öğrenebilmektedir. Temel karşılaştırma modeli (baseline) olarak GCN \cite{kipf2017semi} kullanılacaktır.
+
+\textbf{Büyük Dil Modeli -- Hiyerarşik Sunum:}
+GNN tabanlı öneri sonuçlarının kullanıcıya hiyerarşik bir öğrenme patikası olarak sunulması için yerel olarak çalıştırılabilen açık kaynaklı bir Büyük Dil Modeli (örn. DeepSeek-R1 veya benzer bir model) kullanılması planlanmaktadır. Model seçiminde 8~GB VRAM sınırına uyumluluk gözetilmektedir.
+
+\section{Yazılım}
+
+\begin{itemize}
+    \item \textbf{Python:} Temel programlama dili.
+    \item \textbf{PyTorch \& PyTorch Geometric (PyG):} GNN modellerinin (GAT, GCN) oluşturulması ve eğitimi için.
+    \item \textbf{HuggingFace Transformers / Sentence-Transformers:} Cümle gömme modellerinin çalıştırılması için.
+    \item \textbf{NetworkX / iGraph:} Graf analizi ve görselleştirme için.
+    \item \textbf{Ollama:} Yerel LLM kullanımı için.
+\end{itemize}
+
+\section{Donanım}
+
+Deneyler, GPU hızlandırmalı bir dizüstü bilgisayar üzerinde yürütülmektedir:
+\begin{itemize}
+    \item \textbf{GPU:} NVIDIA RTX 4070 Laptop (8~GB VRAM) -- model eğitimi ve çıkarım için.
+    \item \textbf{CPU:} AMD Ryzen 9 8945HS (4~GHz) -- veri ön işleme ve graf analizi için.
+    \item \textbf{RAM:} 32~GB -- büyük graf yapılarının bellekte tutulması için.
+\end{itemize}

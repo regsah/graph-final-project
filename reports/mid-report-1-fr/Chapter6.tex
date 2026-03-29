@@ -1,0 +1,80 @@
+\chapter{CALENDRIER DE TRAVAIL}
+\thispagestyle{empty}
+
+Le projet a débuté en novembre 2025 et sa finalisation est prévue pour fin mai 2026. Le tableau ci-dessous résume l'ensemble des tâches et leurs dates, suivi d'une visualisation sous forme de diagramme de Gantt. Les barres vertes représentent les tâches achevées, les barres bleues les tâches planifiées.
+
+\begin{table}[htbp]
+\centering
+\caption{Liste des tâches et leurs dates.}
+\label{tab:gorevler}
+\begin{tabular}{clll}
+\toprule
+\textbf{No} & \textbf{Tâche} & \textbf{Début} & \textbf{Fin} \\
+\midrule
+1  & Revue de littérature                     & 03.11.2025 & 05.01.2026 \\
+2  & Construction du jeu de données (Custom-WikiCS) & 25.12.2025 & 16.02.2026 \\
+3  & Analyse de la structure de graphe        & 02.02.2026 & 09.03.2026 \\
+4  & Comparaison des modèles de plongement    & 16.02.2026 & 05.04.2026 \\
+5  & Rédaction du 1\textsuperscript{er} rapport intermédiaire & 02.03.2026 & 08.03.2026 \\
+\midrule
+6  & Entraînement des modèles GAT/GCN        & 09.03.2026 & 30.03.2026 \\
+7  & Rédaction du 2\textsuperscript{e} rapport intermédiaire & 29.03.2026 & 05.04.2026 \\
+8  & Développement du système de recommandation & 06.04.2026 & 20.04.2026 \\
+9  & Intégration du LLM                      & 14.04.2026 & 30.04.2026 \\
+10 & Rédaction du 3\textsuperscript{e} rapport intermédiaire & 26.04.2026 & 03.05.2026 \\
+11 & Évaluation finale et améliorations      & 03.05.2026 & 11.05.2026 \\
+12 & Préparation du livret de fin d'études   & 11.05.2026 & 22.05.2026 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{landscape}
+\begin{center}
+% Semaines : 1=3 Nov 2025, ..., 29=18 Mai 2026
+{%
+% \shorthandoff{=}% fix for pgfgantt
+\begin{ganttchart}[
+    hgrid,
+    vgrid={*{3}{draw=none}, dotted},
+    x unit=0.55cm,
+    y unit chart=0.5cm,
+    title height=1,
+    bar height=0.5,
+    bar label font=\footnotesize,
+    title label font=\footnotesize,
+    milestone label font=\footnotesize\bfseries,
+    bar/.append style={fill=blue!30},
+    milestone/.append style={fill=red!70},
+    today=18,
+    today rule/.style={draw=red!60, ultra thick, dashed},
+    today label font=\small\itshape,
+    today label=Aujourd'hui,
+]{1}{29}
+
+% Titres des mois
+\gantttitle{Nov}{4}\gantttitle{D\'ec}{5}\gantttitle{Jan}{4}\gantttitle{F\'ev}{4}\gantttitle{Mar}{5}\gantttitle{Avr}{4}\gantttitle{Mai}{3} \\
+
+% --- T\^aches achev\'ees (vert) ---
+\ganttbar[bar/.append style={fill=green!40}]{1. Revue de litt\'erature}{1}{10} \\
+\ganttbar[bar/.append style={fill=green!40}]{2. Construction du jeu de donn\'ees}{8}{16} \\
+\ganttbar[bar/.append style={fill=green!40}]{3. Analyse de graphe}{13}{19} \\
+
+% --- T\^aches en cours / planifi\'ees (bleu) ---
+\ganttbar{4. Comparaison des plongements}{16}{22} \\
+\ganttbar[bar/.append style={fill=green!40}]{5. 1\textsuperscript{er} Rapport}{18}{19} \\
+\ganttmilestone{1\textsuperscript{er} Rapport (08.03)}{19} \\
+\ganttbar{6. Entra\^inement GAT/GCN}{19}{22} \\
+\ganttbar{7. 2\textsuperscript{e} Rapport}{21}{22} \\
+\ganttmilestone{2\textsuperscript{e} Rapport (05.04)}{22} \\
+\ganttbar{8. Syst\`eme de recommandation}{23}{25} \\
+\ganttbar{9. Int\'egration LLM}{24}{26} \\
+\ganttbar{10. 3\textsuperscript{e} Rapport}{25}{26} \\
+\ganttmilestone{3\textsuperscript{e} Rapport (03.05)}{26} \\
+\ganttbar{11. \'Evaluation finale}{27}{28} \\
+\ganttbar{12. Livret de fin d'\'etudes}{28}{29} \\
+\ganttmilestone{Remise finale (22.05)}{29}
+
+\end{ganttchart}
+}%
+\end{center}
+\end{landscape}

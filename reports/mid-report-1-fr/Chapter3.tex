@@ -1,0 +1,34 @@
+\chapter{ANALYSE SWOT}
+\thispagestyle{empty}
+
+\begin{itemize}
+    \item \textbf{Forces (Strengths) :}
+    \begin{itemize}
+        \item La structure d'hyperliens de Wikipédia présente naturellement les relations entre articles sous forme de graphe ; il n'est pas nécessaire de construire un graphe séparément.
+        \item Les modèles de plongements de phrases utilisés (bge-m3 et gte-modernbert-base), étant pré-entraînés sur de grands corpus textuels, sont capables de produire des représentations sémantiques de haute qualité sans nécessiter d'adaptation supplémentaire au domaine.
+        \item Le mécanisme d'attention du GAT améliore la qualité des recommandations en apprenant automatiquement l'importance de chaque lien.
+        \item L'existence de jeux de données de référence prêts à l'emploi et nettoyés tels que Wiki-CS \cite{mernyei2020wikics} permet de tester rapidement le modèle.
+    \end{itemize}
+
+    \item \textbf{Faiblesses (Weaknesses) :}
+    \begin{itemize}
+        \item La limite de longueur d'entrée des modèles de plongements de phrases empêche de traiter l'intégralité des articles Wikipédia longs ; des stratégies de troncature ou de résumé seront nécessaires.
+        \item L'exécution conjointe du GNN et des modèles de plongements requiert une grande quantité de mémoire GPU ; cette situation peut créer un goulet d'étranglement en raison des contraintes matérielles.
+        \item Le projet nécessite une expertise dans deux domaines distincts : l'ingénierie des données et le développement de modèles.
+    \end{itemize}
+
+    \item \textbf{Opportunités (Opportunities) :}
+    \begin{itemize}
+        \item La modernisation de la couche de représentation textuelle de WikiRecNet \cite{wikirecnet2020}, qui utilise Doc2Vec, avec des modèles modernes de plongements de phrases offre une opportunité directe d'amélioration.
+        \item L'utilisation des LLM comme couche de présentation hiérarchique constitue un nouveau domaine de recherche encore peu exploré dans la littérature.
+        \item La méthode développée possède le potentiel d'être étendue à d'autres domaines de Wikipédia au-delà de l'informatique, ainsi qu'à différentes langues.
+    \end{itemize}
+
+    \item \textbf{Menaces et risques (Threats) :}
+    \begin{itemize}
+        \item La nature constamment évolutive de Wikipédia comporte le risque que le jeu de données perde sa pertinence au fil du temps.
+        \item Des problèmes de mémoire insuffisante (OOM) peuvent survenir lors de l'entraînement du GNN sur un graphe de grande taille.
+        \item L'absence d'un jeu de données de vérité terrain (ground truth) approprié pour l'évaluation quantitative de la qualité des recommandations complique le processus d'évaluation.
+        \item Le risque d'hallucination de la couche LLM peut affecter négativement la fiabilité de la présentation hiérarchique.
+    \end{itemize}
+\end{itemize}
