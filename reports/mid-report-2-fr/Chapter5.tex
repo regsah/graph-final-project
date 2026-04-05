@@ -5,7 +5,7 @@
 
 Cette section présente une analyse détaillée des coûts du projet, considérant toutes les ressources qui contribuent à la réalisation du système. Suivant les directives, les ressources économiques et les ressources informatiques sont prises en compte.
 
-\subsection{Ressources Informatiques}
+\subsection{Ressources informatiques}
 
 Les ressources informatiques primaires sont résumées dans le Tableau~\ref{tab:compute-resources}.
 
@@ -25,7 +25,7 @@ Stockage & NVMe SSD & 512 Go \\
 \end{tabular}
 \end{table}
 
-\subsection{Taille des Données}
+\subsection{Taille des données}
 
 Les tailles des données pour la collection Custom-WikiCS sont présentées dans le Tableau~\ref{tab:dataset-sizes}.
 
@@ -49,7 +49,7 @@ Matrice d'adjacence (creuse) & 8.2 Mo \\
 
 Les données brutes du graphe WikiCS dominent l'empreinte de stockage à 202.2 Mo, tandis que le cache d'embeddings combiné ne représente que 27.8 Mo (~12\% du total). Le pré-calcul des embeddings hors ligne économise un temps de recalcul significatif.
 
-\subsection{Utilisation Mémoire GPU}
+\subsection{Utilisation mémoire GPU}
 
 Les exigences de mémoire GPU varient selon le modèle et la configuration, comme montré dans le Tableau~\ref{tab:gpu-memory}.
 
@@ -71,7 +71,7 @@ Combiné (entraînement) & GAT + embeddings sur GPU & 6--8 Go \\
 
 Les 8Go de VRAM du RTX 4070 sont suffisants pour toutes les expériences actuelles mais laissent une marge limitée pour des tailles de lot plus grandes ou des modèles plus complexes.
 
-\subsection{Temps d'Entraînement}
+\subsection{Temps d'entraînement}
 
 Le Tableau~\ref{tab:training-time} présente les estimations de temps d'entraînement pour différentes configurations sur l'ordinateur portable RTX 4070.
 
@@ -92,7 +92,7 @@ GAT (3 couches, 8 têtes) & 30--45 sec & 50--75 min \\
 
 L'expérience de base GCN (100 époques) se termine en environ 15--20 minutes sur le matériel disponible.
 
-\subsection{Temps de Génération des Embeddings}
+\subsection{Temps de génération des embeddings}
 
 Le Tableau~\ref{tab:embedding-time} présente le temps requis pour générer les embeddings de phrases.
 
@@ -113,7 +113,7 @@ SVD-Node2Vec (128-dim) & 2--5 min & CPU \\
 
 La génération d'embeddings BGE-M3 est un coût unique; les embeddings sont mis en cache pour les expériences subséquentes.
 
-\subsection{Consommation d'Énergie}
+\subsection{Consommation d'énergie}
 
 Le Tableau~\ref{tab:power-consumption} présente les estimations de consommation électrique.
 
@@ -136,7 +136,7 @@ Total & 160--200W (moy ~160W) & 15--20 min \\
 
 En supposant 20 exécutions d'entraînement complètes (exploration d'hyperparamètres, études d'ablation), la consommation d'énergie totale pour l'entraînement GNN est d'environ 1.2--2.0 kWh.
 
-\subsection{Ressources Humaines}
+\subsection{Ressources humaines}
 
 Le Tableau~\ref{tab:human-resources} présente l'effort humain estimé pour le projet.
 
@@ -165,7 +165,7 @@ Rédaction de rapports (tous mid-reports + final) & 80 heures \\
 
 Cette section présente les résultats expérimentaux initiaux obtenus à ce jour.
 
-\subsection{Analyse Structurelle du Graphe}
+\subsection{Analyse structurelle du graphe}
 
 Avant le développement du modèle, une analyse structurelle complète du graphe Custom-WikiCS a été réalisée (Report-4). Les principales conclusions sont résumées ci-dessous.
 
@@ -244,7 +244,7 @@ Distance Euclidienne  & 0.9181 & 0.1089 & 1.0600 & 0.0773 & $-0.1419$ \\
 \end{tabular}
 \end{table}
 
-\subsection{Résultats de Détection de Communautés}
+\subsection{Résultats de détection de communautés}
 
 La détection de communautés par les algorithmes Louvain et Infomap révèle des amas topiques cohérents significatifs dans le graphe (Figures~\ref{fig:louvain-communities} et \ref{fig:infomap-communities}, et Tableau~\ref{tab:community-results}).
 
@@ -304,7 +304,7 @@ Infomap & 0.5748 & 0.5480 & $+0.0268$ \\
 
 Les deux algorithmes confirment que le graphe possède une structure de communautés significative. Louvain produit un petit nombre de grandes communautés (moyenne $\approx$299 nœuds), tandis qu'Infomap trouve plusieurs communautés plus petites et plus fines (moyenne $\approx$43 nœuds). Malgré la différence de granularité, les deux algorithmes s'accordent sur la conclusion clé (décrite dans le Tableau~\ref{tab:sim-community}): les nœuds au sein de la même communauté partagent constamment une similarité cosinus plus élevée que les nœuds de communautés différentes, validant le partitionnement structurel.
 
-\subsection{Résultats de Prédiction de Liens GCN}
+\subsection{Résultats de prédiction de liens GCN}
 
 Les premières expériences GNN ont été conduites en utilisant un réseau convolutif sur graphes (GCN) comme base pour la tâche de prédiction de liens, telles que résumées dans le Tableau~\ref{tab:gcn-results}.
 
@@ -329,7 +329,7 @@ Le modèle GCN atteint rapidement une performance de validation forte dès l'ép
 
 Le Test AUC final de \textbf{0.8653} établit une base solide pour la tâche de prédiction de liens.
 
-\subsection{Résultats du Système de Recommandation}
+\subsection{Résultats du système de recommandation}
 
 Un système de recommandation basé sur le contenu combinant les embeddings BGE-M3 et Node2Vec basé sur SVD a été évalué sur 10 requêtes de sujets CS larges (Report-5), avec des exemples de résultats présentés dans le Tableau~\ref{tab:recommendation-results}.
 
@@ -357,7 +357,7 @@ Quantum Programming & Cloud-based Quantum Computing & 0.726 & Quantum \\
 
 *Note: Certaines requêtes (Adversarial ML, Brownout) retournent des articles de clusters topics adjacents en raison du signal structurel de Node2Vec.
 
-\subsection{Évaluation Quantitative}
+\subsection{Évaluation quantitative}
 
 Le Tableau~\ref{tab:quantitative-eval} présente l'évaluation quantitative du système de recommandation sur les arêtes de test réservées.
 

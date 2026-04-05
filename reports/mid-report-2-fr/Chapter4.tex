@@ -3,7 +3,7 @@
 
 \section{Conception conceptuelle}
 
-\subsection{Vue d'Ensemble de l'Architecture Système}
+\subsection{Vue d'ensemble de l'architecture système}
 
 Le système de recommandation proposé suit une architecture en pipeline à trois couches (voir Figure~\ref{fig:system-architecture}) qui transforme séquentiellement les données brutes de Wikipédia en parcours d'apprentissage exploitables. Chaque couche est conçue pour être modulaire, permettant une expérimentation indépendante et une extension future.
 
@@ -20,7 +20,7 @@ Le système de recommandation proposé suit une architecture en pipeline à troi
 
 \textbf{Couche 3 -- Recommandation et Présentation:} Étant donné une requête utilisateur, le système encode la requête avec le même modèle BGE-M3 et effectue une recherche de similarité dans l'espace d'embedding texte-structurel combiné. Les top-$k$ articles les plus similaires sont récupérés et passés à un LLM local pour générer un parcours d'apprentissage hiérarchique, qui est ensuite servi à l'utilisateur.
 
-\subsection{Diagramme de Flux de Données}
+\subsection{Diagramme de flux de données}
 
 La Figure~\ref{fig:data-flow} illustre le flux de données de bout en bout des données Wikipédia brutes à la sortie de recommandation finale. Le diagramme est structuré en deux pistes distinctes: une \textbf{piste hors ligne pré-calculée} (en haut) et une \textbf{piste en ligne au moment de la requête} (en bas).
 
@@ -48,7 +48,7 @@ La Figure~\ref{fig:data-flow} illustre le flux de données de bout en bout des d
     \item Les titres et métadonnées des articles sont passés à un LLM local, qui génère un parcours d'apprentissage hiérarchique et le retourne à l'utilisateur
 \end{enumerate}
 
-\subsection{Maquette d'Interface}
+\subsection{Maquette d'interface}
 
 La Figure~\ref{fig:mockup} présente une maquette de l'interface utilisateur attendue pour le système de recommandation.
 
@@ -66,7 +66,7 @@ L'interface suit une disposition à trois panneaux:
     \item \textbf{Panneau droit -- Feuille de Route:} Présente le parcours d'apprentissage hiérarchique généré par LLM sous forme d'arbre pliable (ex. Core Concepts $\to$ Language Fundamentals $\to$ Execution Models $\to$ Interpreters / Compilers $\to$ Advanced Topics), accompagné d'un suivi de progression.
 \end{itemize}
 
-\subsection{Storyboard: Parcours Utilisateur}
+\subsection{Storyboard: Parcours utilisateur}
 
 La Figure~\ref{fig:storyboard} illustre le parcours utilisateur en six étapes à travers le système de recommandation WikiPath.
 
@@ -88,7 +88,7 @@ La Figure~\ref{fig:storyboard} illustre le parcours utilisateur en six étapes �
 
 \section{Conception technique}
 
-\subsection{Diagramme de Composants UML}
+\subsection{Diagramme de composants UML}
 
 La Figure~\ref{fig:component-diagram} présente le diagramme de composants UML montrant les principaux modules logiciels et leurs interactions.
 
@@ -111,7 +111,7 @@ Le système est décomposé en six composants:
 \end{itemize}
 
 
-\subsection{Mécanisme d'Attention GAT}
+\subsection{Mécanisme d'attention GAT}
 
 Les Réseaux d'Attention sur Graphes (GAT)~\cite{velickovic2018graph} représentent une extension future planifiée du pipeline actuel. Alors que le système actuel utilise des embeddings combinés BGE-M3 et Node2Vec SVD pour les recommandations, le GAT sera étudié pour apprendre des représentations de nœuds enrichies en assistant sur le voisinage d'hyperliens. Le mécanisme d'attention procède comme suit:
 
@@ -161,7 +161,7 @@ Le projet utilise le dataset Custom-WikiCS, une version modifiée du dataset ben
     \item \textbf{Features supplémentaires:} Embeddings Node2Vec basés sur SVD de 128 dimensions
 \end{itemize}
 
-\subsection{Protocole d'Évaluation}
+\subsection{Protocole d'évaluation}
 
 La tâche de prédiction de liens suit le protocole d'évaluation standard:
 

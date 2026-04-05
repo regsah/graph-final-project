@@ -35,12 +35,12 @@ La contrainte économique a influencé les décisions de conception suivantes:
     \item Se concentrer sur des architectures de modèle efficaces tenant dans 8Go VRAM
 \end{itemize}
 
-\subsection{Environnement et Durabilité}
+\subsection{Environnement et durabilité}
 
 L'entraînement du deep learning est énergivore. Ce projet considère la durabilité environnementale à travers les mesures suivantes:
 
 \begin{itemize}
-    \item \textbf{Efficacité d'entraînement:} Tous les modèles GNN sont conçus pour converger en 100 époques, avec arrêt précoce pour éviter le calcul inutile. Une session d'entraînement typique consomme environ 0.05--0.10 kWh.
+    \item \textbf{Efficacité d'entraînement:} Tous les modèles GNN sont conçus pour converger en 100 époques, avec arrêt précoce pour éviter le calcul inutile. Une session d'entraînement typique consomme environ 0.06--0.10 kWh.
     \item \textbf{Expérimentation consciente de l'énergie:} Plutôt que de mener des recherches d'hyperparamètres à grande échelle, le projet emploie une expérimentation ciblée basée sur les conseils de la littérature et l'analyse des résultats initiaux.
     \item \textbf{Calcul local:} Exécuter les expériences sur matériel personnel plutôt que dans des centres de données cloud réduit l'empreinte carbone par expérience, au prix d'une itération plus lente.
 \end{itemize}
@@ -68,7 +68,7 @@ Cette contrainte a conduit aux considérations de conception suivantes:
     \item Le travail futur adresse explicitement l'évolutivité par partitionnement de graphe et entraînement distribué
 \end{itemize}
 
-\subsection{Faisabilité de Fabrication et Reproductibilité}
+\subsection{Faisabilité de fabrication et reproductibilité}
 
 \begin{itemize}
     \item \textbf{Dépendances logicielles:} Tout le code est versionné et utilise la gestion de paquets Python standard (requirements.txt). La conteneurisation Docker est planifiée pour le déploiement final afin d'assurer la reproductibilité.
@@ -87,7 +87,7 @@ Le projet adhère à des principes éthiques forts:
     \item \textbf{Hallucinations LLM:} L'utilisation des LLMs pour la génération de parcours hiérarchiques comporte le risque d'hallucinations factuelles. Ce risque est atténué en n'utilisant les LLMs que pour l'organisation de recommandations d'articles pré-vérifiées, pas pour la génération de contenu factuel.
 \end{itemize}
 
-\subsection{Santé et Sécurité}
+\subsection{Santé et sécurité}
 
 \begin{itemize}
     \item \textbf{Aucun risque physique:} Le projet implique uniquement le développement logiciel et le calcul; il n'y a aucun risque pour la santé physique.
@@ -102,7 +102,7 @@ Le projet adhère à des principes éthiques forts:
     \item \textbf{Sécurité du code:} Les pratiques standard de codage sécurisé sont suivies; aucune source de code externe d'origine inconnue n'est utilisée.
 \end{itemize}
 
-\subsection{Considérations Sociales et Politiques}
+\subsection{Considérations sociales et politiques}
 
 \begin{itemize}
     \item \textbf{Biais de langue:} L'implémentation actuelle se concentre sur les articles de Wikipédia anglais. Bien que BGE-M3 supporte plus de 100 langues, la qualité de recommandation pour les sujets non anglais n'a pas été évaluée. Le travail futur pourrait s'étendre à d'autres éditions linguistiques de Wikipédia.
@@ -120,7 +120,7 @@ Basé sur les contraintes identifiées ci-dessus, le projet est techniquement fa
 \label{tab:feasibility}
 \begin{tabular}{ll}
 \toprule
-\textbf{Contrainte} & \textbf{Réponse de Conception} \\
+\textbf{Contrainte} & \textbf{Réponse de conception} \\
 \midrule
 Économie & Matériel local, logiciels open-source, embeddings mis en cache \\
 Environnement & Entraînement efficace, arrêt précoce, expérimentation consciente de l'énergie \\
