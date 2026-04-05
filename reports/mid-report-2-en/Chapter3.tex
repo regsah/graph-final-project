@@ -12,7 +12,7 @@ This project addresses the above problem by developing a multimodal recommendati
     \item \textbf{Large Language Models (LLMs)} to organize recommended articles into hierarchical learning paths
 \end{itemize}
 
-The system treats Wikipedia's hyperlink structure as a directed graph where nodes represent articles and directed edges represent hyperlinks. Text and structural embeddings are concatenated per node and a degree-normalised popularity penalty is applied to prevent hub articles from dominating recommendations. Graph Attention Networks (GAT) are under active investigation as a planned extension to further enrich node representations.
+The system treats Wikipedia's hyperlink structure as a directed graph where nodes represent articles and directed edges represent hyperlinks. Text and structural embeddings are concatenated per node and a degree-normalised popularity penalty is applied to prevent hub articles from dominating recommendations. Graph Attention Networks (GAT)~\cite{velickovic2018graph} are under active investigation as a planned extension to further enrich node representations.
 
 \section{Realistic Constraints and Conditions}
 

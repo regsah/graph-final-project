@@ -13,7 +13,7 @@ The volume of encyclopedic resources such as Wikipedia has grown exponentially. 
 
 This project addresses the above problem by developing a multimodal recommendation system that combines:
 \begin{itemize}
-    \item \textbf{Graph Neural Networks (GNNs)} to learn structural relationships from Wikipedia's hyperlink structure
+    \item \textbf{Graph Neural Networks (GNNs)}~\cite{kipf2017semi,velickovic2018graph} to learn structural relationships from Wikipedia's hyperlink structure
     \item \textbf{Modern sentence embedding models} (BAAI/bge-m3 and Alibaba-NLP/gte-modernbert-base) to capture semantic content
     \item \textbf{Large Language Models (LLMs)} to organize recommended articles into hierarchical learning paths
 \end{itemize}
@@ -27,7 +27,7 @@ Since the first mid-report, the following milestones have been achieved:
 \begin{itemize}
     \item \textbf{Custom-WikiCS dataset construction:} The Wiki-CS benchmark graph topology was combined with modern sentence embeddings (BAAI/bge-m3, 1024-dim) to create the Custom-WikiCS dataset (11,367 nodes, 291,039 directed edges).
     \item \textbf{Comprehensive graph analysis:} Structural properties were analyzed including degree distribution (power-law, $\alpha \approx 3.0$), topic-link assortativity, community detection (Louvain modularity: 0.6504), and centrality measures (Report-4).
-    \item \textbf{GCN baseline experiments:} Initial link prediction experiments using Graph Convolutional Networks achieved Test AUC of 0.8407, with evidence of overfitting suggesting early stopping strategies are needed.
+    \item \textbf{GCN baseline experiments:} Initial link prediction experiments using Graph Convolutional Networks~\cite{kipf2017semi} achieved Test AUC of 0.8407, with evidence of overfitting suggesting early stopping strategies are needed.
     \item \textbf{Recommendation system development:} A content-based recommendation system combining BGE-M3 embeddings and SVD-based Node2Vec was evaluated, achieving Hits@10 = 11.49\% (134$\times$ above random baseline) on held-out test edges (Report-5).
 \end{itemize}
 
@@ -51,7 +51,7 @@ The project's original contributions, as identified in the first mid-report, rem
 
 \begin{itemize}
     \item \textbf{Combining modern text embeddings with graph structure:} Unlike WikiRecNet \cite{wikirecnet2020} which uses Doc2Vec, this project leverages contextual sentence embedding models (BAAI/bge-m3, gte-modernbert-base) with GNN architectures for stronger multimodal representations.
-    \item \textbf{Attention-based link weighting:} GAT's attention mechanism learns which hyperlinks carry the most semantic relevance, improving over standard GCN which treats all neighbors equally.
+    \item \textbf{Attention-based link weighting:} GAT's attention mechanism~\cite{velickovic2018graph} learns which hyperlinks carry the most semantic relevance, improving over standard GCN~\cite{kipf2017semi} which treats all neighbors equally.
     \item \textbf{LLM-supported hierarchical presentation:} Unlike flat recommendation lists, results are to be organized as conceptual learning paths via local LLM, providing users with a structured roadmap.
 \end{itemize}
 

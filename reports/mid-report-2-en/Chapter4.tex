@@ -113,7 +113,7 @@ The system is decomposed into six components:
 
 \subsection{GAT Attention Mechanism}
 
-Graph Attention Networks (GAT) represent a planned future extension of the current pipeline. While the current system uses concatenated BGE-M3 and SVD-based Node2Vec embeddings for recommendations, GAT will be investigated to learn enriched node representations by attending over the hyperlink neighbourhood. The attention mechanism proceeds as follows:
+Graph Attention Networks (GAT)~\cite{velickovic2018graph} represent a planned future extension of the current pipeline. While the current system uses concatenated BGE-M3 and SVD-based Node2Vec embeddings for recommendations, GAT will be investigated to learn enriched node representations by attending over the hyperlink neighbourhood. The attention mechanism proceeds as follows:
 
 \textbf{Step 1 -- Linear Transformation:} Each node is transformed by a shared learnable weight matrix $\mathbf{W} \in \mathbb{R}^{F' \times F}$:
 \[
@@ -151,7 +151,7 @@ For a $K$-head GAT layer, the outputs can be concatenated:
 
 \subsection{Dataset: Custom-WikiCS}
 
-The project uses the Custom-WikiCS dataset, a modified version of the Wiki-CS benchmark dataset~\cite{mernyei2020wikics}:
+The project uses the Custom-WikiCS dataset, a modified version of the Wiki-CS benchmark dataset~\cite{mernyei2020wikics} evaluated using GCN~\cite{kipf2017semi} and GAT~\cite{velickovic2018graph} architectures:
 
 \begin{itemize}
     \item \textbf{Nodes:} 11,367 Wikipedia CS articles (after removing 334 isolated nodes)
