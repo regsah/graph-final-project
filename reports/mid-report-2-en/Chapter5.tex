@@ -125,9 +125,9 @@ Table~\ref{tab:power-consumption} presents power consumption estimates.
 \toprule
 \textbf{Component} & \textbf{Power Draw} & \textbf{Duration (GCN training)} \\
 \midrule
-GPU (RTX 4070) & 300W (peak) / 150W (avg) & 15--20 min \\
-System (CPU, RAM, SSD) & 100W & 15--20 min \\
-Total & 200--400W (avg ~250W) & 15--20 min \\
+GPU (RTX 4070 Laptop) & 140W (peak) / 100W (avg) & 15--20 min \\
+System (CPU, RAM, SSD) & 60W & 15--20 min \\
+Total & 160--200W (avg ~160W) & 15--20 min \\
 \midrule
 \textbf{Energy per Run} & \multicolumn{2}{c}{0.06--0.10 kWh} \\
 \bottomrule
@@ -246,7 +246,7 @@ Euclidean Distance  & 0.9181 & 0.1089 & 1.0600 & 0.0773 & $-0.1419$ \\
 
 \subsection{Community Detection Results}
 
-Community detection using Louvain and Infomap algorithms reveals meaningful topical clusters in the graph.
+Community detection using Louvain and Infomap algorithms reveals meaningful topical clusters in the graph (Figures~\ref{fig:louvain-communities} and \ref{fig:infomap-communities}, and Table~\ref{tab:community-results}).
 
 \begin{figure}[H]
     \centering
@@ -302,11 +302,11 @@ Infomap & 0.5748 & 0.5480 & $+0.0268$ \\
 \end{tabular}
 \end{table}
 
-Both algorithms confirm that the graph possesses meaningful community structure. Louvain produces a small number of large communities (mean $\approx$299 nodes), while Infomap finds many smaller, finer-grained communities (mean $\approx$43 nodes). Despite the difference in granularity, both algorithms agree on the key finding: nodes within the same community share consistently higher cosine similarity than nodes in different communities, validating the structural partitioning.
+Both algorithms confirm that the graph possesses meaningful community structure. Louvain produces a small number of large communities (mean $\approx$299 nodes), while Infomap finds many smaller, finer-grained communities (mean $\approx$43 nodes). Despite the difference in granularity, both algorithms agree on the key finding (outlined in Table~\ref{tab:sim-community}): nodes within the same community share consistently higher cosine similarity than nodes in different communities, validating the structural partitioning.
 
 \subsection{GCN Baseline Link Prediction Results}
 
-The first GNN experiments were conducted using a Graph Convolutional Network (GCN) baseline for the link prediction task.
+The first GNN experiments were conducted using a Graph Convolutional Network (GCN) baseline for the link prediction task, as summarized in Table~\ref{tab:gcn-results}.
 
 \begin{table}[htbp]
 \centering
@@ -331,7 +331,7 @@ The final test AUC of \textbf{0.8653} establishes a solid baseline for the link 
 
 \subsection{Recommendation System Results}
 
-A content-based recommendation system combining BGE-M3 embeddings and SVD-based Node2Vec was evaluated on 10 broad CS topic queries (Report-5).
+A content-based recommendation system combining BGE-M3 embeddings and SVD-based Node2Vec was evaluated on 10 broad CS topic queries (Report-5), with sample results presented in Table~\ref{tab:recommendation-results}.
 
 \begin{table}[htbp]
 \centering

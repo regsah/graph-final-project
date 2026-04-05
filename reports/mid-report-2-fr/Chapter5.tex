@@ -51,7 +51,7 @@ Les données brutes du graphe WikiCS dominent l'empreinte de stockage à 202.2 M
 
 \subsection{Utilisation Mémoire GPU}
 
-Les exigences de mémoire GPU varient selon le modèle et la configuration, comme shown dans le Tableau~\ref{tab:gpu-memory}.
+Les exigences de mémoire GPU varient selon le modèle et la configuration, comme montré dans le Tableau~\ref{tab:gpu-memory}.
 
 \begin{table}[htbp]
 \centering
@@ -125,9 +125,9 @@ Le Tableau~\ref{tab:power-consumption} présente les estimations de consommation
 \toprule
 \textbf{Composant} & \textbf{Consommation} & \textbf{Durée (entraînement GCN)} \\
 \midrule
-GPU (RTX 4070) & 300W (pic) / 150W (moy) & 15--20 min \\
-Système (CPU, RAM, SSD) & 100W & 15--20 min \\
-Total & 200--400W (moy ~250W) & 15--20 min \\
+GPU (RTX 4070 Laptop) & 140W (pic) / 100W (moy) & 15--20 min \\
+Système (CPU, RAM, SSD) & 60W & 15--20 min \\
+Total & 160--200W (moy ~160W) & 15--20 min \\
 \midrule
 \textbf{Énergie par Exécution} & \multicolumn{2}{c}{0.06--0.10 kWh} \\
 \bottomrule
@@ -176,7 +176,7 @@ Avant le développement du modèle, une analyse structurelle complète du graphe
     \label{fig:degree-dist}
 \end{figure}
 
-La distribution des degrés (Figure~\ref{fig:degree-dist}) suit un patrón de loi de puissance, caractéristique des réseaux sans échelle. Le Tableau~\ref{tab:degree-stats} présente les statistiques des degrés.
+La distribution des degrés (Figure~\ref{fig:degree-dist}) suit un patron de loi de puissance, caractéristique des réseaux sans échelle. Le Tableau~\ref{tab:degree-stats} présente les statistiques des degrés.
 
 \begin{table}[htbp]
 \centering
@@ -209,7 +209,7 @@ La relation approximativement linéaire sur les axes log-log (Figure~\ref{fig:de
     \label{fig:cosine-assort}
 \end{figure}
 
-Une découverte importante est que les paires d'articles liées présentent une similarité cosinus plus élevée (moyenne: 0.5726) que les paires aléatoires (moyenne: 0.4352), comme shown dans la Figure~\ref{fig:cosine-assort}. Cela confirme que les hyperliens encodent des relations sémantiques entre articles.
+Une découverte importante est que les paires d'articles liées présentent une similarité cosinus plus élevée (moyenne: 0.5726) que les paires aléatoires (moyenne: 0.4352), comme montré dans la Figure~\ref{fig:cosine-assort}. Cela confirme que les hyperliens encodent des relations sémantiques entre articles.
 
 Les Figures~\ref{fig:pearson-assort} et~\ref{fig:euclidean-assort} présentent la même analyse en utilisant la corrélation de Pearson et la distance euclidienne, confirmant la découverte à travers les trois métriques.
 
@@ -246,7 +246,7 @@ Distance Euclidienne  & 0.9181 & 0.1089 & 1.0600 & 0.0773 & $-0.1419$ \\
 
 \subsection{Résultats de Détection de Communautés}
 
-La détection de communautés par les algorithmes Louvain et Infomap révèle des amas topiques cohérents significatifs dans le graphe.
+La détection de communautés par les algorithmes Louvain et Infomap révèle des amas topiques cohérents significatifs dans le graphe (Figures~\ref{fig:louvain-communities} et \ref{fig:infomap-communities}, et Tableau~\ref{tab:community-results}).
 
 \begin{figure}[H]
     \centering
@@ -302,11 +302,11 @@ Infomap & 0.5748 & 0.5480 & $+0.0268$ \\
 \end{tabular}
 \end{table}
 
-Les deux algorithmes confirment que le graphe possède une structure de communautés significative. Louvain produit un petit nombre de grandes communautés (moyenne $\approx$299 nœuds), tandis qu'Infomap trouve plusieurs communautés plus petites et plus fines (moyenne $\approx$43 nœuds). Malgré la différence de granularité, les deux algorithmes s'accordent sur la conclusion clé: les nœuds au sein de la même communauté partagent constamment une similarité cosinus plus élevée que les nœuds de communautés différentes, validant le partitionnement structurel.
+Les deux algorithmes confirment que le graphe possède une structure de communautés significative. Louvain produit un petit nombre de grandes communautés (moyenne $\approx$299 nœuds), tandis qu'Infomap trouve plusieurs communautés plus petites et plus fines (moyenne $\approx$43 nœuds). Malgré la différence de granularité, les deux algorithmes s'accordent sur la conclusion clé (décrite dans le Tableau~\ref{tab:sim-community}): les nœuds au sein de la même communauté partagent constamment une similarité cosinus plus élevée que les nœuds de communautés différentes, validant le partitionnement structurel.
 
 \subsection{Résultats de Prédiction de Liens GCN}
 
-Les premières expériences GNN ont été conduites en utilisant un réseau convolutif sur graphes (GCN) comme base pour la tâche de prédiction de liens.
+Les premières expériences GNN ont été conduites en utilisant un réseau convolutif sur graphes (GCN) comme base pour la tâche de prédiction de liens, telles que résumées dans le Tableau~\ref{tab:gcn-results}.
 
 \begin{table}[htbp]
 \centering
@@ -331,7 +331,7 @@ Le Test AUC final de \textbf{0.8653} établit une base solide pour la tâche de 
 
 \subsection{Résultats du Système de Recommandation}
 
-Un système de recommandation basé sur le contenu combinant les embeddings BGE-M3 et Node2Vec basé sur SVD a été évalué sur 10 requêtes de sujets CS larges (Report-5).
+Un système de recommandation basé sur le contenu combinant les embeddings BGE-M3 et Node2Vec basé sur SVD a été évalué sur 10 requêtes de sujets CS larges (Report-5), avec des exemples de résultats présentés dans le Tableau~\ref{tab:recommendation-results}.
 
 \begin{table}[htbp]
 \centering
@@ -359,7 +359,7 @@ Quantum Programming & Cloud-based Quantum Computing & 0.726 & Quantum \\
 
 \subsection{Évaluation Quantitative}
 
-Le Tableau~\ref{tab:quantitative-eval} présente l'évaluation quantitative du système de recommandation sur les arêtes de test withheld.
+Le Tableau~\ref{tab:quantitative-eval} présente l'évaluation quantitative du système de recommandation sur les arêtes de test réservées.
 
 \begin{table}[htbp]
 \centering

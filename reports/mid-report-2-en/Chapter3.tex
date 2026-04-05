@@ -40,7 +40,7 @@ The economic constraint has influenced the following design decisions:
 Deep learning training is energy-intensive. This project considers environmental sustainability through the following measures:
 
 \begin{itemize}
-    \item \textbf{Training efficiency:} All GNN models are designed to converge within 100 epochs, with early stopping to prevent unnecessary computation. A typical training run consumes approximately 0.15--0.25 kWh.
+    \item \textbf{Training efficiency:} All GNN models are designed to converge within 100 epochs, with early stopping to prevent unnecessary computation. A typical training run consumes approximately 0.05--0.10 kWh.
     \item \textbf{Energy-aware experimentation:} Rather than conducting large-scale hyperparameter grid searches, the project employs targeted experimentation based on literature guidance and analysis of initial results.
     \item \textbf{Local computation:} Running experiments on personal hardware rather than cloud data centers reduces the carbon footprint per experiment, albeit at the cost of slower iteration.
 \end{itemize}

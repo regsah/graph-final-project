@@ -26,7 +26,7 @@ Depuis le premier rapport intermédiaire, les étapes suivantes ont été réali
 
 \begin{itemize}
     \item \textbf{Construction du dataset Custom-WikiCS:} La topologie du graphe benchmark Wiki-CS a été combinée avec des embeddings de phrases modernes (BAAI/bge-m3, 1024-dim) pour créer le dataset Custom-WikiCS (11\,367 nœuds, 291\,039 arêtes dirigées).
-    \item \textbf{Analyse graphique complète:} Les propriétés structurelles ont été analysées incluant la distribution des degrés (loi de puissance, $\alpha \approx 3.0$), l'assortativité thème-lien, la détection de communautés (modularité Louvain: 0.6504) et les mesures de centralité (Report-4).
+    \item \textbf{Analyse graphique complète:} Les propriétés structurelles ont été analysées incluant la distribution des degrés (loi de puissance, $\alpha \approx 3.0$), l'assortativité thème-lien, la détection de communautés (modularité Louvain: 0.6476) et les mesures de centralité (Report-4).
     \item \textbf{Expériences de base GCN:} Les expériences initiales de prédiction de liens utilisant les Réseaux Convolutifs sur Graphes~\cite{kipf2017semi} ont atteint un AUC de test de 0.8407, avec des signes de surapprentissage suggérant la nécessité de stratégies d'arrêt précoce.
     \item \textbf{Développement du système de recommandation:} Un système de recommandation basé sur le contenu combinant les embeddings BGE-M3 et Node2Vec SVD a été évalué, atteignant Hits@10 = 11.49\% (134$\times$ au-dessus du hasard) sur les arêtes de test (Report-5).
 \end{itemize}

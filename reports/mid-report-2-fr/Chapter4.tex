@@ -5,7 +5,7 @@
 
 \subsection{Vue d'Ensemble de l'Architecture Système}
 
-Le système de recommandation proposé suit une architecture en pipeline à trois couches qui transforme séquentiellement les données brutes de Wikipédia en parcours d'apprentissage exploitables. Chaque couche est conçue pour être modulaire, permettant une expérimentation indépendante et une extension future.
+Le système de recommandation proposé suit une architecture en pipeline à trois couches (voir Figure~\ref{fig:system-architecture}) qui transforme séquentiellement les données brutes de Wikipédia en parcours d'apprentissage exploitables. Chaque couche est conçue pour être modulaire, permettant une expérimentation indépendante et une extension future.
 
 \begin{figure}[H]
     \centering
@@ -14,7 +14,7 @@ Le système de recommandation proposé suit une architecture en pipeline à troi
     \label{fig:system-architecture}
 \end{figure}
 
-\textbf{Couche 1 -- Préparation des Données:} La topologie du graphe WikiCS est chargée et enrichie avec le contenu textuel des articles fetched via l'API Wikipédia. Le Wiki Stem Corpus fournit des données textuelles supplémentaires pour les articles. Le graphe résultant contient 11\,367 nœuds (articles CS) et 291\,039 arêtes dirigées (hyperliens).
+\textbf{Couche 1 -- Préparation des Données:} La topologie du graphe WikiCS est chargée et enrichie avec le contenu textuel des articles récupéré via l'API Wikipédia. Le Wiki Stem Corpus fournit des données textuelles supplémentaires pour les articles. Le graphe résultant contient 11\,367 nœuds (articles CS) et 291\,039 arêtes dirigées (hyperliens).
 
 \textbf{Couche 2 -- Embedding:} Deux processus d'embedding parallèles sont appliqués à chaque nœud. (a) \textit{Embedding Textuel}: les textes des articles sont encodés en utilisant BAAI/bge-m3 en vecteurs denses de 1024 dimensions capturant le contenu sémantique. (b) \textit{Node2Vec (basé sur SVD)}: une approche de factorisation de matrice PPMI produit des embeddings structurels de 128 dimensions reflétant le contexte de voisinage et la position de chaque nœud dans le graphe. Les deux vecteurs sont concaténés pour former un embedding combiné de 1\,152 dimensions par nœud, avec une pénalité de popularité normalisée par le degré appliquée à la composante structurelle.
 

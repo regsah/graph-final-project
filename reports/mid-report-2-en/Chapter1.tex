@@ -26,7 +26,7 @@ Since the first mid-report, the following milestones have been achieved:
 
 \begin{itemize}
     \item \textbf{Custom-WikiCS dataset construction:} The Wiki-CS benchmark graph topology was combined with modern sentence embeddings (BAAI/bge-m3, 1024-dim) to create the Custom-WikiCS dataset (11,367 nodes, 291,039 directed edges).
-    \item \textbf{Comprehensive graph analysis:} Structural properties were analyzed including degree distribution (power-law, $\alpha \approx 3.0$), topic-link assortativity, community detection (Louvain modularity: 0.6504), and centrality measures (Report-4).
+    \item \textbf{Comprehensive graph analysis:} Structural properties were analyzed including degree distribution (power-law, $\alpha \approx 3.0$), topic-link assortativity, community detection (Louvain modularity: 0.6476), and centrality measures (Report-4).
     \item \textbf{GCN baseline experiments:} Initial link prediction experiments using Graph Convolutional Networks~\cite{kipf2017semi} achieved Test AUC of 0.8407, with evidence of overfitting suggesting early stopping strategies are needed.
     \item \textbf{Recommendation system development:} A content-based recommendation system combining BGE-M3 embeddings and SVD-based Node2Vec was evaluated, achieving Hits@10 = 11.49\% (134$\times$ above random baseline) on held-out test edges (Report-5).
 \end{itemize}
@@ -61,7 +61,7 @@ The expected outcomes of the project are:
 
 \begin{itemize}
     \item A multimodal recommendation system that predicts missing links in the Wikipedia hyperlink graph with AUC $>$ 0.85
-    \item A content-based recommendation system achievingHits@10 $>$ 15\% on held-out test edges
+    \item A content-based recommendation system achieving Hits@10 $>$ 15\% on held-out test edges
     \item A hierarchical learning path generator using an LLM (DeepSeek-R1 or equivalent)
 \end{itemize}
 
