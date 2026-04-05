@@ -37,17 +37,17 @@ The dataset sizes for the Custom-WikiCS collection are presented in Table~\ref{t
 \toprule
 \textbf{Component} & \textbf{Size} \\
 \midrule
-WikiCS raw data (PyG format) & 21.6 MB \\
-BGE-M3 embeddings (11,367 $\times$ 1024 $\times$ float32) & 46.6 MB \\
-Node2Vec embeddings (11,367 $\times$ 128 $\times$ float32) & 5.8 MB \\
-Combined embedding cache & 52.4 MB \\
+WikiCS raw data (PyG format) & 202.2 MB \\
+BGE-M3 embeddings (11,367 $\times$ 1024 $\times$ float32) & 21.3 MB \\
+Node2Vec embeddings (11,367 $\times$ 128 $\times$ float32) & 6.5 MB \\
+Combined embedding cache & 27.8 MB \\
 Adjacency matrix (sparse) & 8.2 MB \\
-Total cached data & $\approx$ 80 MB \\
+Total & \multicolumn{1}{r}{238.2 MB} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The embedding storage dominates the dataset size, accounting for approximately 65\% of total cached data. Pre-computing embeddings offline saves significant recomputation time.
+The raw WikiCS graph data dominates the storage footprint at 202.2 MB, while the combined embedding cache accounts for only 27.8 MB (~12\% of total). Pre-computing embeddings offline saves significant recomputation time.
 
 \subsection{GPU Memory Usage}
 
@@ -104,8 +104,8 @@ Table~\ref{tab:embedding-time} presents the time required for generating sentenc
 \toprule
 \textbf{Model} & \textbf{Time (11,367 articles)} & \textbf{Hardware} \\
 \midrule
-BAAI/bge-m3 (1024-dim) & 30--60 sec & RTX 4070 GPU \\
-mGTE-modernbert (768-dim) & 20--40 sec & RTX 4070 GPU \\
+BAAI/bge-m3 (1024-dim) & 30--60 min & RTX 4070 GPU \\
+mGTE-modernbert (768-dim) & 20--40 min & RTX 4070 GPU \\
 SVD-Node2Vec (128-dim) & 2--5 min & CPU \\
 \bottomrule
 \end{tabular}
