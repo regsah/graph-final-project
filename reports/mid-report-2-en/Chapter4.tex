@@ -18,7 +18,7 @@ The proposed recommendation system follows a three-layer pipeline architecture t
 
 \textbf{Layer 2 -- Embedding:} Two parallel embedding processes are applied to each node. (a) \textit{Text Embedding}: article texts are encoded using BAAI/bge-m3 into 1024-dimensional dense vectors capturing semantic content. (b) \textit{Node2Vec (SVD-based)}: a PPMI matrix factorisation approach produces 128-dimensional structural embeddings reflecting each node's neighbourhood context and graph position. The two vectors are concatenated to form a 1,152-dimensional combined embedding per node, with a degree-normalised popularity penalty applied to the structural component.
 
-\textbf{Layer 3 -- Recommendation and Presentation:} Given a user query, the system encodes the query with the same BGE-M3 model and computes cosine similarity against all pre-computed node embeddings. The top-$k$ most similar articles are retrieved and passed to a local LLM (DeepSeek-R1 via Ollama) to generate a hierarchical learning path, which is then served to the user.
+\textbf{Layer 3 -- Recommendation and Presentation:} Given a user query, the system encodes the query with the same BGE-M3 model and performs similarity search within the combined text-structural embedding space. The top-$k$ most similar articles are retrieved and passed to a local LLM to generate a hierarchical learning path, which is then served to the user.
 
 \subsection{Data Flow Diagram}
 
@@ -80,9 +80,9 @@ Figure~\ref{fig:storyboard} illustrates the six-step user journey through the Wi
 \begin{enumerate}
     \item \textbf{Query Entry:} The user submits a topic query via the search interface (e.g., ``Programming Languages'').
     \item \textbf{Query Encoding:} The query string is encoded into a dense vector using BAAI/bge-m3, producing a 1024-dimensional representation (e.g., $[0.12, -0.74, \ldots]$).
-    \item \textbf{Similarity Search:} Cosine similarity is computed between the query vector and all pre-cached degree-normalised node embeddings. The top-$k$ nearest nodes in the embedding space are identified.
+    \item \textbf{Similarity Search:} The encoded query vector is used to navigate the combined text-structural embedding space, identifying the most semantically relevant articles.
     \item \textbf{Candidate Ranking:} Retrieved articles are ranked by similarity score (e.g., Compilers: 0.98, Interpreters: 0.94, Paradigms: 0.91, \ldots).
-    \item \textbf{LLM Structuring} \textit{[planned]:} The ranked flat list is passed to a local LLM (DeepSeek-R1 via Ollama), which organises the articles into a hierarchical prerequisite structure.
+    \item \textbf{LLM Structuring} \textit{[planned]:} The ranked flat list is passed to a local LLM, which organises the articles into a hierarchical prerequisite structure.
     \item \textbf{Path Presentation} \textit{[planned]:} The final organised hierarchy is displayed to the user as a concept map (e.g., Core Concepts $\to$ Language Fundamentals $\to$ Execution Models $\to$ Compilers / Interpreters).
 \end{enumerate}
 
@@ -113,7 +113,7 @@ The system is decomposed into six components:
 
 \subsection{GAT Attention Mechanism}
 
-The Graph Attention Network (GAT) layer extends the standard graph convolution by computing attention coefficients that weigh the importance of each neighbor. Given node features $\mathbf{h} = \{\vec{h}_1, \vec{h}_2, \ldots, \vec{h}_N\}$ where $\vec{h}_i \in \mathbb{R}^F$, the attention mechanism proceeds as follows:
+Graph Attention Networks (GAT) represent a planned future extension of the current pipeline. While the current system uses concatenated BGE-M3 and SVD-based Node2Vec embeddings for recommendations, GAT will be investigated to learn enriched node representations by attending over the hyperlink neighbourhood. The attention mechanism proceeds as follows:
 
 \textbf{Step 1 -- Linear Transformation:} Each node is transformed by a shared learnable weight matrix $\mathbf{W} \in \mathbb{R}^{F' \times F}$:
 \[
@@ -146,57 +146,6 @@ For a $K$-head GAT layer, the outputs can be concatenated:
 \vec{h}_i^{(l+1)} = \bigparallel_{k=1}^K \sigma\!\left(\sum_{j \in \mathcal{N}_i} \alpha_{ij}^k \mathbf{W}^k \vec{h}_j^{(l)}\right)
 \]
 
-\subsection{Training Flowchart}
-
-Figure~\ref{fig:training-flow} presents the training procedure flowchart for the GNN-based link prediction model.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.65\textwidth]{figures/training-flowchart.pdf}
-    \caption{Training flowchart: GNN link prediction with positive/negative sampling.}
-    \label{fig:training-flow}
-\end{figure}
-
-The training procedure is as follows:
-
-\begin{enumerate}
-    \item Load the WikiCS dataset and split edges into train/validation/test sets
-    \item Initialize the GNN model (GAT or GCN) and optimizer (Adam, lr=0.01)
-    \item For each epoch:
-    \begin{enumerate}
-        \item Generate node embeddings via forward pass: $\mathbf{Z} = \text{GNN}(\mathbf{X}, \mathbf{A})$
-        \item Sample negative edges (random unconnected node pairs)
-        \item Compute link prediction scores via dot product decoder: $\hat{y}_{ij} = \sigma(\vec{z}_i^T \vec{z}_j)$
-        \item Compute Binary Cross-Entropy loss: $\mathcal{L} = \text{BCE}(\hat{y}, y)$
-        \item Backpropagate and update model parameters
-    \end{enumerate}
-    \item Evaluate on validation set every 10 epochs
-    \item Apply early stopping if validation AUC does not improve
-    \item Report final test AUC on held-out test edges
-\end{enumerate}
-
-\subsection{Inference Flowchart}
-
-Figure~\ref{fig:inference-flow} presents the inference procedure for generating article recommendations.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.6\textwidth]{figures/inference-flowchart.pdf}
-    \caption{Inference flowchart: query to top-k recommendations.}
-    \label{fig:inference-flow}
-\end{figure}
-
-The inference procedure is as follows:
-
-\begin{enumerate}
-    \item Receive user query string
-    \item Encode query using the same sentence embedding model: $\vec{q} = \text{Encode}(query)$
-    \item Compute cosine similarity between $\vec{q}$ and all node embeddings $\{\vec{z}_i\}$
-    \item Rank nodes by similarity score in descending order
-    \item Retrieve top-k article titles and metadata
-    \item (Optional) Pass top-k articles to LLM for hierarchical organization
-    \item Return structured recommendations to user
-\end{enumerate}
 
 \section{Experimental Methodology}
 

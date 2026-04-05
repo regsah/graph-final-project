@@ -167,7 +167,7 @@ This section presents the initial experimental results obtained to date.
 
 \subsection{Graph Structural Analysis}
 
-Prior to GNN training, a comprehensive structural analysis of the Custom-WikiCS graph was performed (Report-4). Key findings are summarized below.
+Prior to model development, a comprehensive structural analysis of the Custom-WikiCS graph was performed (Report-4). Key findings are summarized below.
 
 \begin{figure}[H]
     \centering
@@ -251,14 +251,14 @@ Community detection using Louvain and Infomap algorithms reveals meaningful topi
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\textwidth]{figures/community-size-distribution-louvain.png}
-    \caption{Louvain community size distribution (mean community size: 31.4 nodes).}
+    \caption{Louvain community size distribution (mean community size: 299.1 nodes).}
     \label{fig:louvain-communities}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\textwidth]{figures/community-size-distribution-infomap.png}
-    \caption{Infomap community size distribution (mean community size: 19.6 nodes).}
+    \caption{Infomap community size distribution (mean community size: 43.4 nodes).}
     \label{fig:infomap-communities}
 \end{figure}
 
@@ -270,10 +270,11 @@ Community detection using Louvain and Infomap algorithms reveals meaningful topi
 \toprule
 \textbf{Metric} & \textbf{Louvain} & \textbf{Infomap} \\
 \midrule
-Modularity             & 0.6504 & 0.5998 \\
-Number of communities  & 373    & 596    \\
-Max community size     & 1,971  & 837    \\
-Mean community size    & 31.37  & 19.63  \\
+Modularity             & 0.6476 & 0.5998 \\
+Number of communities  & 38     & 262    \\
+Max community size     & 2,040  & 837    \\
+Mean community size    & 299.13 & 43.39  \\
+Median community size  & 3      & 11     \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -295,13 +296,13 @@ To validate that detected communities correspond to semantically coherent groups
 \toprule
 \textbf{Algorithm} & \textbf{Intra-Community} & \textbf{Inter-Community} & \textbf{Difference} \\
 \midrule
-Louvain & 0.5795 & 0.5481 & $+0.0314$ \\
-Infomap & 0.5726 & 0.5481 & $+0.0245$ \\
+Louvain & 0.5729 & 0.5435 & $+0.0293$ \\
+Infomap & 0.5748 & 0.5480 & $+0.0268$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Both algorithms confirm that the graph possesses strong community structure with semantically coherent clusters. Nodes within the same community share consistently higher cosine similarity than nodes in different communities, validating the structural partitioning.
+Both algorithms confirm that the graph possesses meaningful community structure. Louvain produces a small number of large communities (mean $\approx$299 nodes), while Infomap finds many smaller, finer-grained communities (mean $\approx$43 nodes). Despite the difference in granularity, both algorithms agree on the key finding: nodes within the same community share consistently higher cosine similarity than nodes in different communities, validating the structural partitioning.
 
 \subsection{GCN Baseline Link Prediction Results}
 
@@ -309,25 +310,24 @@ The first GNN experiments were conducted using a Graph Convolutional Network (GC
 
 \begin{table}[htbp]
 \centering
-\caption{GCN training dynamics over epochs.}
+\caption{GCN training dynamics with early stopping.}
 \label{tab:gcn-results}
 \begin{tabular}{rrrr}
 \toprule
 \textbf{Epoch} & \textbf{Loss} & \textbf{Val AUC} & \textbf{Notes} \\
 \midrule
-10 & 0.619 & 0.887 & Best validation AUC \\
-20 & 0.596 & 0.871 & \\
-50 & 0.580 & 0.859 & Overfitting begins \\
-100 & 0.559 & 0.843 & Overfitted \\
+10 & 0.6356 & 0.8802 & \\
+20 & 0.6059 & 0.8780 & \\
+27 & --     & 0.8805 & Early stopped (Best Val AUC) \\
 \midrule
-\textbf{Test AUC (final)} & \multicolumn{3}{r}{\textbf{0.8407}} \\
+\textbf{Test AUC (final)} & \multicolumn{3}{r}{\textbf{0.8653}} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The GCN model rapidly achieves strong validation AUC (~0.887) by epoch 10, but subsequently overfits: the validation AUC decreases from 0.887 to 0.843 as training continues to epoch 100. This suggests that early stopping at epoch 10--20 would yield optimal results.
+The GCN model rapidly achieves strong validation performance by epoch 10. With early stopping implemented, the model halts training at epoch 27, preventing the severe overfitting observed in extended 100-epoch runs. This baseline achieves a final Test AUC of 0.8653, demonstrating that topological learning alone provides a strong starting point.
 
-The final test AUC of \textbf{0.8407} establishes a reasonable baseline for the link prediction task.
+The final test AUC of \textbf{0.8653} establishes a solid baseline for the link prediction task.
 
 \subsection{Recommendation System Results}
 
@@ -388,8 +388,7 @@ The results obtained to date demonstrate the feasibility of the proposed approac
 \begin{itemize}
     \item The Custom-WikiCS graph exhibits clear power-law degree distribution and meaningful community structure, confirming that Wikipedia's hyperlink structure encodes topical relationships
     \item Linked article pairs are significantly more similar (cosine: 0.5726 vs. 0.4352 random), validating the hypothesis that hyperlinks correlate with semantic similarity
-    \item The GCN baseline achieves Test AUC = 0.8407, establishing a solid baseline for link prediction
-    \item Early stopping is essential: the GCN overfits after epoch 10, suggesting regularization or architectural improvements are needed
+    \item The GCN baseline achieves Test AUC = 0.8653 with early stopping, establishing a solid baseline for link prediction
     \item The recommendation system achieves 134$\times$ above random baseline, confirming that combined embeddings capture both semantic and structural signals
 \end{itemize}
 
