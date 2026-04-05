@@ -1,18 +1,72 @@
 \chapter{INTRODUCTION}
-\thispagestyle{empty} % pour effacer le numero de page
+\thispagestyle{empty}
 
-Galatasaray Üniversitesi Mühendislik ve Teknoloji Fakültesi Bilgisayar Mühendisliği Bölümü’nde bitirme projeleri, bu kılavuzda belirtilen içerik ve biçimsel özellikler dikkate alınarak hazırlanmalıdır. 
+\section{Titre du projet}
 
-Bitirme projeleri, beyaz karton kapak ciltli olarak (spiral cilt kabul edilmez), dönemin son günü mesai saati bitimine kadar Fakülte Öğrenci İşlerine teslim edilmelidir.
+\textbf{En français :} Recommandation d'articles Wikipédia par réseaux de neurones sur graphes
 
-Genel olarak bir projede yer alması gereken başlıklar aşağıda sunulmuştur, belirlenen proje konusunun içeriğine göre bu başlıklar değişebilir:
+\textbf{En turc :} Graf Sinir Ağları ile Vikipedi Makale Önerisi
 
-$-$ Introduction \\
-$-$ Revue de Littérature \\
-$-$ Définition de Problème \\
-$-$ Méthodologies et Modèles \\
-$-$ Application Numériques \\
-$-$ Analyse des Résultats Obtenue et Discussions \\
-$-$ Conclusions et Perspectives
+\section{Sujet du projet}
 
-Projenin Introduction (Giriş) bölümü en az 2-3 sayfa olmalıdır. Türkçe özet bölümünde ifade edilen, bitirme projesinin amacı, özgün değeri, kullanılan yöntem(ler)in ana hatları, çalışmanın tasarım ve uygulaması ile elde edilen çıktıların bilimsel, teknolojik, etik ve sosyoekonomik ne tür katkılarda bulunabileceği hususları ayrı paragraflar halinde net cümlelerle verilmelidir. En son paragrafta ise çalışma planı detaylı olarak verilmelidir.
+Le volume des ressources encyclopédiques telles que Wikipédia a crû de manière exponentielle. Pour les utilisateurs, le défi fondamental n'est plus l'accès à l'information mais plutôt la construction d'un parcours d'apprentissage optimal à travers des articles conceptuellement liés. Les moteurs de recherche et systèmes de recommandation traditionnels s'appuient généralement sur la correspondance de mots-clés ou le filtrage collaboratif, ce qui ne permet pas de capturer les relations hiérarchiques et sémantiques entre concepts --- par exemple, comprendre le ``Deep Learning'' nécessite des connaissances préalables en ``Linear Algebra'' et ``Probability Theory''.
+
+Ce projet aborde ce problème en développant un système de recommandation multimodal combinant:
+\begin{itemize}
+    \item \textbf{Les réseaux de neurones sur graphes (GNNs)}~\cite{kipf2017semi,velickovic2018graph} pour apprendre les relations structurelles à partir de la structure d'hyperliens de Wikipédia
+    \item \textbf{Les modèles d'embedding de phrases modernes} (BAAI/bge-m3 et Alibaba-NLP/gte-modernbert-base) pour capturer le contenu sémantique
+    \item \textbf{Les grands modèles de langage (LLMs)} pour organiser les articles recommandés en parcours d'apprentissage hiérarchiques
+\end{itemize}
+
+Le périmètre du projet se limite à un prototype de système de recommandation fonctionnant sur des articles de Wikipédia en anglais dans le domaine de l'informatique. Le support multilingue, le suivi d'interactions utilisateur en temps réel et l'architecture de service de production sont hors du périmètre de ce travail.
+
+\section{Progrès depuis le Premier Rapport Intermédiaire}
+
+Depuis le premier rapport intermédiaire, les étapes suivantes ont été réalisées:
+
+\begin{itemize}
+    \item \textbf{Construction du dataset Custom-WikiCS:} La topologie du graphe benchmark Wiki-CS a été combinée avec des embeddings de phrases modernes (BAAI/bge-m3, 1024-dim) pour créer le dataset Custom-WikiCS (11\,367 nœuds, 291\,039 arêtes dirigées).
+    \item \textbf{Analyse graphique complète:} Les propriétés structurelles ont été analysées incluant la distribution des degrés (loi de puissance, $\alpha \approx 3.0$), l'assortativité thème-lien, la détection de communautés (modularité Louvain: 0.6504) et les mesures de centralité (Report-4).
+    \item \textbf{Expériences de base GCN:} Les expériences initiales de prédiction de liens utilisant les Réseaux Convolutifs sur Graphes~\cite{kipf2017semi} ont atteint un AUC de test de 0.8407, avec des signes de surapprentissage suggérant la nécessité de stratégies d'arrêt précoce.
+    \item \textbf{Développement du système de recommandation:} Un système de recommandation basé sur le contenu combinant les embeddings BGE-M3 et Node2Vec SVD a été évalué, atteignant Hits@10 = 11.49\% (134$\times$ au-dessus du hasard) sur les arêtes de test (Report-5).
+\end{itemize}
+
+\section{Objectifs du projet}
+
+L'objectif principal reste le développement d'un système de recommandation multimodal qui, étant donné une requête utilisateur, retourne des articles Wikipedia sémantiquement liés organisés en parcours d'apprentissage hiérarchique.
+
+Les objectifs spécifiques et leur statut actuel sont:
+
+\begin{itemize}
+    \item \textbf{Modélisation par graphe:} Structure d'hyperliens de Wikipédia modélisée en tant que graphe --- \textit{Complété}
+    \item \textbf{Embedding textuel:} Articles encodés en utilisant BAAI/bge-m3 et gte-modernbert-base --- \textit{Complété}
+    \item \textbf{Apprentissage GNN:} Embeddings de nœuds basés sur GAT combinant texte et structure --- \textit{En cours (base GCN complétée, GAT en attente)}
+    \item \textbf{Recommandation:} Récupération des top-$k$ articles via similarité cosinus --- \textit{Complété (base)}
+    \item \textbf{Présentation hiérarchique par LLM:} Organisation du parcours d'apprentissage via LLM local --- \textit{Planifié pour Phase 3}
+\end{itemize}
+
+\section{Valeur originale du projet}
+
+Les contributions originales du projet, identifiées dans le premier rapport intermédiaire, restent valides:
+
+\begin{itemize}
+    \item \textbf{Combinaison d'embeddings de texte modernes avec la structure de graphe:} Contrairement à WikiRecNet \cite{wikirecnet2020} qui utilise Doc2Vec, ce projet exploite des modèles d'embedding de phrases contextuels (BAAI/bge-m3, gte-modernbert-base) avec des architectures GNN pour des représentations multimodales plus fortes.
+    \item \textbf{Pondération des liens par attention:} Le mécanisme d'attention du GAT~\cite{velickovic2018graph} apprend quels hyperliens portent la plus grande pertinence sémantique, améliorant le GCN standard~\cite{kipf2017semi} qui traite tous les voisins de manière égale.
+    \item \textbf{Présentation hiérarchique assistée par LLM:} Contrairement aux listes de recommandation plates, les résultats seront organisés en parcours d'apprentissage conceptuels via un LLM local, fournissant aux utilisateurs une feuille de route structurée.
+\end{itemize}
+
+\section{Contribution sociale du projet}
+
+Les contributions sociales de ce projet sont abordées ci-dessous selon leurs dimensions scientifique, technologique et socio-économique.
+
+\textbf{Contribution scientifique et technologique :}
+Le projet contribue directement au domaine des systèmes de recommandation sur les graphes en proposant un cadre combinant les réseaux de neurones sur graphes avec des modèles de langage basés sur Transformer dans le contexte de Wikipédia. Les résultats obtenus et les analyses comparatives serviront de référence pour les chercheurs dans ce domaine.
+
+\textbf{Accès à l'éducation et démocratisation du savoir :}
+Wikipédia est l'une des plus grandes sources d'information gratuitement accessibles dans le monde. Ce projet vise à faciliter les processus d'auto-apprentissage en proposant aux utilisateurs un parcours d'apprentissage conceptuel, contribuant ainsi à réduire les inégalités d'accès au savoir.
+
+\textbf{Durabilité :}
+Le projet est entièrement construit sur des données ouvertes et gratuites (Wikipédia). Les méthodes développées sont de nature à pouvoir être adaptées aux versions de Wikipédia dans différentes langues ou à d'autres bases de connaissances ouvertes, sans dépendance à une infrastructure commerciale.
+
+\textbf{Dimension éthique :}
+Le système est conçu pour fonctionner exclusivement sur la base de requêtes, sans nécessiter de profilage utilisateur ni de collecte de données personnelles. Cette approche vise à offrir un système de recommandation éthiquement sûr en préservant la vie privée des utilisateurs.

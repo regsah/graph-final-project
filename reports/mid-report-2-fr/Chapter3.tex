@@ -1,7 +1,133 @@
-\chapter{DEFINITION DU PROBLEME}
+\chapter{DÉFINITION DU PROBLÈME}
 \thispagestyle{empty}
 
-Bu bir şablondur, başlıklar duruma göre değişebilir.
+\section{Contexte du projet et définition du problème}
 
+Wikipédia représente l'un des plus grands dépôts de connaissances librement accessibles au monde, contenant des millions d'articles interconnectés par des hyperliens. Pour un apprenant naviguant dans ce graphe de connaissances, le défi fondamental n'est pas l'accès à l'information mais plutôt la construction d'un parcours d'apprentissage optimal à travers des articles conceptuellement liés. Les moteurs de recherche et systèmes de recommandation traditionnels s'appuient généralement sur la correspondance de mots-clés ou le filtrage collaboratif, ce qui ne permet pas de capturer les relations hiérarchiques et sémantiques entre concepts --- par exemple, comprendre le ``Deep Learning'' nécessite des connaissances préalables en ``Linear Algebra'' et ``Probability Theory''.
 
-\lipsum[1-5]
+Ce projet aborde ce problème en développant un système de recommandation multimodal combinant:
+\begin{itemize}
+    \item \textbf{Les modèles d'embedding de phrases modernes} (BAAI/bge-m3) pour capturer le contenu sémantique des textes d'articles sous forme de vecteurs denses de haute dimension
+    \item \textbf{Les embeddings structurels de graphe} (Node2Vec basé sur SVD via factorisation de matrice PPMI) pour encoder le contexte de voisinage et la position de chaque article dans le graphe d'hyperliens
+    \item \textbf{Les grands modèles de langage (LLMs)} pour organiser les articles recommandés en parcours d'apprentissage hiérarchiques
+\end{itemize}
+
+Le système traite la structure d'hyperliens de Wikipédia comme un graphe dirigé où les nœuds représentent les articles et les arêtes dirigées représentent les hyperliens. Les embeddings textuels et structurels sont concaténés par nœud et une pénalité de popularité normalisée par le degré est appliquée pour empêcher les articles hubs de dominer les recommandations. Les Réseaux d'Attention sur Graphes (GAT)~\cite{velickovic2018graph} sont sous investigation active comme extension future pour enrichir davantage les représentations des nœuds.
+
+\section{Contraintes et conditions réelles}
+
+Les contraintes et conditions suivantes ont été systématiquement identifiées et prises en compte tout au long de la conception technique de ce projet.
+
+\subsection{Économie}
+
+Le projet fonctionne sous un budget contraint typique des environnements de recherche académique:
+
+\begin{itemize}
+    \item \textbf{Coûts matériels:} Toutes les expériences sont menées sur un ordinateur portable personnel (ASUS ROG avec RTX 4070, 8Go VRAM) plutôt que sur des instances GPU cloud. Les coûts de calcul cloud pour des expériences comparables (ex. AWS p3.2xlarge à \$3.06/heure) seraient prohibitifs pour le développement itératif.
+    \item \textbf{Coûts logiciels:} Tous les outils logiciels utilisés sont open-source et gratuits: PyTorch, PyTorch Geometric, HuggingFace Transformers, NetworkX et Ollama pour l'inférence LLM locale.
+    \item \textbf{Coûts des données:} Le dataset Wikipédia est publiquement disponible sans frais. Aucun dataset propriétaire n'est requis.
+\end{itemize}
+
+La contrainte économique a influencé les décisions de conception suivantes:
+\begin{itemize}
+    \item Pré-calculer et mettre en cache tous les embeddings hors ligne plutôt que d'utiliser des appels API cloud
+    \item Utiliser l'inférence LLM locale (Ollama) au lieu de services API payants (OpenAI, Anthropic)
+    \item Se concentrer sur des architectures de modèle efficaces tenant dans 8Go VRAM
+\end{itemize}
+
+\subsection{Environnement et Durabilité}
+
+L'entraînement du deep learning est énergivore. Ce projet considère la durabilité environnementale à travers les mesures suivantes:
+
+\begin{itemize}
+    \item \textbf{Efficacité d'entraînement:} Tous les modèles GNN sont conçus pour converger en 100 époques, avec arrêt précoce pour éviter le calcul inutile. Une session d'entraînement typique consomme environ 0.15--0.25 kWh.
+    \item \textbf{Expérimentation consciente de l'énergie:} Plutôt que de mener des recherches d'hyperparamètres à grande échelle, le projet emploie une expérimentation ciblée basée sur les conseils de la littérature et l'analyse des résultats initiaux.
+    \item \textbf{Calcul local:} Exécuter les expériences sur matériel personnel plutôt que dans des centres de données cloud réduit l'empreinte carbone par expérience, au prix d'une itération plus lente.
+\end{itemize}
+
+La consommation totale d'énergie estimée pour le projet (enquête littéraire, construction du dataset, génération d'embeddings, entraînement GNN et évaluation) est d'environ 50--100 kWh, comparable à un seul vol transatlantique.
+
+\subsection{Évolutivité}
+
+Une contrainte critique est l'évolutivité de l'approche proposée:
+
+\begin{itemize}
+    \item \textbf{Échelle actuelle:} Le dataset Custom-WikiCS contient 11\,367 nœuds et 291\,039 arêtes dirigées, représentant un sous-ensemble nettoyé des articles d'informatique de Wikipédia anglais.
+    \item \textbf{Échelle Wikipédia complète:} Wikipédia anglais complet contient plus de 6 millions d'articles et des centaines de millions d'hyperliens. Entraîner un GNN complet sur ce graphe nécessiterait:
+    \begin{itemize}
+        \item Mémoire GPU dépassant 100 Go pour stocker la matrice d'adjacence et les embeddings
+        \item Temps d'entraînement mesurés en jours à semaines plutôt qu'en minutes
+        \item Complexité mémoire potentielle O($N^2$) pour le mécanisme d'attention du GAT
+    \end{itemize}
+    \item \textbf{Stratégies d'échantillonnage:} Pour un déploiement à grande échelle, des techniques d'échantillonnage de graphe (ex. GraphSAINT, ClusterGCN) seraient nécessaires pour traiter le graphe en mini-lots.
+\end{itemize}
+
+Cette contrainte a conduit aux considérations de conception suivantes:
+\begin{itemize}
+    \item Le projet se concentre explicitement sur le sous-domaine informatique pour garder la taille du graphe gérable
+    \item Le travail futur adresse explicitement l'évolutivité par partitionnement de graphe et entraînement distribué
+\end{itemize}
+
+\subsection{Faisabilité de Fabrication et Reproductibilité}
+
+\begin{itemize}
+    \item \textbf{Dépendances logicielles:} Tout le code est versionné et utilise la gestion de paquets Python standard (requirements.txt). La conteneurisation Docker est planifiée pour le déploiement final afin d'assurer la reproductibilité.
+    \item \textbf{Contrôle de graine aléatoire:} Toutes les expériences utilisent des graines aléatoires fixes (ex. seed=42) pour assurer la reproductibilité entre les exécutions.
+    \item \textbf{Versioning des données:} Le dataset Custom-WikiCS est stocké comme un artefact statique (WikiCS\_data.pt) avec des étapes de prétraitement documentées.
+\end{itemize}
+
+\subsection{Éthique}
+
+Le projet adhère à des principes éthiques forts:
+
+\begin{itemize}
+    \item \textbf{Vie privée:} Le système est entièrement basé sur les requêtes et ne collecte, ne stocke ni ne traite aucune donnée utilisateur personnelle. Aucun profilage utilisateur, suivi comportemental ou cookie n'est utilisé.
+    \item \textbf{Transparence:} La logique de recommandation est basée sur la similarité cosinus des embeddings pré-calculés, fournissant un signal de recommandation clair et auditable. Les futures extensions basées sur GAT offriront une interprétabilité supplémentaire via les poids d'attention.
+    \item \textbf{Connaissance libre:} Le système fonctionne sur des données Wikipédia ouvertes, promouvant un accès démocratisé à la connaissance.
+    \item \textbf{Hallucinations LLM:} L'utilisation des LLMs pour la génération de parcours hiérarchiques comporte le risque d'hallucinations factuelles. Ce risque est atténué en n'utilisant les LLMs que pour l'organisation de recommandations d'articles pré-vérifiées, pas pour la génération de contenu factuel.
+\end{itemize}
+
+\subsection{Santé et Sécurité}
+
+\begin{itemize}
+    \item \textbf{Aucun risque physique:} Le projet implique uniquement le développement logiciel et le calcul; il n'y a aucun risque pour la santé physique.
+    \item \textbf{Ergonomie:} Les sessions d'entraînement GPU prolongées génèrent de la chaleur et du bruit. L'ordinateur portable est utilisé avec une ventilation adéquate et des durées de session raisonnables.
+\end{itemize}
+
+\subsection{Sécurité}
+
+\begin{itemize}
+    \item \textbf{Aucune donnée sensible:} Le projet n'implique aucune donnée personnelle sensible, information financière ou système critique pour la sécurité.
+    \item \textbf{Déploiement LLM local:} Utiliser Ollama pour l'inférence LLM locale assure qu'aucune donnée n'est transmise à des serveurs externes, éliminant les vecteurs d'attaque basés sur le réseau.
+    \item \textbf{Sécurité du code:} Les pratiques standard de codage sécurisé sont suivies; aucune source de code externe d'origine inconnue n'est utilisée.
+\end{itemize}
+
+\subsection{Considérations Sociales et Politiques}
+
+\begin{itemize}
+    \item \textbf{Biais de langue:} L'implémentation actuelle se concentre sur les articles de Wikipédia anglais. Bien que BGE-M3 supporte plus de 100 langues, la qualité de recommandation pour les sujets non anglais n'a pas été évaluée. Le travail futur pourrait s'étendre à d'autres éditions linguistiques de Wikipédia.
+    \item \textbf{Biais de représentation des connaissances:} La structure d'hyperliens de Wikipédia reflète les décisions éditoriales de millions de contributeurs, embed potentially embedding des biais systémiques (ex. sur-représentation de certains sujets, biais de genre dans la couverture des articles).
+    \item \textbf{Équité d'accès:} En s'appuyant sur des données Wikipédia librement disponibles et des outils open-source, le projet promeut l'accès équitable à la technologie éducative.
+\end{itemize}
+
+\section{Résumé de faisabilité technique}
+
+Basé sur les contraintes identifiées ci-dessus, le projet est techniquement faisable dans l'environnement donné. Le Tableau~\ref{tab:feasibility} résume l'alignement entre les contraintes et les décisions de conception.
+
+\begin{table}[htbp]
+\centering
+\caption{Matrice de conformité aux contraintes.}
+\label{tab:feasibility}
+\begin{tabular}{ll}
+\toprule
+\textbf{Contrainte} & \textbf{Réponse de Conception} \\
+\midrule
+Économie & Matériel local, logiciels open-source, embeddings mis en cache \\
+Environnement & Entraînement efficace, arrêt précoce, expérimentation consciente de l'énergie \\
+Évolutivité & Domaines focalisés (CS uniquement), stratégies d'échantillonnage planifiées \\
+Éthique \& Interprétabilité & Basé sur requêtes uniquement, pas de profilage, recommandations auditable par similarité \\
+Sécurité & Aucune donnée sensible, inférence LLM locale \\
+Social & Données ouvertes, modèles d'embedding multilingues disponibles \\
+\bottomrule
+\end{tabular}
+\end{table}
