@@ -1,0 +1,110 @@
+\chapter{Annexes} 
+\thispagestyle{empty}
+
+Un exemple de Figure
+\begin{figure}[htbp]
+\centering
+ \includegraphics[width=0.75\linewidth]{figures/lena.jpg}
+  \caption*{Toujours Lena}
+  \label{fig:annex1}
+\end{figure}
+
+Plusieurs exemples pour les Tableaux
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|r|l|}
+  \hline
+  7C0 & hexadecimal \\
+  3700 & octal \\ \cline{2-2}
+  11111000000 & binary \\
+  \hline \hline
+  1984 & decimal \\
+  \hline
+ \end{tabular}
+ \caption*{Exemple de Tableau}
+\end{table}
+
+\begin{table}[!t]
+\centering
+    \begin{tabular}{ | l | l | l | p{6cm} |}
+    \hline
+    Day & Min Temp & Max Temp & Summary \\ \hline
+    Monday & 11C & 22C & A clear day with lots of sunshine.  
+    However, the strong breeze will bring down the temperatures. \\ \hline
+    Tuesday & 9C & 19C & Cloudy with rain, across many northern regions. Clear spells 
+    across most of Scotland and Northern Ireland, 
+    but rain reaching the far northwest. \\ \hline
+    Wednesday & 10C & 21C & Rain will still linger for the morning. 
+    Conditions will improve by early afternoon and continue 
+    throughout the evening. \\
+    \hline
+    \end{tabular}
+    \caption*{Un Autre Exemple de Tableau}
+    \end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ |l|l| }
+  \hline
+  \multicolumn{2}{|c|}{Team sheet} \\
+  \hline
+  GK & Paul Robinson \\
+  LB & Lucas Radebe \\
+  DC & Michael Duberry \\
+  DC & Dominic Matteo \\
+  RB & Dider Domi \\
+  MC & David Batty \\
+  MC & Eirik Bakke \\
+  MC & Jody Morris \\
+  FW & Jamie McMaster \\
+  ST & Alan Smith \\
+  ST & Mark Viduka \\
+  \hline
+\end{tabular}
+\caption*{Un Autre Exemple avec Multi-colonnes}
+\end{table}
+
+\clearpage
+
+Exemple de pseudo-code
+\begin{algorithm}[htbp]
+\KwData{this text}
+\KwResult{how to write algorithm with \LaTeX2e }
+initialization\;
+\While{not at end of this document}{
+read current\;
+\eIf{understand}{
+go to next section\;
+current section becomes this one\;
+}{
+go back to the beginning of current section\;
+}
+}
+\caption{Comment écrire des pseudo-codes}
+\end{algorithm}
+
+\clearpage
+
+Exemple de code avec le paquet fancyvrb
+\begin{Verbatim}[frame=single]
+/* Hello World program */
+
+#include<stdio.h>
+
+main(){
+    printf("Hello World");
+}
+\end{Verbatim}
+
+Exemple de code avec le paquet listings
+
+\vspace{18pt}
+\begin{lstlisting}[language={C++},basicstyle={\small\ttfamily},showstringspaces=false,tabsize=5,frame=single]
+/* Hello World program */
+
+#include<stdio.h>
+
+main(){
+    printf("Hello World");
+}
+\end{lstlisting}
