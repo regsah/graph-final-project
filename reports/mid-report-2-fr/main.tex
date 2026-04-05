@@ -35,16 +35,16 @@
 
 % Pour changer les noms par défauts
 \AtBeginDocument{
-	renewcommand\contentsname{Table des Matières}
-    renewcommand\nomname{Liste des Notations}
-	renewcommand\listfigurename{Liste des Figures}
-	renewcommand\listtablename{Liste des Tableaux}
-    renewcommand\bibname{Bibliographie}
+	\renewcommand\contentsname{Table des Matières}
+    \renewcommand\nomname{Liste des Notations}
+	\renewcommand\listfigurename{Liste des Figures}
+	\renewcommand\listtablename{Liste des Tableaux}
+    \renewcommand\bibname{Bibliographie}
 }
 \setlength\parindent{0pt} % Pas d'espace au debut de paragraphe
 
 % Pour les titres de niveau 4
-\countersecnumdepth{4}
+\setcounter{secnumdepth}{4}
 
 % Pour la taille des fonts dans les section-subsection-subsubsection
 \titleformat{\section}
@@ -55,30 +55,30 @@
   {\normalfont\fontsize{12}{15}}{\thesubsubsection}{1em}{}
 
 % Pour les chapitres
-renewcommand\cftchapdotsep{\cftdotsep}
-renewcommand\cftchapnumwidth{3em}
-renewcommand\cftsecindent{3em}
-renewcommand\thechapter{\arabic{chapter}}
-renewcommand\thesection{\arabic{chapter}.\arabic{section}}
+\renewcommand\cftchapdotsep{\cftdotsep}
+\renewcommand\cftchapnumwidth{3em}
+\renewcommand\cftsecindent{3em}
+\renewcommand\thechapter{\arabic{chapter}}
+\renewcommand\thesection{\arabic{chapter}.\arabic{section}}
 
 % Pour numéroter les équations
-renewcommand{\theequation}{\arabic{equation}}
+\renewcommand{\theequation}{\arabic{equation}}
 
 % TOC - Table des matières
-\settocdepth{4}
+\setcounter{tocdepth}{4}
 \setlength{\cftbeforetoctitleskip}{-3em}
 \setlength{\cftaftertoctitleskip}{12pt}
-renewcommand\cfttoctitlefont{\large\bf}
+\renewcommand\cfttoctitlefont{\large\bf}
 
 % LOF - Liste des figures
 \setlength{\cftbeforeloftitleskip}{-3em}
 \setlength{\cftafterloftitleskip}{12pt}
-renewcommand\cftloftitlefont{\large\bf}
+\renewcommand\cftloftitlefont{\large\bf}
 
 % LOT - Liste des tableaux
 \setlength{\cftbeforelottitleskip}{-3em}
 \setlength{\cftafterlottitleskip}{12pt}
-renewcommand\cftlottitlefont{\large\bf}
+\renewcommand\cftlottitlefont{\large\bf}
 
 % Les espaces et les fonts des titres
 \setlength{\parskip}{12pt plus 1pt minus 1pt}
@@ -89,7 +89,7 @@ renewcommand\cftlottitlefont{\large\bf}
 \titleformat{\chapter}{\normalfont\large\bf}{\thechapter}{14pt}{\large\bf}
 
 % Définition du symbole de concaténation pour les équations GAT (chapitre 4)
-newcommand{\bigparallel}{\mathop{\big\|}}
+\newcommand{\bigparallel}{\mathop{\big\|}}
 
 \begin{document}
 \input{titlepage}
@@ -105,8 +105,8 @@ newcommand{\bigparallel}{\mathop{\big\|}}
 
 % pour placer le numéro de page au dessus
 \pagestyle{fancy}
-renewcommand{\headrulewidth}{0pt}
-renewcommand{\footrulewidth}{0pt}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
 \fancyhead{}
 \fancyfoot{}
 \chead{\arabic{page}}
