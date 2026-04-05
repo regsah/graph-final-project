@@ -20,6 +20,8 @@
 \usepackage[utf8]{inputenc} % pour le codage de caractères
 \usepackage[T1]{fontenc} % pour le codage de caractères
 \usepackage{amsmath} % pour les équations et les symboles mathématiques
+\usepackage{amssymb} % pour les symboles mathématiques supplémentaires
+\usepackage{booktabs} % pour les tableaux avec \toprule, \midrule, \bottomrule
 \usepackage[intoc]{nomencl} % pour la liste des notations
 \usepackage{titlesec} % pour les titres de différents niveaux
 \usepackage{fancyhdr} % pour gérer les numéros de pages
@@ -87,26 +89,20 @@
 \titlespacing{\subsubsection}{0pt}{0pt}{0cm}
 \titleformat{\chapter}{\normalfont\large\bf}{\thechapter}{14pt}{\large\bf} 
 
+% Définition du symbole de concaténation pour les équations GAT (chapitre 4)
+\newcommand{\bigparallel}{\mathop{\big\|}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 \input{titlepage}
 \frontmatter
-\input{Preface}\setcounter{page}{2} 
 \clearpage
 \tableofcontents
-%%% si vous n'avez pas de liste des notations, alors effacez les 3 lignes suivantes
-\clearpage
-\makenomenclature
-\printnomenclature %%% 
 \clearpage
 \listoffigures
 \clearpage
 \listoftables
-\clearpage
-\input{Resume}
-\clearpage
-\input{Ozet}
 \clearpage
 \mainmatter
 
@@ -120,13 +116,9 @@
 
 % Les chapitres
 \input{Chapter1}
-\input{Chapter2}
 \input{Chapter3}
 \input{Chapter4}
 \input{Chapter5}
-\input{Chapter6}
-\input{Chapter7}
-\input{Extra} 
 \backmatter
 
 % La bibliographie
@@ -135,8 +127,5 @@
 \thispagestyle{empty}
 \bibliography{ref}
 \thispagestyle{empty}
-
-% Les Annexes
-\input{Annexes}
 
 \end{document}

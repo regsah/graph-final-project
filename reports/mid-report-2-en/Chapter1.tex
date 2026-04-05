@@ -1,18 +1,73 @@
 \chapter{INTRODUCTION}
-\thispagestyle{empty} % pour effacer le numero de page
+\thispagestyle{empty}
 
-Galatasaray Üniversitesi Mühendislik ve Teknoloji Fakültesi Bilgisayar Mühendisliği Bölümü’nde bitirme projeleri, bu kılavuzda belirtilen içerik ve biçimsel özellikler dikkate alınarak hazırlanmalıdır. 
+\section{Project Title}
 
-Bitirme projeleri, beyaz karton kapak ciltli olarak (spiral cilt kabul edilmez), dönemin son günü mesai saati bitimine kadar Fakülte Öğrenci İşlerine teslim edilmelidir.
+\textbf{English:} Wikipedia Article Recommendation Using Graph Neural Networks
 
-Genel olarak bir projede yer alması gereken başlıklar aşağıda sunulmuştur, belirlenen proje konusunun içeriğine göre bu başlıklar değişebilir:
+\textbf{French:} Recommandation d'articles Wikipédia par réseaux de neurones sur graphes
 
-$-$ Introduction \\
-$-$ Revue de Littérature \\
-$-$ Définition de Problème \\
-$-$ Méthodologies et Modèles \\
-$-$ Application Numériques \\
-$-$ Analyse des Résultats Obtenue et Discussions \\
-$-$ Conclusions et Perspectives
+\section{Project Context and Motivation}
 
-Projenin Introduction (Giriş) bölümü en az 2-3 sayfa olmalıdır. Türkçe özet bölümünde ifade edilen, bitirme projesinin amacı, özgün değeri, kullanılan yöntem(ler)in ana hatları, çalışmanın tasarım ve uygulaması ile elde edilen çıktıların bilimsel, teknolojik, etik ve sosyoekonomik ne tür katkılarda bulunabileceği hususları ayrı paragraflar halinde net cümlelerle verilmelidir. En son paragrafta ise çalışma planı detaylı olarak verilmelidir.
+The volume of encyclopedic resources such as Wikipedia has grown exponentially. For users, the fundamental challenge is no longer access to information but rather constructing an optimal learning path through conceptually related articles. Traditional search engines and recommendation systems typically rely on keyword matching or collaborative filtering, failing to capture the hierarchical and semantic relationships between concepts --- for example, that understanding ``Deep Learning'' requires prior knowledge of ``Linear Algebra'' and ``Probability Theory''.
+
+This project addresses the above problem by developing a multimodal recommendation system that combines:
+\begin{itemize}
+    \item \textbf{Graph Neural Networks (GNNs)} to learn structural relationships from Wikipedia's hyperlink structure
+    \item \textbf{Modern sentence embedding models} (BAAI/bge-m3 and Alibaba-NLP/gte-modernbert-base) to capture semantic content
+    \item \textbf{Large Language Models (LLMs)} to organize recommended articles into hierarchical learning paths
+\end{itemize}
+
+The project scope is limited to a prototype recommendation system operating on English Wikipedia articles in the computer science domain. Multi-language support, real-time user interaction tracking, and production-ready service architecture are outside the scope of this work.
+
+\section{Progress Since First Mid-Report}
+
+Since the first mid-report, the following milestones have been achieved:
+
+\begin{itemize}
+    \item \textbf{Custom-WikiCS dataset construction:} The Wiki-CS benchmark graph topology was combined with modern sentence embeddings (BAAI/bge-m3, 1024-dim) to create the Custom-WikiCS dataset (11,367 nodes, 291,039 directed edges).
+    \item \textbf{Comprehensive graph analysis:} Structural properties were analyzed including degree distribution (power-law, $\alpha \approx 3.0$), topic-link assortativity, community detection (Louvain modularity: 0.6504), and centrality measures (Report-4).
+    \item \textbf{GCN baseline experiments:} Initial link prediction experiments using Graph Convolutional Networks achieved Test AUC of 0.8407, with evidence of overfitting suggesting early stopping strategies are needed.
+    \item \textbf{Recommendation system development:} A content-based recommendation system combining BGE-M3 embeddings and SVD-based Node2Vec was evaluated, achieving Hits@10 = 11.49\% (134$\times$ above random baseline) on held-out test edges (Report-5).
+\end{itemize}
+
+\section{Project Objectives}
+
+The primary objective remains the development of a multimodal recommendation system that, given a user query, returns semantically related Wikipedia articles organized as a hierarchical learning path.
+
+The specific objectives and their current status are:
+
+\begin{itemize}
+    \item \textbf{Graph modeling:} Wikipedia hyperlink structure modeled as a graph --- \textit{Completed}
+    \item \textbf{Text embedding:} Article texts encoded using BAAI/bge-m3 and gte-modernbert-base --- \textit{Completed}
+    \item \textbf{GNN learning:} GAT-based node embeddings combining text and structure --- \textit{In Progress (GCN baseline complete, GAT pending)}
+    \item \textbf{Recommendation:} Top-$k$ article retrieval via cosine similarity --- \textit{Completed (basic)}
+    \item \textbf{LLM hierarchical presentation:} Learning path organization via local LLM --- \textit{Planned for Phase 3}
+\end{itemize}
+
+\section{Original Contributions}
+
+The project's original contributions, as identified in the first mid-report, remain valid:
+
+\begin{itemize}
+    \item \textbf{Combining modern text embeddings with graph structure:} Unlike WikiRecNet \cite{wikirecnet2020} which uses Doc2Vec, this project leverages contextual sentence embedding models (BAAI/bge-m3, gte-modernbert-base) with GNN architectures for stronger multimodal representations.
+    \item \textbf{Attention-based link weighting:} GAT's attention mechanism learns which hyperlinks carry the most semantic relevance, improving over standard GCN which treats all neighbors equally.
+    \item \textbf{LLM-supported hierarchical presentation:} Unlike flat recommendation lists, results are to be organized as conceptual learning paths via local LLM, providing users with a structured roadmap.
+\end{itemize}
+
+\section{Expected Outcomes and Societal Impact}
+
+The expected outcomes of the project are:
+
+\begin{itemize}
+    \item A GNN-based recommendation system that predicts missing links in the Wikipedia hyperlink graph with AUC $>$ 0.85
+    \item A content-based recommendation system achievingHits@10 $>$ 15\% on held-out test edges
+    \item A hierarchical learning path generator using local LLM (DeepSeek-R1 or equivalent)
+\end{itemize}
+
+The project's societal impact includes:
+\begin{itemize}
+    \item \textbf{Educational access:} Facilitating self-directed learning by providing structured learning paths through Wikipedia's CS articles
+    \item \textbf{Open knowledge:} Operating on free Wikipedia data with open-source tools, promoting equitable access
+    \item \textbf{Privacy-preserving design:} Query-based system without user profiling or personal data collection
+\end{itemize}

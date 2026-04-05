@@ -1,7 +1,133 @@
-\chapter{DEFINITION DU PROBLEME}
+\chapter{DEFINITION OF THE PROBLEM}
 \thispagestyle{empty}
 
-Bu bir şablondur, başlıklar duruma göre değişebilir.
+\section{Project Context and Problem Definition}
 
+Wikipedia represents one of the largest freely accessible knowledge repositories in the world, containing millions of articles interconnected through hyperlinks. For a learner navigating this knowledge graph, the fundamental challenge is not access to information but rather constructing an optimal learning path through conceptually related articles. Traditional search engines and recommendation systems typically rely on keyword matching or collaborative filtering, which fail to capture the hierarchical and semantic relationships between concepts --- for example, that understanding ``Deep Learning'' requires prior knowledge of ``Linear Algebra'' and ``Probability Theory''.
 
-\lipsum[1-5]
+This project addresses the above problem by developing a multimodal recommendation system that combines:
+\begin{itemize}
+    \item \textbf{Graph Neural Networks (GNNs)} to learn structural relationships between Wikipedia articles from the hyperlink structure
+    \item \textbf{Modern sentence embedding models} (BAAI/bge-m3 and Alibaba-NLP/gte-modernbert-base) to capture semantic content of article texts
+    \item \textbf{Large Language Models (LLMs)} to organize recommended articles into hierarchical learning paths
+\end{itemize}
+
+The system treats Wikipedia's hyperlink structure as a directed graph where nodes represent articles and directed edges represent hyperlinks. By applying Graph Attention Networks (GAT) over this structure, the model learns which hyperlinks carry the most semantic relevance, enabling context-aware article recommendations.
+
+\section{Realistic Constraints and Conditions}
+
+The following constraints and conditions have been systematically identified and considered throughout the engineering design of this project.
+
+\subsection{Economy}
+
+The project operates under a constrained budget typical of academic research environments:
+
+\begin{itemize}
+    \item \textbf{Hardware costs:} All experiments are conducted on a personal laptop (ASUS ROG with RTX 4070, 8GB VRAM) rather than cloud GPU instances. Cloud computing costs for comparable experiments (e.g., AWS p3.2xlarge at \$3.06/hour) would be prohibitive for iterative development.
+    \item \textbf{Software costs:} All software tools used are open-source and free: PyTorch, PyTorch Geometric, HuggingFace Transformers, NetworkX, and Ollama for local LLM inference.
+    \item \textbf{Data costs:} The Wikipedia dataset is publicly available at no cost. No proprietary datasets are required.
+\end{itemize}
+
+The economic constraint has influenced the following design decisions:
+\begin{itemize}
+    \item Pre-computing and caching all embeddings offline rather than using cloud-based API calls
+    \item Using local LLM inference (Ollama) instead of paid API services (OpenAI, Anthropic)
+    \item Focusing on efficient model architectures that fit within 8GB VRAM
+\end{itemize}
+
+\subsection{Environment and Sustainability}
+
+Deep learning training is energy-intensive. This project considers environmental sustainability through the following measures:
+
+\begin{itemize}
+    \item \textbf{Training efficiency:} All GNN models are designed to converge within 100 epochs, with early stopping to prevent unnecessary computation. A typical training run consumes approximately 0.15--0.25 kWh.
+    \item \textbf{Energy-aware experimentation:} Rather than conducting large-scale hyperparameter grid searches, the project employs targeted experimentation based on literature guidance and analysis of initial results.
+    \item \textbf{Local computation:} Running experiments on personal hardware rather than cloud data centers reduces the carbon footprint per experiment, albeit at the cost of slower iteration.
+\end{itemize}
+
+Estimated total energy consumption for the project (literature survey, dataset construction, embedding generation, GNN training, and evaluation) is approximately 50--100 kWh, comparable to a single transatlantic flight.
+
+\subsection{Scalability}
+
+A critical constraint is the scalability of the proposed approach:
+
+\begin{itemize}
+    \item \textbf{Current scale:} The Custom-WikiCS dataset contains 11,367 nodes and 291,039 directed edges, representing a cleaned subset of English Wikipedia's computer science articles.
+    \item \textbf{Full Wikipedia scale:} The complete English Wikipedia contains over 6 million articles and hundreds of millions of hyperlinks. Training a full-scale GNN on this graph would require:
+    \begin{itemize}
+        \item GPU memory exceeding 100GB for storing the adjacency matrix and embeddings
+        \item Training times measured in days to weeks rather than minutes
+        \item Potential O($N^2$) memory complexity for GAT's attention mechanism
+    \end{itemize}
+    \item \textbf{Sampling strategies:} For full-scale deployment, graph sampling techniques (e.g., GraphSAINT, ClusterGCN) would be required to process the graph in mini-batches.
+\end{itemize}
+
+This constraint has led to the following design considerations:
+\begin{itemize}
+    \item The project explicitly focuses on the computer science subdomain to keep the graph size manageable
+    \item Future work explicitly addresses scalability through graph partitioning and distributed training
+\end{itemize}
+
+\subsection{Manufacturability and Reproducibility}
+
+\begin{itemize}
+    \item \textbf{Software dependencies:} All code is version-controlled and uses standard Python package management (requirements.txt). Docker containerization is planned for final deployment to ensure reproducibility.
+    \item \textbf{Random seed control:} All experiments use fixed random seeds (e.g., seed=42) to ensure reproducibility across runs.
+    \item \textbf{Data versioning:} The Custom-WikiCS dataset is stored as a static artifact (WikiCS\_data.pt) with documented preprocessing steps.
+\end{itemize}
+
+\subsection{Ethics}
+
+The project adheres to strong ethical principles:
+
+\begin{itemize}
+    \item \textbf{Privacy:} The system is entirely query-based and does not collect, store, or process any personal user data. No user profiling, behavioral tracking, or cookies are used.
+    \item \textbf{Transparency:} The recommendation logic is fully interpretable through GAT's attention weights, allowing users to understand why a particular article was recommended.
+    \item \textbf{Open knowledge:} The system operates on open Wikipedia data, promoting democratized access to knowledge.
+    \item \textbf{LLM hallucinations:} The use of LLMs for hierarchical path generation carries the risk of factual hallucinations. This risk is mitigated by using LLMs only for organization of pre-verified article recommendations, not for factual content generation.
+\end{itemize}
+
+\subsection{Health and Safety}
+
+\begin{itemize}
+    \item \textbf{No physical risks:} The project involves only software development and computation; there are no physical health risks.
+    \item \textbf{Ergonomics:} Extended GPU training sessions generate heat and noise. The laptop is operated with adequate ventilation and reasonable session durations.
+\end{itemize}
+
+\subsection{Security}
+
+\begin{itemize}
+    \item \textbf{No sensitive data:} The project does not involve any sensitive personal data, financial information, or security-critical systems.
+    \item \textbf{Local LLM deployment:} Using Ollama for local LLM inference ensures that no data is transmitted to external servers, eliminating network-based attack vectors.
+    \item \textbf{Code security:} Standard secure coding practices are followed; no external code sources of unknown origin are used.
+\end{itemize}
+
+\subsection{Social and Political Considerations}
+
+\begin{itemize}
+    \item \textbf{Language bias:} The current implementation focuses on English Wikipedia articles. While BGE-M3 supports 100+ languages, the recommendation quality for non-English topics has not been evaluated. Future work could extend to other Wikipedia language editions.
+    \item \textbf{Knowledge representation bias:} Wikipedia's hyperlink structure reflects the editorial decisions of millions of contributors, potentially embedding systemic biases (e.g., over-representation of certain topics, gender bias in article coverage).
+    \item \textbf{Access equity:} By relying on freely available Wikipedia data and open-source tools, the project promotes equitable access to educational technology.
+\end{itemize}
+
+\section{Technical Feasibility Summary}
+
+Based on the constraints identified above, the project is technically feasible within the given environment. Table~\ref{tab:feasibility} summarizes the alignment between constraints and design decisions.
+
+\begin{table}[htbp]
+\centering
+\caption{Constraint-compliance matrix.}
+\label{tab:feasibility}
+\begin{tabular}{ll}
+\toprule
+\textbf{Constraint} & \textbf{Design Response} \\
+\midrule
+Economy & Local hardware, open-source software, cached embeddings \\
+Environment & Efficient training, early stopping, energy-aware experimentation \\
+Scalability & Domain-focused (CS only), sampling strategies planned \\
+Ethics & Query-based only, no user profiling, interpretable GAT weights \\
+Security & No sensitive data, local LLM inference \\
+Social & Open data, multilingual embedding models available \\
+\bottomrule
+\end{tabular}
+\end{table}
