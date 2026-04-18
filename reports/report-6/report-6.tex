@@ -142,7 +142,7 @@ BGE-M3 + Node2Vec (corrected) & 0.02\% & 0.05\% & 0.10\% & 0.13\% & 0.0004 & 0.0
 GCN Only & 0.76\% & 6.20\% & 22.87\% & 34.70\% & 0.0302 & 0.0842 & 0.3470 & 0.0285 \\
 Node2Vec (uncorrected) & 2.63\% & 16.06\% & 47.80\% & 64.33\% & 0.0751 & 0.1766 & 0.6433 & 0.0738 \\
 BGE-M3 + Node2Vec (uncorrected) & 0.06\% & 0.24\% & 0.89\% & 1.67\% & 0.0019 & 0.0039 & 0.0167 & 0.0014 \\
-GCN + BGE-M3 (rank fusion) & 0.00\% & 0.00\% & 0.00\% & 0.00\% & 0.0000 & 0.0000 & 0.0000 & 0.0000 \\
+GCN + BGE-M3 (rank fusion) & 0.37\% & 3.49\% & 13.62\% & 23.22\% & 0.0181 & 0.0532 & 0.2322 & 0.0162 \\
 GraphSAGE Only & 0.19\% & 1.43\% & 5.72\% & 10.33\% & 0.0087 & 0.0235 & 0.1033 & 0.0072 \\
 \bottomrule
 \end{tabular}
@@ -162,6 +162,8 @@ GraphSAGE Only & 0.19\% & 1.43\% & 5.72\% & 10.33\% & 0.0087 & 0.0235 & 0.1033 &
     \item \textbf{GraphSAGE underperforms GCN} in this transductive link-prediction setting (1.43\% vs 6.20\% Hit@10).
 
     \item \textbf{Degree correction backfires for Node2Vec.} Corrected Node2Vec (7.95\% Hit@10) performs worse than uncorrected (16.06\% Hit@10), suggesting that the power-law penalty may be too aggressive or misapplied.
+
+    \item \textbf{Rank fusion (GCN + BGE-M3) achieves 3.49\% Hit@10} using top-500 optimization.  While substantially better than combined embedding concatenation (0.24\%), it still underperforms both individual models, suggesting that simple RRF merging of heterogeneous spaces is not optimal.
 \end{enumerate}
 
 % ═══════════════════════════════════════════════════════════════════════════
@@ -477,10 +479,10 @@ for topic-level queries.
 2 & BGE-M3 Only & 10.21\% & 0.0507 \\
 3 & Node2Vec (corrected) & 7.95\% & 0.0351 \\
 4 & GCN Only & 6.20\% & 0.0302 \\
-5 & GraphSAGE Only & 1.43\% & 0.0087 \\
-6 & BGE-M3 + Node2Vec (uncorrected) & 0.24\% & 0.0019 \\
-7 & BGE-M3 + Node2Vec (corrected) & 0.05\% & 0.0004 \\
-8 & GCN + BGE-M3 (rank fusion) & 0.00\% & 0.0000 \\
+5 & GCN + BGE-M3 (rank fusion) & 3.49\% & 0.0181 \\
+6 & GraphSAGE Only & 1.43\% & 0.0087 \\
+7 & BGE-M3 + Node2Vec (uncorrected) & 0.24\% & 0.0019 \\
+8 & BGE-M3 + Node2Vec (corrected) & 0.05\% & 0.0004 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -500,7 +502,7 @@ Key findings:
 
     \item \textbf{GraphSAGE underperforms GCN} in transductive link prediction (1.43\% vs 6.20\% Hit@10).
 
-    \item \textbf{Rank fusion was too computationally expensive.} The O(n$^2$) complexity of re-ranking all 11,701 candidates per query × 63,106 test edges made it intractable.
+    \item \textbf{Rank fusion (GCN + BGE-M3) with top-500 optimization achieves 3.49\% Hit@10.} While substantially better than combined embedding concatenation (0.24\%), it underperforms both individual models. This suggests that simple RRF merging of rankings from heterogeneous embedding spaces is not optimal.
 \end{itemize}
 
 % ═══════════════════════════════════════════════════════════════════════════
@@ -524,6 +526,12 @@ The GCN-only model, trained purely from graph structure with learnable random
 embeddings, achieves 6.20\% Hit@10 and 34.70\% Hit@100, demonstrating that
 sufficient training on graph structure can capture meaningful node representations
 without any domain knowledge or text features.
+
+The rank fusion approach (GCN + BGE-M3 with top-500 optimization) achieves
+3.49\% Hit@10, substantially better than combined embedding concatenation but
+still underperforming both individual models.  This suggests that simple rank
+fusion of heterogeneous spaces is not optimal; learned weighting or attention-based
+fusion may be more effective.
 
 All code and evaluation results are available at:
 \texttt{WikiCS/custom-wiki/notebooks/eval/eval-2.ipynb}
