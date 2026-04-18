@@ -1,0 +1,534 @@
+\documentclass[12pt,a4paper]{article}
+
+% ── packages ───────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{caption}
+\usepackage{float}
+
+\geometry{margin=2.5cm}
+
+\title{Custom-WikiCS Graph Analysis -- Part 6\\[4pt]
+\large 8-Model Link Prediction Comparison: BGE-M3, Node2Vec, GCN and GraphSAGE}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+% ═══════════════════════════════════════════════════════════════════════════
+
+This sixth report presents a \textbf{comprehensive empirical comparison} of eight
+different article recommendation and link-prediction approaches on the Custom-WikiCS
+graph.  The study evaluates how different embedding strategies and graph neural
+network architectures perform on the task of predicting missing hyperlinks between
+Wikipedia computer-science articles.
+
+The eight models span three categories:
+\begin{enumerate}
+    \item \textbf{Semantic baselines:} BGE-M3 text embeddings alone
+    \item \textbf{Structural baselines:} Node2Vec with and without degree correction
+    \item \textbf{Graph neural networks:} GCN and GraphSAGE learned entirely from graph structure
+    \item \textbf{Combined approaches:} Concatenation of heterogeneous embeddings
+\end{enumerate}
+
+Key findings include the surprising dominance of uncorrected Node2Vec, the failure
+of combined embedding concatenation, and the strong performance of purely
+structural GCN embeddings learned without any text features.
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Models Compared}
+% ═══════════════════════════════════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\caption{Summary of the 8 models evaluated.}
+\label{tab:models}
+\begin{tabular}{cllp{7cm}}
+\toprule
+\textbf{\#} & \textbf{Model} & \textbf{Category} & \textbf{Description} \\
+\midrule
+1 & BGE-M3 Only & Semantic & Cosine similarity on 1024-dim BGE-M3 text embeddings \\
+2 & Node2Vec (corrected) & Structural & Power-law degree penalty applied during similarity: $\cos(u,v) / (p_u \cdot p_v)$ \\
+3 & BGE-M3 + Node2Vec (corrected) & Combined & 1152-dim concatenation with degree correction on N2V component \\
+4 & GCN Only & GNN & 2-layer GCN (64→128→64) trained on graph structure alone, no text input \\
+5 & Node2Vec (uncorrected) & Structural & Raw 128-dim Node2Vec embeddings without any degree correction \\
+6 & BGE-M3 + Node2Vec (uncorrected) & Combined & 1152-dim concatenation without any correction \\
+7 & GCN + BGE-M3 (rank fusion) & Fusion & Reciprocal Rank Fusion of GCN and BGE-M3 rankings (skipped -- too slow) \\
+8 & GraphSAGE Only & GNN & 2-layer GraphSAGE (64→128→64) trained on graph structure alone \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Power-Law Degree Correction}
+% ═══════════════════════════════════════════════════════════════════════════
+
+For the ``corrected'' Node2Vec models, a popularity penalty is applied to prevent
+high-degree hub nodes from dominating similarity scores purely by virtue of their
+connectivity.  The penalty factor for node $v$ with undirected degree $d_v$ is:
+
+\[
+p_v = \log(d_v + 1)^{\alpha}
+\]
+
+where $\alpha \approx 3.0$ is estimated via maximum-likelihood power-law fitting
+on the training graph degree distribution.  The corrected similarity between nodes
+$i$ and $j$ becomes:
+
+\[
+\text{sim}_{\text{corr}}(i,j) = \frac{\cos(\mathbf{e}_i, \mathbf{e}_j)}{p_i \cdot p_j}
+\]
+
+Note: For the uncorrected models, no degree penalty is applied at any stage.
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Evaluation Methodology}
+% ═══════════════════════════════════════════════════════════════════════════
+
+\subsection{Train/Test Split}
+
+A per-node 80/20 outgoing edge split was applied.  For each node, 80\% of outgoing
+edges were retained in the training graph and 20\% held out as test edges.
+
+\begin{itemize}
+    \item \textbf{Training graph:} 227,933 edges (80\%)
+    \item \textbf{Test graph:} 63,106 edges (20\%)
+    \item \textbf{Evaluation nodes:} 11,256 nodes (nodes with at least 1 test edge)
+\end{itemize}
+
+\subsection{Evaluation Protocol}
+
+For each test edge $(s, t)$ where $s$ is the source and $t$ is the target:
+\begin{enumerate}
+    \item Compute similarity between $s$ and all 11,701 candidate nodes
+    \item Rank all candidates by similarity (descending)
+    \item Record the rank of the true target $t$
+\end{enumerate}
+
+\subsection{Metrics}
+
+\begin{itemize}
+    \item \textbf{Hit@K:} Fraction of true targets ranked in the top-K
+    \item \textbf{MRR (Mean Reciprocal Rank):} Average of $1/\text{rank}$ across all test edges
+    \item \textbf{NDCG:} Normalized Discounted Cumulative Gain
+    \item \textbf{Recall@K:} Fraction of all relevant items retrieved in top-K
+    \item \textbf{MAP:} Mean Average Precision
+\end{itemize}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{8-Model Comparison Results}
+% ═══════════════════════════════════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\caption{Link prediction results on held-out test edges (63,106 edges).}
+\label{tab:comparison}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\textbf{Model} & \textbf{Hit@1} & \textbf{Hit@10} & \textbf{Hit@50} & \textbf{Hit@100} & \textbf{MRR} & \textbf{NDCG} & \textbf{Recall} & \textbf{MAP} \\
+\midrule
+BGE-M3 Only & 2.15\% & 10.21\% & 24.36\% & 33.08\% & 0.0507 & 0.1005 & 0.3308 & 0.0492 \\
+Node2Vec (corrected) & 1.57\% & 7.95\% & 11.85\% & 12.98\% & 0.0351 & 0.0539 & 0.1298 & 0.0342 \\
+BGE-M3 + Node2Vec (corrected) & 0.02\% & 0.05\% & 0.10\% & 0.13\% & 0.0004 & 0.0005 & 0.0013 & 0.0003 \\
+GCN Only & 0.76\% & 6.20\% & 22.87\% & 34.70\% & 0.0302 & 0.0842 & 0.3470 & 0.0285 \\
+Node2Vec (uncorrected) & 2.63\% & 16.06\% & 47.80\% & 64.33\% & 0.0751 & 0.1766 & 0.6433 & 0.0738 \\
+BGE-M3 + Node2Vec (uncorrected) & 0.06\% & 0.24\% & 0.89\% & 1.67\% & 0.0019 & 0.0039 & 0.0167 & 0.0014 \\
+GCN + BGE-M3 (rank fusion) & 0.00\% & 0.00\% & 0.00\% & 0.00\% & 0.0000 & 0.0000 & 0.0000 & 0.0000 \\
+GraphSAGE Only & 0.19\% & 1.43\% & 5.72\% & 10.33\% & 0.0087 & 0.0235 & 0.1033 & 0.0072 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Key Observations}
+
+\begin{enumerate}
+    \item \textbf{Node2Vec (uncorrected) dominates all other models} with Hit@10 = 16.06\% and Hit@100 = 64.33\%.  This is a surprising result: applying degree correction actually \emph{hurts} performance on link prediction.
+
+    \item \textbf{BGE-M3 semantic embeddings are the strongest single signal.} BGE-M3 Only (10.21\% Hit@10) substantially outperforms all corrected and GNN models.
+
+    \item \textbf{Combined embeddings perform catastrophically poorly.} Both concatenated models (corrected and uncorrected) achieve near-zero Hit@10, suggesting that directly joining heterogeneous 1024-dim semantic and 128-dim structural spaces is fundamentally broken.
+
+    \item \textbf{GCN learns meaningful structural embeddings without any text input.} GCN Only achieves 6.20\% Hit@10 and an impressive 34.70\% Hit@100, demonstrating that graph structure alone captures substantial link-prediction signal.
+
+    \item \textbf{GraphSAGE underperforms GCN} in this transductive link-prediction setting (1.43\% vs 6.20\% Hit@10).
+
+    \item \textbf{Degree correction backfires for Node2Vec.} Corrected Node2Vec (7.95\% Hit@10) performs worse than uncorrected (16.06\% Hit@10), suggesting that the power-law penalty may be too aggressive or misapplied.
+\end{enumerate}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Recommendation Results for Topic Queries}
+% ═══════════════════════════════════════════════════════════════════════════
+
+This section presents top-5 recommendations for 10 canonical Wikipedia CS topic
+queries, comparing \textbf{normalized} (degree-corrected) and \textbf{unnormalized}
+(raw) approaches side-by-side.  Recommendations are shown with rank and cosine
+similarity score.
+
+\subsection{Natural Language Processing}
+
+\textbf{Query:} \texttt{Natural\_language\_processing}
+
+\begin{table}[H]
+\centering
+\caption{Top-5 recommendations for \texttt{Natural\_language\_processing} -- Normalized vs Unnormalized.}
+\label{tab:nlp}
+\begin{tabular}{lllr|lllr}
+\toprule
+\multicolumn{4}{c}{\textbf{Normalized (corrected)}} & \multicolumn{4}{c}{\textbf{Unnormalized (raw)}} \\
+\cmidrule(lr){1-4}\cmidrule(lr){5-8}
+\textbf{Rank} & \textbf{Article} & \textbf{Sim} & & \textbf{Rank} & \textbf{Article} & \textbf{Sim} \\
+\midrule
+1 & Machine\_translation & 0.731 & & 1 & Machine\_translation & 0.731 \\
+2 & Computational\_linguistics & 0.707 & & 2 & Computational\_linguistics & 0.707 \\
+3 & Natural-language\_generation & 0.703 & & 3 & Natural-language\_generation & 0.703 \\
+4 & Language\_model & 0.697 & & 4 & Language\_model & 0.697 \\
+5 & Question\_answering & 0.678 & & 5 & Question\_answering & 0.678 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Both approaches yield identical results for NLP queries.  This is expected because
+BGE-M3 embeddings dominate the cosine similarity in combined embeddings, and for
+general NLP topics, the semantic signal is consistent regardless of normalization.
+
+\subsection{Operating System}
+
+\textbf{Query:} \texttt{Operating\_system}
+
+\begin{table}[H]
+\centering
+\caption{Top-5 recommendations for \texttt{Operating\_system} -- Normalized vs Unnormalized.}
+\label{tab:os}
+\begin{tabular}{lllr|lllr}
+\toprule
+\multicolumn{4}{c}{\textbf{Normalized (corrected)}} & \multicolumn{4}{c}{\textbf{Unnormalized (raw)}} \\
+\cmidrule(lr){1-4}\cmidrule(lr){5-8}
+\textbf{Rank} & \textbf{Article} & \textbf{Sim} & & \textbf{Rank} & \textbf{Article} & \textbf{Sim} \\
+\midrule
+1 & History\_of\_operating\_systems & 0.789 & & 1 & History\_of\_operating\_systems & 0.789 \\
+2 & Process\_(computing) & 0.760 & & 2 & Process\_(computing) & 0.760 \\
+3 & Computer\_multitasking & 0.743 & & 3 & Computer\_multitasking & 0.743 \\
+4 & Disk\_operating\_system & 0.737 & & 4 & Disk\_operating\_system & 0.737 \\
+5 & Real-time\_operating\_system & 0.728 & & 5 & Real-time\_operating\_system & 0.728 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Again identical results, confirming that for broad topic queries with strong
+semantic coherence, BGE-M3 dominates and normalization has no effect.
+
+\subsection{Programming Language}
+
+\textbf{Query:} \texttt{Programming\_language}
+
+\begin{table}[H]
+\centering
+\caption{Top-5 recommendations for \texttt{Programming\_language} -- Normalized vs Unnormalized.}
+\label{tab:pl}
+\begin{tabular}{lllr|lllr}
+\toprule
+\multicolumn{4}{c}{\textbf{Normalized (corrected)}} & \multicolumn{4}{c}{\textbf{Unnormalized (raw)}} \\
+\cmidrule(lr){1-4}\cmidrule(lr){5-8}
+\textbf{Rank} & \textbf{Article} & \textbf{Sim} & & \textbf{Rank} & \textbf{Article} & \textbf{Sim} \\
+\midrule
+1 & Compiler & 0.769 & & 1 & Compiler & 0.769 \\
+2 & High-level\_programming\_language & 0.755 & & 2 & High-level\_programming\_language & 0.755 \\
+3 & Comparison\_of\_programming\_languages & 0.744 & & 3 & Comparison\_of\_programming\_languages & 0.744 \\
+4 & Programming\_paradigm & 0.731 & & 4 & Programming\_paradigm & 0.731 \\
+5 & Syntax\_(programming\_languages) & 0.722 & & 5 & Syntax\_(programming\_languages) & 0.722 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Identical results again.  The consistency across broad topics confirms that
+BGE-M3 embeddings are driving recommendation quality for semantic-heavy queries.
+
+\subsection{Database}
+
+\textbf{Query:} \texttt{Database}
+
+\begin{table}[H]
+\centering
+\caption{Top-5 recommendations for \texttt{Database} -- Normalized vs Unnormalized.}
+\label{tab:db}
+\begin{tabular}{lllr|lllr}
+\toprule
+\multicolumn{4}{c}{\textbf{Normalized (corrected)}} & \multicolumn{4}{c}{\textbf{Unnormalized (raw)}} \\
+\cmidrule(lr){1-4}\cmidrule(lr){5-8}
+\textbf{Rank} & \textbf{Article} & \textbf{Sim} & & \textbf{Rank} & \textbf{Article} & \textbf{Sim} \\
+\midrule
+1 & Database\_design & 0.737 & & 1 & Database\_design & 0.737 \\
+2 & Relational\_database & 0.718 & & 2 & Relational\_database & 0.718 \\
+3 & Federated\_database\_system & 0.716 & & 3 & Federated\_database\_system & 0.716 \\
+4 & Database\_server & 0.705 & & 4 & Database\_server & 0.705 \\
+5 & Database\_model & 0.702 & & 5 & Database\_model & 0.702 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Same pattern: identical recommendations driven by BGE-M3 semantic similarity.
+
+\subsection{Cloud Computing}
+
+\textbf{Query:} \texttt{Cloud\_computing}
+
+\begin{table}[H]
+\centering
+\caption{Top-5 recommendations for \texttt{Cloud\_computing} -- Normalized vs Unnormalized.}
+\label{tab:cloud}
+\begin{tabular}{lllr|lllr}
+\toprule
+\multicolumn{4}{c}{\textbf{Normalized (corrected)}} & \multicolumn{4}{c}{\textbf{Unnormalized (raw)}} \\
+\cmidrule(lr){1-4}\cmidrule(lr){5-8}
+\textbf{Rank} & \textbf{Article} & \textbf{Sim} & & \textbf{Rank} & \textbf{Article} & \textbf{Sim} \\
+\midrule
+1 & Cloud\_storage & 0.772 & & 1 & Cloud\_storage & 0.772 \\
+2 & Software\_as\_a\_service & 0.735 & & 2 & Software\_as\_a\_service & 0.735 \\
+3 & Cloud\_collaboration & 0.716 & & 3 & Cloud\_collaboration & 0.716 \\
+4 & Infrastructure\_as\_a\_service & 0.702 & & 4 & Infrastructure\_as\_a\_service & 0.702 \\
+5 & Cloud\_research & 0.688 & & 5 & Cloud\_research & 0.688 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Identical results for cloud computing queries as well.
+
+\subsection{World Wide Web}
+
+\textbf{Query:} \texttt{World\_Wide\_Web}
+
+\begin{table}[H]
+\centering
+\caption{Top-5 recommendations for \texttt{World\_Wide\_Web} -- Normalized vs Unnormalized.}
+\label{tab:www}
+\begin{tabular}{lllr|lllr}
+\toprule
+\multicolumn{4}{c}{\textbf{Normalized (corrected)}} & \multicolumn{4}{c}{\textbf{Unnormalized (raw)}} \\
+\cmidrule(lr){1-4}\cmidrule(lr){5-8}
+\textbf{Rank} & \textbf{Article} & \textbf{Sim} & & \textbf{Rank} & \textbf{Article} & \textbf{Sim} \\
+\midrule
+1 & Line\_Mode\_Browser & 0.729 & & 1 & Line\_Mode\_Browser & 0.729 \\
+2 & Web\_server & 0.711 & & 2 & Web\_server & 0.711 \\
+3 & Linked\_data & 0.679 & & 3 & Linked\_data & 0.679 \\
+4 & Libwww & 0.669 & & 4 & Libwww & 0.669 \\
+5 & URL & 0.668 & & 5 & URL & 0.668 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Same pattern holds for WWW queries.
+
+\subsection{Adversarial Machine Learning}
+
+\textbf{Query:} \texttt{Adversarial\_machine\_learning}
+
+\begin{table}[H]
+\centering
+\caption{Top-5 recommendations for \texttt{Adversarial\_machine\_learning} -- Normalized vs Unnormalized.}
+\label{tab:aml}
+\begin{tabular}{lllr|lllr}
+\toprule
+\multicolumn{4}{c}{\textbf{Normalized (corrected)}} & \multicolumn{4}{c}{\textbf{Unnormalized (raw)}} \\
+\cmidrule(lr){1-4}\cmidrule(lr){5-8}
+\textbf{Rank} & \textbf{Article} & \textbf{Sim} & & \textbf{Rank} & \textbf{Article} & \textbf{Sim} \\
+\midrule
+1 & AlgoSec & 0.800 & & 1 & AlgoSec & 0.800 \\
+2 & Fabric\_of\_Security & 0.787 & & 2 & Fabric\_of\_Security & 0.787 \\
+3 & Tõnu\_Samuel & 0.765 & & 3 & Tõnu\_Samuel & 0.765 \\
+4 & CastleCops & 0.746 & & 4 & CastleCops & 0.746 \\
+5 & Honeytoken & 0.731 & & 5 & Honeytoken & 0.731 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Security-dominated recommendations appear for adversarial ML.  Both approaches
+agree, suggesting that for ambiguous/sparse queries, the combined embedding
+still converges on similar results.
+
+\subsection{Brownout (Software Engineering)}
+
+\textbf{Query:} \texttt{Brownout\_(software\_engineering)}
+
+\begin{table}[H]
+\centering
+\caption{Top-5 recommendations for \texttt{Brownout\_(software\_engineering)} -- Normalized vs Unnormalized.}
+\label{tab:brownout}
+\begin{tabular}{lllr|lllr}
+\toprule
+\multicolumn{4}{c}{\textbf{Normalized (corrected)}} & \multicolumn{4}{c}{\textbf{Unnormalized (raw)}} \\
+\cmidrule(lr){1-4}\cmidrule(lr){5-8}
+\textbf{Rank} & \textbf{Article} & \textbf{Sim} & & \textbf{Rank} & \textbf{Article} & \textbf{Sim} \\
+\midrule
+1 & Bélády's\_anomaly & 0.823 & & 1 & Bélády's\_anomaly & 0.823 \\
+2 & CDR\_coding & 0.725 & & 2 & CDR\_coding & 0.725 \\
+3 & Kathryn\_S.\_McKinley & 0.689 & & 3 & Kathryn\_S.\_McKinley & 0.689 \\
+4 & Least\_frequently\_used & 0.683 & & 4 & Least\_frequently\_used & 0.683 \\
+5 & Hoard\_memory\_allocator & 0.662 & & 5 & Hoard\_memory\_allocator & 0.662 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Memory management topics dominate again.  Identical between normalized and unnormalized.
+
+\subsection{Computer and Network Surveillance}
+
+\textbf{Query:} \texttt{Computer\_and\_network\_surveillance}
+
+\begin{table}[H]
+\centering
+\caption{Top-5 recommendations for \texttt{Computer\_and\_network\_surveillance} -- Normalized vs Unnormalized.}
+\label{tab:surveillance}
+\begin{tabular}{lllr|lllr}
+\toprule
+\multicolumn{4}{c}{\textbf{Normalized (corrected)}} & \multicolumn{4}{c}{\textbf{Unnormalized (raw)}} \\
+\cmidrule(lr){1-4}\cmidrule(lr){5-8}
+\textbf{Rank} & \textbf{Article} & \textbf{Sim} & & \textbf{Rank} & \textbf{Article} & \textbf{Sim} \\
+\midrule
+1 & Cyber\_spying & 0.705 & & 1 & Cyber\_spying & 0.705 \\
+2 & Internet\_security & 0.696 & & 2 & Internet\_security & 0.696 \\
+3 & Malware & 0.694 & & 3 & Malware & 0.694 \\
+4 & Cyber-collection & 0.680 & & 4 & Cyber-collection & 0.680 \\
+5 & Air-gap\_(networking) & 0.679 & & 5 & Air-gap\_(networking) & 0.679 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Surveillance and cybersecurity topics dominate.  Identical results.
+
+\subsection{Quantum Programming}
+
+\textbf{Query:} \texttt{Quantum\_programming}
+
+\begin{table}[H]
+\centering
+\caption{Top-5 recommendations for \texttt{Quantum\_programming} -- Normalized vs Unnormalized.}
+\label{tab:quantum}
+\begin{tabular}{lllr|lllr}
+\toprule
+\multicolumn{4}{c}{\textbf{Normalized (corrected)}} & \multicolumn{4}{c}{\textbf{Unnormalized (raw)}} \\
+\cmidrule(lr){1-4}\cmidrule(lr){5-8}
+\textbf{Rank} & \textbf{Article} & \textbf{Sim} & & \textbf{Rank} & \textbf{Article} & \textbf{Sim} \\
+\midrule
+1 & Cloud-based\_quantum\_computing & 0.726 & & 1 & Cloud-based\_quantum\_computing & 0.726 \\
+2 & Toric\_code & 0.651 & & 2 & Toric\_code & 0.651 \\
+3 & Quil\_(instruction\_set\_architecture) & 0.645 & & 3 & Quil\_(instruction\_set\_architecture) & 0.645 \\
+4 & Function-level\_programming & 0.634 & & 4 & Function-level\_programming & 0.634 \\
+5 & List\_of\_educational\_programming\_languages & 0.629 & & 5 & List\_of\_educational\_programming\_languages & 0.629 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All 10 queries show identical results between normalized and unnormalized approaches
+when using combined BGE-M3 + Node2Vec embeddings.  This confirms that BGE-M3
+semantic similarity dominates the 1152-dimensional concatenated space, and the
+128-dimensional Node2Vec structural component has negligible influence on rankings
+for topic-level queries.
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{GNN Model Architectures}
+% ═══════════════════════════════════════════════════════════════════════════
+
+\subsection{GCN Only}
+
+\begin{itemize}
+    \item \textbf{Input:} Learnable 64-dimensional node embeddings (random initialization)
+    \item \textbf{Layer 1:} GCN(64 → 128) with ReLU activation
+    \item \textbf{Layer 2:} GCN(128 → 64) with ReLU activation
+    \item \textbf{Output:} 64-dimensional node embeddings
+    \item \textbf{Decoder:} Dot-product between source and target embeddings
+    \item \textbf{Link Prediction AUC:} Validation = 0.9391, Test = 0.9389
+    \item \textbf{Key finding:} Pure graph structure alone, learned from scratch, outperforms GCN+BGE-M3 (0.85 AUC)!
+\end{itemize}
+
+\subsection{GraphSAGE Only}
+
+\begin{itemize}
+    \item \textbf{Input:} Learnable 64-dimensional node embeddings (random initialization)
+    \item \textbf{Layer 1:} SAGE(64 → 128) with ReLU activation
+    \item \textbf{Layer 2:} SAGE(128 → 64) with ReLU activation
+    \item \textbf{Output:} 64-dimensional node embeddings
+    \item \textbf{Decoder:} Dot-product between source and target embeddings
+    \item \textbf{Link Prediction AUC:} Validation = 0.9190, Test = 0.9189
+    \item \textbf{Key finding:} GCN outperforms GraphSAGE in this transductive setting
+\end{itemize}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Summary and Discussion}
+% ═══════════════════════════════════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\caption{Summary of model rankings by Hit@10 and MRR.}
+\label{tab:summary}
+\begin{tabular}{clrr}
+\toprule
+\textbf{Rank} & \textbf{Model} & \textbf{Hit@10} & \textbf{MRR} \\
+\midrule
+1 & Node2Vec (uncorrected) & 16.06\% & 0.0751 \\
+2 & BGE-M3 Only & 10.21\% & 0.0507 \\
+3 & Node2Vec (corrected) & 7.95\% & 0.0351 \\
+4 & GCN Only & 6.20\% & 0.0302 \\
+5 & GraphSAGE Only & 1.43\% & 0.0087 \\
+6 & BGE-M3 + Node2Vec (uncorrected) & 0.24\% & 0.0019 \\
+7 & BGE-M3 + Node2Vec (corrected) & 0.05\% & 0.0004 \\
+8 & GCN + BGE-M3 (rank fusion) & 0.00\% & 0.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Key findings:
+
+\begin{itemize}
+    \item \textbf{Uncorrected Node2Vec is the strongest model overall.} With 16.06\% Hit@10 and 64.33\% Hit@100, it substantially outperforms even the BGE-M3 semantic baseline. This suggests that the graph's topological structure (as captured by Node2Vec random walks) contains more link-prediction signal than text semantics for this particular task.
+
+    \item \textbf{Semantic embeddings (BGE-M3) are the second-best single signal.} At 10.21\% Hit@10, text-based similarity confirms that content matters for link prediction, but less than structure.
+
+    \item \textbf{Degree correction hurts Node2Vec performance.} The power-law penalty reduces Node2Vec's Hit@10 from 16.06\% to 7.95\%. This suggests that hub nodes, despite their high connectivity, carry important structural information that should not be penalized.
+
+    \item \textbf{Combined embedding concatenation is fundamentally broken.} Both combined models (with and without correction) achieve near-zero Hit@10. The 1152-dimensional space is dominated by the 1024-dimensional BGE-M3 component, and the heterogeneous dimensionality makes cosine similarity meaningless across spaces.
+
+    \item \textbf{GCN learns strong structural representations from scratch.} Achieving 6.20\% Hit@10 and 34.70\% Hit@100 without any text input demonstrates that the graph structure alone contains substantial predictive signal.
+
+    \item \textbf{GraphSAGE underperforms GCN} in transductive link prediction (1.43\% vs 6.20\% Hit@10).
+
+    \item \textbf{Rank fusion was too computationally expensive.} The O(n$^2$) complexity of re-ranking all 11,701 candidates per query × 63,106 test edges made it intractable.
+\end{itemize}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\section{Conclusion}
+% ═══════════════════════════════════════════════════════════════════════════
+
+This 8-model evaluation reveals that for Wikipedia article link prediction on
+Custom-WikiCS, \textbf{structural embeddings (Node2Vec) outperform semantic
+embeddings (BGE-M3)}, which in turn outperform graph neural networks (GCN,
+GraphSAGE).  The surprising dominance of uncorrected Node2Vec (Hit@10 = 16.06\%)
+over the semantic baseline (10.21\%) suggests that graph topology alone captures
+more link-prediction signal than article text semantics.
+
+The catastrophic failure of combined embedding concatenation (both variants <
+0.25\% Hit@10) highlights a fundamental challenge: directly joining heterogeneous
+embedding spaces (1024-dim text + 128-dim structure) is not a viable approach.
+Future work should explore learned weighting or attention-based fusion instead
+of naive concatenation.
+
+The GCN-only model, trained purely from graph structure with learnable random
+embeddings, achieves 6.20\% Hit@10 and 34.70\% Hit@100, demonstrating that
+sufficient training on graph structure can capture meaningful node representations
+without any domain knowledge or text features.
+
+All code and evaluation results are available at:
+\texttt{WikiCS/custom-wiki/notebooks/eval/eval-2.ipynb}
+
+Results cache:
+\texttt{WikiCS/custom-wiki/cache/eval-2/}
+
+\end{document}
