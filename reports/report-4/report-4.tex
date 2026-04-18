@@ -589,6 +589,125 @@ range narrows progressively with increasing degree, confirming the
 variance-reduction effect of hub nodes.
 
 % ═══════════════════════════════════════════════════════════════════════════
+\section{Appendix A: Statistical Tests for Community Similarity}
+% ═══════════════════════════════════════════════════════════════════════════
+
+To formally test whether the observed difference between intra-community and
+inter-community similarity is statistically significant, an independent samples
+$t$-test was conducted for both Louvain and Infomap community assignments.
+
+\subsection{Louvain T-Test Results}
+
+\begin{table}[H]
+\centering
+\caption{Louvain community similarity: T-test results.}
+\label{tab:louvain_ttest}
+\begin{tabular}{lr}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Intra-community edges (n) & 159\,552 \\
+Inter-community edges (n) & 56\,571 \\
+Intra-community mean similarity & 0.5729 \\
+Inter-community mean similarity & 0.5435 \\
+t-statistic & 68.1973 \\
+p-value & $<$0.0001 \\
+Cohen's $d$ effect size & 0.345 \\
+Significant (p $<$ 0.05) & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Infomap T-Test Results}
+
+\begin{table}[H]
+\centering
+\caption{Infomap community similarity: T-test results.}
+\label{tab:infomap_ttest}
+\begin{tabular}{lr}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Intra-community edges (n) & 138\,656 \\
+Inter-community edges (n) & 77\,467 \\
+Intra-community mean similarity & 0.5748 \\
+Inter-community mean similarity & 0.5480 \\
+t-statistic & 67.8098 \\
+p-value & $<$0.0001 \\
+Cohen's $d$ effect size & 0.311 \\
+Significant (p $<$ 0.05) & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Summary and Interpretation}
+
+\begin{table}[H]
+\centering
+\caption{Community similarity t-test summary for both algorithms.}
+\label{tab:ttest_summary}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Algorithm} & \textbf{Intra N} & \textbf{Inter N} & \textbf{Intra Mean} & \textbf{Inter Mean} & \textbf{t-stat} & \textbf{p-value} \\
+\midrule
+Louvain & 159\,552 & 56\,571 & 0.5729 & 0.5435 & 68.20 & $<$0.0001 \\
+Infomap & 138\,656 & 77\,467 & 0.5748 & 0.5480 & 67.81 & $<$0.0001 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Both Louvain and Infomap yield highly significant t-statistics ($t > 67$, $p < 0.0001$),
+confirming that the observed difference between intra-community and inter-community
+similarity is not due to random chance.  However, the effect size (Cohen's $d \approx 0.31$--$0.35$)
+is small to medium, indicating that while the difference is real, the practical
+magnitude of the separation is modest.  This aligns with the visual observation
+from the box plots: the two distributions overlap considerably, with intra-community
+similarity being only marginally higher on average.
+
+\subsection{Node Count Annotations for Degree vs.\ Similarity Box Plot}
+
+Figure~\ref{fig:degree_sim} was annotated with the number of nodes in each degree
+range to provide additional context.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{img-4/degree-vs-similarity-annotated.png}
+    \caption{Node degree range vs.\ average neighbour cosine similarity
+             (annotated with node counts per bin).}
+    \label{fig:degree_sim_annotated}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Node counts per degree bin for Figure~\ref{fig:degree_sim_annotated}.}
+\label{tab:degree_bin_counts}
+\begin{tabular}{lr}
+\toprule
+\textbf{Degree Range} & \textbf{Node Count} \\
+\midrule
+0--3 & 2\,116 \\
+3--10 & 3\,028 \\
+10--30 & 2\,380 \\
+30--100 & 2\,626 \\
+100--300 & 1\,148 \\
+300--500 & 48 \\
+500--1000 & 17 \\
+1000--1500 & 1 \\
+1500--2000 & 1 \\
+2000--2500 & 1 \\
+2500--3000 & 0 \\
+3000--3500 & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The degree distribution is heavily right-skewed: the vast majority of nodes
+(10\,150 out of 11\,367) fall in the 0--100 degree range, while fewer than 70
+nodes have degree exceeding 300.  This confirms the scale-free nature of the
+network and explains why high-degree bins have limited sample sizes for
+similarity statistics.
+
+% ═══════════════════════════════════════════════════════════════════════════
 \section{Conclusion}
 % ═══════════════════════════════════════════════════════════════════════════
 
@@ -614,8 +733,9 @@ Phase 4 of the Custom-WikiCS analysis demonstrates that:
           identify meaningful community structure; Louvain produces fewer,
           larger communities while Infomap yields finer-grained partitions.
     \item Intra-community edges are consistently more similar than
-          inter-community edges for both algorithms, validating the semantic
-          coherence of the detected communities.
+          inter-community edges for both algorithms (Louvain: $t=68.20$, Infomap:
+          $t=67.81$, $p<0.0001$), confirming that the difference is statistically
+          significant though small in practical effect (Cohen's $d\approx0.31$--$0.35$).
     \item High-degree hub nodes act as generalist connectors with average
           neighbour similarity converging to the global mean, while low-degree
           nodes exhibit higher variance, reflecting both specialist niches and
