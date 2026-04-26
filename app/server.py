@@ -116,6 +116,9 @@ class ArticleRecord:
     title: str
     label: str
     excerpt: str
+    in_degree: int
+    out_degree: int
+    total_degree: int
 
 
 class RepoRecommender:
@@ -136,6 +139,9 @@ class RepoRecommender:
                 title=node["title"],
                 label=node.get("label", "Wikipedia article"),
                 excerpt=shorten_text(node.get("raw_text", "")),
+                in_degree=int(self.graph.in_degree(node_id)),
+                out_degree=int(self.graph.out_degree(node_id)),
+                total_degree=int(self.graph_undirected.degree(node_id)),
             )
             self.article_by_id[node_id] = record
             self.article_by_title[record.title] = record
@@ -200,6 +206,10 @@ class RepoRecommender:
             "display_title": prettify_title(record.title),
             "label": record.label,
             "excerpt": record.excerpt,
+            "canonical_title": record.title,
+            "in_degree": record.in_degree,
+            "out_degree": record.out_degree,
+            "total_degree": record.total_degree,
         }
 
     def search(self, query: str, limit: int = 8) -> list[dict[str, object]]:
@@ -258,6 +268,10 @@ class RepoRecommender:
                     "display_title": prettify_title(article.title),
                     "label": article.label,
                     "excerpt": article.excerpt,
+                    "canonical_title": article.title,
+                    "in_degree": article.in_degree,
+                    "out_degree": article.out_degree,
+                    "total_degree": article.total_degree,
                     "score": float(scores[idx]),
                 }
             )
@@ -288,6 +302,10 @@ class RepoRecommender:
                     "display_title": prettify_title(article.title),
                     "label": article.label,
                     "excerpt": article.excerpt,
+                    "canonical_title": article.title,
+                    "in_degree": article.in_degree,
+                    "out_degree": article.out_degree,
+                    "total_degree": article.total_degree,
                     "score": float(scores[idx]),
                 }
             )
@@ -382,6 +400,11 @@ class RepoRecommender:
         else:
             scores = self._scores_rank_fusion(source_id)
             results = self._top_results_from_scores(source_id, scores, top_k)
+
+        for item in results:
+            rec_id = int(item["id"])
+            item["linked_from_source"] = self.graph.has_edge(source_id, rec_id)
+            item["linked_to_source"] = self.graph.has_edge(rec_id, source_id)
 
         return {
             "source": self.get_article_payload(resolved),

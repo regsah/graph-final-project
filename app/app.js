@@ -23,6 +23,10 @@ const ui = {
   previewLabel: document.getElementById("preview-label"),
   previewRank: document.getElementById("preview-rank"),
   previewScore: document.getElementById("preview-score"),
+  previewCanonical: document.getElementById("preview-canonical"),
+  previewNodeId: document.getElementById("preview-node-id"),
+  previewDegree: document.getElementById("preview-degree"),
+  previewLinkPattern: document.getElementById("preview-link-pattern"),
   previewExcerpt: document.getElementById("preview-excerpt")
 };
 
@@ -366,6 +370,10 @@ function selectResult(resultId) {
   ui.previewLabel.textContent = item.label;
   ui.previewRank.textContent = `Rank ${item.rank}`;
   ui.previewScore.textContent = `Score ${Number(item.score).toFixed(4)}`;
+  ui.previewCanonical.textContent = item.canonical_title || item.title;
+  ui.previewNodeId.textContent = String(item.id);
+  ui.previewDegree.textContent = `in ${item.in_degree} / out ${item.out_degree} / total ${item.total_degree}`;
+  ui.previewLinkPattern.textContent = formatLinkPattern(item);
   ui.previewExcerpt.textContent = item.excerpt;
 
   renderResults();
@@ -377,6 +385,10 @@ function resetPreview() {
   ui.previewLabel.textContent = "Preview";
   ui.previewRank.textContent = "Rank -";
   ui.previewScore.textContent = "Score -";
+  ui.previewCanonical.textContent = "-";
+  ui.previewNodeId.textContent = "-";
+  ui.previewDegree.textContent = "-";
+  ui.previewLinkPattern.textContent = "-";
   ui.previewExcerpt.textContent =
     "The right panel will show a compact title, score, and representative article excerpt once a result is selected from the center column.";
 }
@@ -414,6 +426,19 @@ function formatTitle(value) {
 
 function normalizeTitle(value) {
   return formatTitle(value).replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function formatLinkPattern(item) {
+  if (item.linked_from_source && item.linked_to_source) {
+    return "bidirectional with source";
+  }
+  if (item.linked_from_source) {
+    return "source links to this article";
+  }
+  if (item.linked_to_source) {
+    return "this article links back to source";
+  }
+  return "not a direct edge in either direction";
 }
 
 init();
