@@ -87,9 +87,9 @@
             <p class="section-label">Future layer</p>
             <h2>Learning tree</h2>
             <p class="muted-copy">
-              The LLM structuring layer is intentionally not active in this prototype.
-              The center column currently shows the flat top-20 order that the future
-              tree layer will consume.
+              The app now supports an optional learning-path organization step.
+              Ranked results remain the default view, and the center panel can
+              switch into an accordion-based path when you want a structured order.
             </p>
           </section>
         </aside>
@@ -121,12 +121,19 @@
                 <p class="section-label">Results</p>
                 <h3 id="results-title">Start by selecting an article</h3>
               </div>
-              <div class="results-count" id="results-count">0 items</div>
+              <div class="results-toolbar-right">
+                <div class="view-toggle" role="tablist" aria-label="Result view mode">
+                  <button id="ranked-view-button" class="view-toggle-button is-active" type="button">Ranked View</button>
+                  <button id="path-view-button" class="view-toggle-button" type="button">Learning Path View</button>
+                </div>
+                <div class="results-count" id="results-count">0 items</div>
+              </div>
             </div>
             <p id="results-meta" class="helper-text results-meta">
               The app will use the repository's cached graph and embedding artifacts.
             </p>
             <ol id="results-list" class="results-list"></ol>
+            <div id="learning-path-panel" class="learning-path-panel is-hidden"></div>
             <div id="empty-state" class="empty-state">
               <h3>No recommendations yet</h3>
               <p>

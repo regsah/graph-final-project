@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 from urllib.parse import parse_qs, unquote, urlparse
 
 import numpy as np
@@ -30,6 +32,8 @@ N2V_PATH = CUSTOM_WIKI_DIR / "cap-embeddings" / "node2vec" / "master_embeddings.
 ALPHA_PATH = CUSTOM_WIKI_DIR / "cache" / "recommendation-1" / "alpha.pkl"
 GCN_PATH = CUSTOM_WIKI_DIR / "cache" / "gcn" / "gcn_only_results.pkl"
 SAGE_PATH = CUSTOM_WIKI_DIR / "cache" / "graphSAGE" / "graphsage_results.pkl"
+OLLAMA_BASE_URL = os.environ.get("WIKIPATH_OLLAMA_URL", "http://127.0.0.1:11434")
+OLLAMA_MODEL = os.environ.get("WIKIPATH_OLLAMA_MODEL", "llama3.2:3b")
 
 
 MODEL_CATALOG = [
@@ -87,6 +91,13 @@ STARTER_TITLES = [
     "Machine_translation",
 ]
 
+LEARNING_PATH_SECTIONS = [
+    {"id": "foundations", "title": "Foundations", "summary": "Articles to understand first."},
+    {"id": "core", "title": "Core Concepts", "summary": "Articles central to the target topic."},
+    {"id": "advanced", "title": "Advanced Topics", "summary": "Articles that deepen or specialize the topic."},
+    {"id": "adjacent", "title": "Adjacent Topics", "summary": "Useful supporting or neighboring concepts."},
+]
+
 
 def normalize_rows(matrix: np.ndarray) -> np.ndarray:
     matrix = np.asarray(matrix, dtype=np.float32)
@@ -108,6 +119,20 @@ def prettify_title(title: str) -> str:
 
 def normalize_title_query(text: str) -> str:
     return " ".join(text.replace("_", " ").split()).strip().lower()
+
+
+def linked_pattern_text(item: dict[str, object]) -> str:
+    if item.get("linked_from_source") and item.get("linked_to_source"):
+        return "bidirectional"
+    if item.get("linked_from_source"):
+        return "source_to_candidate"
+    if item.get("linked_to_source"):
+        return "candidate_to_source"
+    return "no_direct_edge"
+
+
+def canonicalize_title_for_match(title: str) -> str:
+    return normalize_title_query(title)
 
 
 @dataclass
@@ -413,8 +438,354 @@ class RepoRecommender:
             "results": results,
         }
 
+    def organize_learning_path(
+        self,
+        title: str,
+        model_id: str,
+        top_k: int = 20,
+        organizer_model: str | None = None,
+    ) -> dict[str, object]:
+        recommendation_payload = self.recommend(title, model_id, top_k=top_k)
+        organization = build_learning_path(
+            recommendation_payload,
+            organizer_model=organizer_model or OLLAMA_MODEL,
+        )
+        return {
+            **organization,
+            "source": recommendation_payload["source"],
+            "resolved_title": recommendation_payload["resolved_title"],
+            "model_id": model_id,
+        }
+
 
 RECOMMENDER = RepoRecommender()
+
+
+def call_ollama_json(messages: list[dict[str, str]], model: str) -> tuple[str, dict[str, object]]:
+    payload = {
+        "model": model,
+        "stream": False,
+        "format": "json",
+        "options": {
+            "temperature": 0.2,
+            "top_p": 0.9,
+        },
+        "messages": messages,
+    }
+    data = json.dumps(payload).encode("utf-8")
+    request = Request(
+        f"{OLLAMA_BASE_URL}/api/chat",
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=140) as response:
+            raw = response.read().decode("utf-8")
+    except HTTPError as exc:
+        raise RuntimeError(f"Ollama HTTP error: {exc.code} {exc.reason}") from exc
+    except URLError as exc:
+        raise RuntimeError(f"Ollama connection error: {exc.reason}") from exc
+    except Exception as exc:
+        raise RuntimeError(str(exc)) from exc
+
+    payload = json.loads(raw)
+    content = payload.get("message", {}).get("content", "")
+    return content, payload
+
+
+def stream_ollama_content(messages: list[dict[str, str]], model: str, on_chunk) -> str:
+    payload = {
+        "model": model,
+        "stream": True,
+        "format": "json",
+        "options": {
+            "temperature": 0.2,
+            "top_p": 0.9,
+        },
+        "messages": messages,
+    }
+    data = json.dumps(payload).encode("utf-8")
+    request = Request(
+        f"{OLLAMA_BASE_URL}/api/chat",
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    collected: list[str] = []
+    try:
+        with urlopen(request, timeout=180) as response:
+            while True:
+                line = response.readline()
+                if not line:
+                    break
+                line = line.decode("utf-8").strip()
+                if not line:
+                    continue
+                part = json.loads(line)
+                chunk = part.get("message", {}).get("content", "")
+                if chunk:
+                    collected.append(chunk)
+                    on_chunk(chunk)
+                if part.get("done"):
+                    break
+    except HTTPError as exc:
+        raise RuntimeError(f"Ollama HTTP error: {exc.code} {exc.reason}") from exc
+    except URLError as exc:
+        raise RuntimeError(f"Ollama connection error: {exc.reason}") from exc
+    except Exception as exc:
+        raise RuntimeError(str(exc)) from exc
+    return "".join(collected)
+
+
+def make_learning_path_prompt(recommendation_payload: dict[str, object]) -> list[dict[str, str]]:
+    source = recommendation_payload["source"]
+    candidates = []
+    for item in recommendation_payload["results"]:
+        candidates.append(
+            {
+                "title": item["title"],
+                "label": item["label"],
+                "rank": item["rank"],
+                "score": round(float(item["score"]), 4),
+                "link_pattern": linked_pattern_text(item),
+            }
+        )
+
+    instructions = (
+        "Return only valid JSON.\n"
+        "You are assigning retrieved Wikipedia computer-science articles into learning-path buckets.\n"
+        "Use only canonical candidate titles from the provided list.\n"
+        "Allowed sections are exactly: foundations, core, advanced, adjacent.\n"
+        "Do not invent titles.\n"
+        "Do not duplicate titles.\n"
+        "Keep each why field very short.\n"
+        "Return exactly one placement for every candidate title.\n"
+        "Output shape: {\"placements\": [{\"title\": \"Candidate_title\", \"rank\": 1, \"section\": \"foundations|core|advanced|adjacent\", \"why\": \"Short reason.\"}]}"
+    )
+
+    user_payload = {
+        "target": {
+            "canonical_title": source["title"],
+            "label": source["label"],
+        },
+        "retrieval_model": recommendation_payload["model_id"],
+        "candidate_articles": candidates,
+        "allowed_sections": [section["id"] for section in LEARNING_PATH_SECTIONS],
+    }
+
+    return [
+        {"role": "system", "content": instructions},
+        {"role": "user", "content": json.dumps(user_payload, ensure_ascii=True)},
+    ]
+
+
+def validate_learning_path(raw_obj: object, candidate_map: dict[str, dict[str, object]], target_title: str) -> tuple[dict[str, object], list[str]]:
+    errors: list[str] = []
+    if not isinstance(raw_obj, dict):
+        return {}, ["Top-level JSON must be an object."]
+
+    placements_obj = raw_obj.get("placements")
+    if not isinstance(placements_obj, list):
+        return {}, ["`placements` must be a list."]
+
+    valid_section_ids = {section["id"] for section in LEARNING_PATH_SECTIONS}
+    section_map: dict[str, dict[str, object]] = {}
+    used_titles: set[str] = set()
+    used_ranks: set[int] = set()
+    for section_cfg in LEARNING_PATH_SECTIONS:
+        section_map[section_cfg["id"]] = {
+            "id": section_cfg["id"],
+            "title": section_cfg["title"],
+            "summary": section_cfg["summary"],
+            "items": [],
+        }
+
+    for item in placements_obj:
+        if not isinstance(item, dict):
+            errors.append("Each placement must be an object.")
+            continue
+        title = item.get("title")
+        rank = item.get("rank")
+        section_id = item.get("section")
+        why = item.get("why", "")
+        normalized_title = canonicalize_title_for_match(str(title))
+        if normalized_title not in candidate_map:
+            errors.append(f"Unknown candidate title: {title}")
+            continue
+        if section_id not in valid_section_ids:
+            errors.append(f"Invalid section id: {section_id}")
+            continue
+        candidate = candidate_map[normalized_title]
+        if normalized_title in used_titles:
+            errors.append(f"Duplicate title across placements: {title}")
+            continue
+        if not isinstance(rank, int):
+            errors.append(f"Missing or invalid rank for title `{title}`.")
+            continue
+        if rank != int(candidate["rank"]):
+            errors.append(f"Rank mismatch for title `{title}`: expected {candidate['rank']}, got {rank}")
+            continue
+        if rank in used_ranks:
+            errors.append(f"Duplicate rank across placements: {rank}")
+            continue
+        if not isinstance(why, str) or not why.strip():
+            errors.append(f"Missing or empty why for title `{title}`.")
+            continue
+
+        used_titles.add(normalized_title)
+        used_ranks.add(rank)
+        section_map[section_id]["items"].append(
+            {
+                **candidate,
+                "why": " ".join(why.split()),
+            }
+        )
+
+    total_items = sum(len(section["items"]) for section in section_map.values())
+    if total_items != len(candidate_map):
+        errors.append(f"Learning path must contain all {len(candidate_map)} ranked titles exactly once.")
+    if len(used_ranks) != len(candidate_map):
+        errors.append(f"Learning path must contain all {len(candidate_map)} ranks exactly once.")
+
+    normalized = {
+        "target": target_title,
+        "view_type": "learning_path",
+        "sections": [
+            {
+                **section_map[section_cfg["id"]],
+                "items": sorted(section_map[section_cfg["id"]]["items"], key=lambda item: int(item["rank"])),
+            }
+            for section_cfg in LEARNING_PATH_SECTIONS
+        ],
+    }
+    return normalized, errors
+
+
+def heuristic_learning_path(recommendation_payload: dict[str, object]) -> dict[str, object]:
+    source = recommendation_payload["source"]
+    results = recommendation_payload["results"]
+    by_degree = sorted(results, key=lambda item: (-int(item["total_degree"]), int(item["rank"])))
+    foundations = by_degree[:5]
+    foundation_ids = {item["id"] for item in foundations}
+
+    remaining = [item for item in results if item["id"] not in foundation_ids]
+    core = remaining[:7]
+    remaining = remaining[7:]
+    advanced = remaining[:4]
+    adjacent = remaining[4:]
+
+    def decorate(items: list[dict[str, object]], why: str) -> list[dict[str, object]]:
+        return [{**item, "why": why} for item in items]
+
+    return {
+        "target": source["title"],
+        "view_type": "learning_path",
+        "sections": [
+            {
+                "id": "foundations",
+                "title": "Foundations",
+                "summary": "Heuristic fallback based on broader graph connectivity.",
+                "items": decorate(foundations, "Chosen as a likely broad prerequisite from the retrieved set."),
+            },
+            {
+                "id": "core",
+                "title": "Core Concepts",
+                "summary": "Highest-ranked central articles remaining after the foundations split.",
+                "items": decorate(core, "Chosen as a central concept near the target topic."),
+            },
+            {
+                "id": "advanced",
+                "title": "Advanced Topics",
+                "summary": "Lower-ranked articles that extend the core topic.",
+                "items": decorate(advanced, "Chosen as a deeper or more specialized follow-up."),
+            },
+            {
+                "id": "adjacent",
+                "title": "Adjacent Topics",
+                "summary": "Neighboring topics that may be useful but less central.",
+                "items": decorate(adjacent, "Chosen as a supporting neighboring topic."),
+            },
+        ],
+        "organizer_model": None,
+        "mode": "heuristic_fallback",
+        "warning": "The local LLM organizer was unavailable or returned invalid output, so a heuristic learning path was used instead.",
+        "attempts": 0,
+    }
+
+
+def build_learning_path(recommendation_payload: dict[str, object], organizer_model: str) -> dict[str, object]:
+    candidate_map = {
+        canonicalize_title_for_match(str(item["title"])): item
+        for item in recommendation_payload["results"]
+    }
+    base_messages = make_learning_path_prompt(recommendation_payload)
+    messages = list(base_messages)
+    last_error = "unknown error"
+    last_content = ""
+
+    for attempt in range(1, 2):
+        try:
+            content, _ = call_ollama_json(messages, organizer_model)
+            last_content = content
+        except RuntimeError as exc:
+            last_error = str(exc)
+            break
+
+        try:
+            raw_obj = json.loads(content)
+        except json.JSONDecodeError as exc:
+            last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
+            messages = list(base_messages) + [
+                {
+                    "role": "assistant",
+                    "content": content,
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Your previous output was invalid JSON. Error: {last_error}. "
+                        "Return corrected JSON only. Do not include markdown or commentary."
+                    ),
+                },
+            ]
+            continue
+
+        normalized, validation_errors = validate_learning_path(
+            raw_obj,
+            candidate_map=candidate_map,
+            target_title=str(recommendation_payload["source"]["title"]),
+        )
+        if not validation_errors:
+            return {
+                **normalized,
+                "organizer_model": organizer_model,
+                "mode": "llm",
+                "warning": None,
+                "attempts": attempt,
+                "raw_llm_output": last_content,
+            }
+
+        last_error = "; ".join(validation_errors)
+        messages = list(base_messages) + [
+            {
+                "role": "assistant",
+                "content": content,
+            },
+            {
+                "role": "user",
+                "content": (
+                    "The previous JSON parsed but failed validation. "
+                    f"Problems: {last_error}. "
+                    "Return corrected JSON only. Use only candidate titles."
+                ),
+            },
+        ]
+
+    fallback = heuristic_learning_path(recommendation_payload)
+    fallback["warning"] = f"{fallback['warning']} Last error: {last_error}"
+    fallback["raw_llm_output"] = last_content
+    return fallback
 
 
 class AppHandler(BaseHTTPRequestHandler):
@@ -423,10 +794,20 @@ class AppHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path == "/api/organize-stream":
+            self._handle_organize_stream(parsed)
+            return
         if parsed.path.startswith("/api/"):
             self._handle_api(parsed)
             return
         self._handle_static(parsed.path)
+
+    def do_POST(self) -> None:
+        parsed = urlparse(self.path)
+        if parsed.path == "/api/organize":
+            self._handle_organize()
+            return
+        self._send_json({"error": "Unknown API route."}, status=HTTPStatus.NOT_FOUND)
 
     def _handle_api(self, parsed) -> None:
         params = parse_qs(parsed.query)
@@ -465,6 +846,121 @@ class AppHandler(BaseHTTPRequestHandler):
             self._send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
         except Exception as exc:  # pragma: no cover - best effort local app server
             self._send_json({"error": f"Internal server error: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    def _handle_organize(self) -> None:
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            raw_body = self.rfile.read(content_length).decode("utf-8") if content_length else "{}"
+            body = json.loads(raw_body)
+
+            title = str(body.get("title", "")).strip()
+            model_id = str(body.get("model_id", "hybrid-corrected"))
+            top_k = int(body.get("top_k", 20))
+            organizer_model = str(body.get("organizer_model", OLLAMA_MODEL))
+
+            if not title:
+                self._send_json({"error": "Missing title in request body."}, status=HTTPStatus.BAD_REQUEST)
+                return
+
+            payload = RECOMMENDER.organize_learning_path(
+                title,
+                model_id=model_id,
+                top_k=top_k,
+                organizer_model=organizer_model,
+            )
+            self._send_json(payload)
+        except json.JSONDecodeError as exc:
+            self._send_json({"error": f"Invalid JSON body: {exc.msg}"}, status=HTTPStatus.BAD_REQUEST)
+        except KeyError as exc:
+            self._send_json({"error": str(exc)}, status=HTTPStatus.NOT_FOUND)
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+        except Exception as exc:  # pragma: no cover
+            self._send_json({"error": f"Internal server error: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    def _handle_organize_stream(self, parsed) -> None:
+        params = parse_qs(parsed.query)
+        title = unquote(params.get("title", [""])[0]).strip()
+        model_id = params.get("model_id", ["hybrid-corrected"])[0]
+        top_k = int(params.get("top_k", ["20"])[0])
+        organizer_model = params.get("organizer_model", [OLLAMA_MODEL])[0]
+
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.end_headers()
+
+        def send_event(event_name: str, payload: dict[str, object]) -> None:
+            data = json.dumps(payload, ensure_ascii=True)
+            self.wfile.write(f"event: {event_name}\n".encode("utf-8"))
+            self.wfile.write(f"data: {data}\n\n".encode("utf-8"))
+            self.wfile.flush()
+
+        try:
+            recommendation_payload = RECOMMENDER.recommend(title, model_id, top_k=top_k)
+            candidate_map = {
+                canonicalize_title_for_match(str(item["title"])): item
+                for item in recommendation_payload["results"]
+            }
+            messages = make_learning_path_prompt(recommendation_payload)
+            raw_output = stream_ollama_content(
+                messages,
+                organizer_model,
+                lambda chunk: send_event("token", {"chunk": chunk}),
+            )
+
+            raw_obj = json.loads(raw_output)
+            normalized, validation_errors = validate_learning_path(
+                raw_obj,
+                candidate_map=candidate_map,
+                target_title=str(recommendation_payload["source"]["title"]),
+            )
+
+            if validation_errors:
+                payload = heuristic_learning_path(recommendation_payload)
+                payload["warning"] = (
+                    "The local LLM organizer returned invalid structured output and a heuristic path was used instead. "
+                    f"Last error: {'; '.join(validation_errors)}"
+                )
+                payload["raw_llm_output"] = raw_output
+            else:
+                payload = {
+                    **normalized,
+                    "organizer_model": organizer_model,
+                    "mode": "llm",
+                    "warning": None,
+                    "attempts": 1,
+                    "raw_llm_output": raw_output,
+                }
+
+            payload.update(
+                {
+                    "source": recommendation_payload["source"],
+                    "resolved_title": recommendation_payload["resolved_title"],
+                    "model_id": model_id,
+                }
+            )
+            send_event("complete", payload)
+        except Exception as exc:
+            try:
+                recommendation_payload = RECOMMENDER.recommend(title, model_id, top_k=top_k)
+                payload = heuristic_learning_path(recommendation_payload)
+                payload["warning"] = (
+                    "The local LLM organizer was unavailable or timed out, so a heuristic path was used instead. "
+                    f"Last error: {exc}"
+                )
+                payload["raw_llm_output"] = ""
+                payload.update(
+                    {
+                        "source": recommendation_payload["source"],
+                        "resolved_title": recommendation_payload["resolved_title"],
+                        "model_id": model_id,
+                    }
+                )
+                send_event("complete", payload)
+            except Exception as inner_exc:  # pragma: no cover
+                send_event("fatal", {"error": str(inner_exc)})
 
     def _handle_static(self, path: str) -> None:
         rel_path = "index.html" if path in {"/", ""} else path.lstrip("/")
