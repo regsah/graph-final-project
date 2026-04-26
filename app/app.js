@@ -36,6 +36,7 @@ const state = {
 };
 
 let searchDebounce = null;
+let latestSearchRequest = 0;
 
 function setStatus(message, tone = "default") {
   ui.appStatus.textContent = message;
@@ -129,16 +130,24 @@ function updateModelUI() {
 }
 
 async function refreshSuggestions(query) {
+  const requestId = ++latestSearchRequest;
   state.isLoadingSearch = true;
-  ui.suggestionsList.innerHTML = `<li class="helper-text">Loading suggestions...</li>`;
   try {
     const payload = await fetchJson(`/api/search?q=${encodeURIComponent(query)}&limit=8`);
+    if (requestId !== latestSearchRequest) {
+      return;
+    }
     state.suggestions = payload.results;
     renderSuggestions();
   } catch (error) {
+    if (requestId !== latestSearchRequest) {
+      return;
+    }
     ui.suggestionsList.innerHTML = `<li class="helper-text">${error.message}</li>`;
   } finally {
-    state.isLoadingSearch = false;
+    if (requestId === latestSearchRequest) {
+      state.isLoadingSearch = false;
+    }
   }
 }
 
@@ -191,7 +200,9 @@ async function handleQuerySubmit() {
     const payload = await fetchJson(`/api/search?q=${encodeURIComponent(query)}&limit=8`);
     const candidates = payload.results;
 
-    const exactCandidate = candidates.find((item) => item.title.toLowerCase() === query.toLowerCase());
+    const exactCandidate = candidates.find(
+      (item) => normalizeTitle(item.title) === normalizedQuery
+    );
     if (exactCandidate) {
       selectStartingArticle(exactCandidate);
       return;
@@ -205,28 +216,8 @@ async function handleQuerySubmit() {
     }
 
     ui.disambiguationBlock.classList.remove("is-hidden");
-    ui.disambiguationList.innerHTML = candidates
-      .map(
-        (item) => `
-          <li>
-            <button class="candidate-item" type="button" data-title="${escapeHtml(item.title)}">
-              ${escapeHtml(item.title)}
-              <small>${escapeHtml(item.label)}</small>
-            </button>
-          </li>
-        `
-      )
-      .join("");
-
-    document.querySelectorAll(".candidate-item").forEach((button) => {
-      button.addEventListener("click", () => {
-        const article = candidates.find((item) => item.title === button.dataset.title);
-        if (article) {
-          ui.queryInput.value = article.display_title || formatTitle(article.title);
-          selectStartingArticle(article);
-        }
-      });
-    });
+    ui.disambiguationList.innerHTML =
+      '<li class="helper-text">Matching titles are already listed in Suggestions.</li>';
   } catch (error) {
     ui.disambiguationBlock.classList.remove("is-hidden");
     ui.disambiguationList.innerHTML = `<li class="helper-text">${error.message}</li>`;

@@ -60,8 +60,16 @@
             </div>
             <p class="helper-text">
               Partial matches appear while you type. If you submit without choosing one,
-              the app will ask you to disambiguate.
+              the app will ask you to pick from the suggestions already shown.
             </p>
+
+            <div id="disambiguation-block" class="disambiguation-block is-hidden">
+              <div class="inline-note">
+                <strong>No article selected yet.</strong>
+                <span>Pick one of the suggestions below to continue.</span>
+              </div>
+              <ul id="disambiguation-list" class="candidate-list"></ul>
+            </div>
 
             <div id="selected-article-card" class="selected-card is-hidden">
               <p class="section-label">Starting article</p>
@@ -72,14 +80,6 @@
             <div class="suggestions-block">
               <p class="field-label">Suggestions</p>
               <ul id="suggestions-list" class="suggestions-list"></ul>
-            </div>
-
-            <div id="disambiguation-block" class="disambiguation-block is-hidden">
-              <div class="inline-note">
-                <strong>No article selected yet.</strong>
-                <span>Choose one of the closest matches below to continue.</span>
-              </div>
-              <ul id="disambiguation-list" class="candidate-list"></ul>
             </div>
           </section>
 
