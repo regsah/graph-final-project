@@ -30,9 +30,16 @@ A framework-free static prototype that demonstrates the agreed product flow:
 
 ## How to view it
 
-Open `app/index.html` in a browser.
+Run the local app server from the repo root:
 
-Because this first pass is static and dependency-free, no install step is required.
+`python app/server.py`
+
+Then open:
+
+`http://127.0.0.1:8000`
+
+The server hosts both the frontend files and the local API that reads the
+repository's cached graph and embedding artifacts.
 
 ## Current design decision
 
@@ -44,5 +51,5 @@ The layout follows the clarified direction:
 
 ## Next likely step
 
-After this prototype is approved, the next step is to replace the mock data in
-`app.js` with a real API or local bridge to the repository's recommendation logic.
+After this version, the next likely step is adding a thin structuring layer for
+the future LLM-based learning tree while keeping the retrieval API stable.

@@ -25,6 +25,10 @@
         </div>
       </header>
 
+      <div id="app-status" class="app-status">
+        Connect through the local app server to use the real recommendation pipeline.
+      </div>
+
       <div class="layout">
         <aside class="panel panel-left">
           <section class="panel-section">
@@ -119,6 +123,9 @@
               </div>
               <div class="results-count" id="results-count">0 items</div>
             </div>
+            <p id="results-meta" class="helper-text results-meta">
+              The app will use the repository's cached graph and embedding artifacts.
+            </p>
             <ol id="results-list" class="results-list"></ol>
             <div id="empty-state" class="empty-state">
               <h3>No recommendations yet</h3>

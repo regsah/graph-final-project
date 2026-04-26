@@ -43,6 +43,16 @@ body {
   margin: 0 auto;
 }
 
+.app-status {
+  margin: 0 8px 18px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: rgba(255, 250, 242, 0.78);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -334,6 +344,10 @@ body {
   color: var(--muted);
   font-size: 0.95rem;
   font-weight: 700;
+}
+
+.results-meta {
+  margin: 0 0 14px;
 }
 
 .results-list {
