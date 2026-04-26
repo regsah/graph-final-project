@@ -29,6 +29,7 @@ BGE_PATH = CUSTOM_WIKI_DIR / "cap-embeddings" / "BAAI_bge-m3" / "master_embeddin
 N2V_PATH = CUSTOM_WIKI_DIR / "cap-embeddings" / "node2vec" / "master_embeddings.parquet"
 ALPHA_PATH = CUSTOM_WIKI_DIR / "cache" / "recommendation-1" / "alpha.pkl"
 GCN_PATH = CUSTOM_WIKI_DIR / "cache" / "gcn" / "gcn_only_results.pkl"
+SAGE_PATH = CUSTOM_WIKI_DIR / "cache" / "graphSAGE" / "graphsage_results.pkl"
 
 
 MODEL_CATALOG = [
@@ -53,9 +54,24 @@ MODEL_CATALOG = [
         "description": "Hybrid recommendation model blending semantics with corrected structural signal."
     },
     {
+        "id": "gcn-only",
+        "name": "GCN Only",
+        "description": "Graph convolutional node embeddings used directly for structural recommendation."
+    },
+    {
         "id": "gcn-bge-fusion",
         "name": "GCN + BGE-M3 (rank fusion)",
         "description": "Ranking-level fusion between graph-learned and text-based similarity."
+    },
+    {
+        "id": "hybrid-uncorrected",
+        "name": "BGE-M3 + Node2Vec (uncorrected)",
+        "description": "Direct semantic + structural concatenation without popularity correction."
+    },
+    {
+        "id": "sage-only",
+        "name": "GraphSAGE Only",
+        "description": "GraphSAGE node embeddings used directly for structural recommendation."
     },
 ]
 
@@ -84,6 +100,14 @@ def shorten_text(text: str, limit: int = 320) -> str:
     if len(compact) <= limit:
         return compact
     return compact[:limit].rsplit(" ", 1)[0] + "..."
+
+
+def prettify_title(title: str) -> str:
+    return title.replace("_", " ")
+
+
+def normalize_title_query(text: str) -> str:
+    return " ".join(text.replace("_", " ").split()).strip().lower()
 
 
 @dataclass
@@ -141,6 +165,9 @@ class RepoRecommender:
         )
 
         n2v_scaled = self.n2v_raw / self.degree_penalty[:, np.newaxis]
+        combined_uncorrected = np.concatenate([self.bge_norm, self.n2v_raw], axis=1)
+        self.hybrid_uncorrected_norm = normalize_rows(combined_uncorrected)
+
         combined_corrected = np.concatenate([self.bge_norm, n2v_scaled], axis=1)
         self.hybrid_corrected_norm = normalize_rows(combined_corrected)
 
@@ -149,6 +176,12 @@ class RepoRecommender:
         self.gcn_node_to_idx = {int(k): int(v) for k, v in gcn_data["node_to_idx"].items()}
         self.gcn_idx_to_node = {int(k): int(v) for k, v in gcn_data["idx_to_node"].items()}
         self.gcn_norm = normalize_rows(np.asarray(gcn_data["final_embeddings"], dtype=np.float32))
+
+        with open(SAGE_PATH, "rb") as f:
+            sage_data = pickle.load(f)
+        self.sage_node_to_idx = {int(k): int(v) for k, v in sage_data["node_to_idx"].items()}
+        self.sage_idx_to_node = {int(k): int(v) for k, v in sage_data["idx_to_node"].items()}
+        self.sage_norm = normalize_rows(np.asarray(sage_data["final_embeddings"], dtype=np.float32))
 
         common_ids = sorted(set(self.id_to_idx.keys()) & set(self.gcn_node_to_idx.keys()))
         self.common_ids = np.array(common_ids, dtype=np.int64)
@@ -164,6 +197,7 @@ class RepoRecommender:
         return {
             "id": record.node_id,
             "title": record.title,
+            "display_title": prettify_title(record.title),
             "label": record.label,
             "excerpt": record.excerpt,
         }
@@ -177,14 +211,14 @@ class RepoRecommender:
                 starter_records.extend(missing[: max(0, limit - len(starter_records))])
             return [self.get_article_payload(title) for title in starter_records[:limit]]
 
-        lowered = query.lower()
+        normalized_query = normalize_title_query(query)
         prefix_matches = []
         substring_matches = []
         for title in self.searchable_titles:
-            title_lower = title.lower()
-            if title_lower.startswith(lowered):
+            normalized_title = normalize_title_query(title)
+            if normalized_title.startswith(normalized_query):
                 prefix_matches.append(title)
-            elif lowered in title_lower:
+            elif normalized_query in normalized_title:
                 substring_matches.append(title)
 
         matches = prefix_matches + substring_matches
@@ -198,9 +232,9 @@ class RepoRecommender:
         if query in self.title_to_id:
             return query
 
-        lowered = query.lower()
+        normalized_query = normalize_title_query(query)
         for title in self.searchable_titles:
-            if title.lower() == lowered:
+            if normalize_title_query(title) == normalized_query:
                 return title
 
         return resolve_title(query, self.title_to_id, threshold=0.6)
@@ -221,6 +255,37 @@ class RepoRecommender:
                     "rank": rank,
                     "id": node_id,
                     "title": article.title,
+                    "display_title": prettify_title(article.title),
+                    "label": article.label,
+                    "excerpt": article.excerpt,
+                    "score": float(scores[idx]),
+                }
+            )
+        return results
+
+    def _top_results_from_scores_with_ids(
+        self,
+        source_id: int,
+        candidate_ids: np.ndarray,
+        scores: np.ndarray,
+        top_k: int,
+    ) -> list[dict[str, object]]:
+        scores = scores.astype(np.float32, copy=True)
+        source_mask = candidate_ids == source_id
+        if source_mask.any():
+            scores[source_mask] = -np.inf
+
+        ranked_indices = np.argsort(-scores)[:top_k]
+        results = []
+        for rank, idx in enumerate(ranked_indices, start=1):
+            node_id = int(candidate_ids[idx])
+            article = self.article_by_id[node_id]
+            results.append(
+                {
+                    "rank": rank,
+                    "id": node_id,
+                    "title": article.title,
+                    "display_title": prettify_title(article.title),
                     "label": article.label,
                     "excerpt": article.excerpt,
                     "score": float(scores[idx]),
@@ -244,6 +309,22 @@ class RepoRecommender:
     def _scores_hybrid_corrected(self, source_id: int) -> np.ndarray:
         src_idx = self.id_to_idx[source_id]
         return self.hybrid_corrected_norm[src_idx] @ self.hybrid_corrected_norm.T
+
+    def _scores_hybrid_uncorrected(self, source_id: int) -> np.ndarray:
+        src_idx = self.id_to_idx[source_id]
+        return self.hybrid_uncorrected_norm[src_idx] @ self.hybrid_uncorrected_norm.T
+
+    def _scores_gcn_only(self, source_id: int) -> tuple[np.ndarray, np.ndarray]:
+        src_idx = self.gcn_node_to_idx[source_id]
+        scores = self.gcn_norm[src_idx] @ self.gcn_norm.T
+        candidate_ids = np.array([self.gcn_idx_to_node[i] for i in range(len(self.gcn_idx_to_node))], dtype=np.int64)
+        return candidate_ids, scores
+
+    def _scores_sage_only(self, source_id: int) -> tuple[np.ndarray, np.ndarray]:
+        src_idx = self.sage_node_to_idx[source_id]
+        scores = self.sage_norm[src_idx] @ self.sage_norm.T
+        candidate_ids = np.array([self.sage_idx_to_node[i] for i in range(len(self.sage_idx_to_node))], dtype=np.int64)
+        return candidate_ids, scores
 
     def _scores_rank_fusion(self, source_id: int) -> np.ndarray:
         if source_id not in self.common_pos:
@@ -279,20 +360,34 @@ class RepoRecommender:
         source_id = self.title_to_id[resolved]
         if model_id == "bge-only":
             scores = self._scores_bge(source_id)
+            results = self._top_results_from_scores(source_id, scores, top_k)
         elif model_id == "n2v-uncorrected":
             scores = self._scores_n2v_uncorrected(source_id)
+            results = self._top_results_from_scores(source_id, scores, top_k)
         elif model_id == "n2v-corrected":
             scores = self._scores_n2v_corrected(source_id)
+            results = self._top_results_from_scores(source_id, scores, top_k)
         elif model_id == "hybrid-corrected":
             scores = self._scores_hybrid_corrected(source_id)
+            results = self._top_results_from_scores(source_id, scores, top_k)
+        elif model_id == "gcn-only":
+            candidate_ids, scores = self._scores_gcn_only(source_id)
+            results = self._top_results_from_scores_with_ids(source_id, candidate_ids, scores, top_k)
+        elif model_id == "hybrid-uncorrected":
+            scores = self._scores_hybrid_uncorrected(source_id)
+            results = self._top_results_from_scores(source_id, scores, top_k)
+        elif model_id == "sage-only":
+            candidate_ids, scores = self._scores_sage_only(source_id)
+            results = self._top_results_from_scores_with_ids(source_id, candidate_ids, scores, top_k)
         else:
             scores = self._scores_rank_fusion(source_id)
+            results = self._top_results_from_scores(source_id, scores, top_k)
 
         return {
             "source": self.get_article_payload(resolved),
             "resolved_title": resolved,
             "model_id": model_id,
-            "results": self._top_results_from_scores(source_id, scores, top_k),
+            "results": results,
         }
 
 

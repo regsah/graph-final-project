@@ -39,8 +39,7 @@ let searchDebounce = null;
 
 function setStatus(message, tone = "default") {
   ui.appStatus.textContent = message;
-  ui.appStatus.style.color = tone === "error" ? "#8f4627" : "";
-  ui.appStatus.style.borderColor = tone === "error" ? "rgba(143, 70, 39, 0.28)" : "";
+  ui.appStatus.dataset.tone = tone;
 }
 
 async function fetchJson(url) {
@@ -150,11 +149,11 @@ function renderSuggestions() {
   }
 
   ui.suggestionsList.innerHTML = state.suggestions
-    .map(
-      (item) => `
+      .map(
+        (item) => `
         <li>
           <button class="suggestion-item" type="button" data-title="${escapeHtml(item.title)}">
-            ${escapeHtml(item.title)}
+            ${escapeHtml(item.display_title || formatTitle(item.title))}
             <small>${escapeHtml(item.label)}</small>
           </button>
         </li>
@@ -166,7 +165,7 @@ function renderSuggestions() {
     button.addEventListener("click", () => {
       const article = state.suggestions.find((item) => item.title === button.dataset.title);
       if (article) {
-        ui.queryInput.value = article.title;
+        ui.queryInput.value = article.display_title || formatTitle(article.title);
         selectStartingArticle(article);
       }
     });
@@ -179,7 +178,10 @@ async function handleQuerySubmit() {
     return;
   }
 
-  const exact = state.suggestions.find((item) => item.title.toLowerCase() === query.toLowerCase());
+  const normalizedQuery = normalizeTitle(query);
+  const exact = state.suggestions.find(
+    (item) => normalizeTitle(item.title) === normalizedQuery
+  );
   if (exact) {
     selectStartingArticle(exact);
     return;
@@ -220,7 +222,7 @@ async function handleQuerySubmit() {
       button.addEventListener("click", () => {
         const article = candidates.find((item) => item.title === button.dataset.title);
         if (article) {
-          ui.queryInput.value = article.title;
+          ui.queryInput.value = article.display_title || formatTitle(article.title);
           selectStartingArticle(article);
         }
       });
@@ -236,9 +238,9 @@ function selectStartingArticle(article) {
   state.selectedResultId = null;
 
   ui.selectedArticleCard.classList.remove("is-hidden");
-  ui.selectedArticleTitle.textContent = article.title;
+  ui.selectedArticleTitle.textContent = article.display_title || formatTitle(article.title);
   ui.selectedArticleMeta.textContent = `${article.label} article selected as the recommendation source.`;
-  ui.activeSourcePill.textContent = article.title;
+  ui.activeSourcePill.textContent = article.display_title || formatTitle(article.title);
   ui.disambiguationBlock.classList.add("is-hidden");
 
   runRecommendations(article.title);
@@ -259,8 +261,8 @@ async function runRecommendations(title) {
     );
     state.selectedArticle = payload.source;
     state.results = payload.results;
-    ui.resultsMeta.textContent = `Resolved source article: ${payload.resolved_title}`;
-    renderResults();
+  ui.resultsMeta.textContent = `Resolved source article: ${formatTitle(payload.resolved_title)}`;
+  renderResults();
     if (state.results.length) {
       selectResult(state.results[0].id);
     }
@@ -277,7 +279,9 @@ async function runRecommendations(title) {
 }
 
 function renderResults() {
-  const sourceTitle = state.selectedArticle ? state.selectedArticle.title : "Start by selecting an article";
+  const sourceTitle = state.selectedArticle
+    ? state.selectedArticle.display_title || formatTitle(state.selectedArticle.title)
+    : "Start by selecting an article";
   ui.resultsTitle.textContent = state.selectedArticle
     ? `Top 20 for ${sourceTitle}`
     : "Start by selecting an article";
@@ -297,7 +301,10 @@ function renderResults() {
           <button class="result-card ${item.id === state.selectedResultId ? "is-active" : ""}" type="button" data-result-id="${item.id}">
             <div class="result-rank">${item.rank}</div>
             <div class="result-content">
-              <h4>${escapeHtml(item.title)}</h4>
+              <div class="result-meta-row">
+                <span class="result-label">${escapeHtml(item.label)}</span>
+              </div>
+              <h4>${escapeHtml(item.display_title || formatTitle(item.title))}</h4>
               <p>${escapeHtml(item.excerpt)}</p>
             </div>
             <div class="score-chip">${Number(item.score).toFixed(4)}</div>
@@ -321,7 +328,7 @@ function selectResult(resultId) {
     return;
   }
 
-  ui.previewTitle.textContent = item.title;
+  ui.previewTitle.textContent = item.display_title || formatTitle(item.title);
   ui.previewRank.textContent = `Rank ${item.rank}`;
   ui.previewScore.textContent = `Score ${Number(item.score).toFixed(4)}`;
   ui.previewExcerpt.textContent = item.excerpt;
@@ -361,6 +368,14 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function formatTitle(value) {
+  return String(value).replaceAll("_", " ");
+}
+
+function normalizeTitle(value) {
+  return formatTitle(value).replace(/\s+/g, " ").trim().toLowerCase();
 }
 
 init();

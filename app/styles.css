@@ -53,6 +53,11 @@ body {
   line-height: 1.45;
 }
 
+.app-status[data-tone="error"] {
+  color: #8f4627;
+  border-color: rgba(143, 70, 39, 0.28);
+}
+
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -246,6 +251,7 @@ body {
 .selected-card h3 {
   margin: 8px 0 4px;
   font-size: 1.18rem;
+  overflow-wrap: anywhere;
 }
 
 .is-hidden {
@@ -391,12 +397,32 @@ body {
 .result-content h4 {
   margin: 0;
   font-size: 1.1rem;
+  overflow-wrap: anywhere;
 }
 
 .result-content p {
   margin: 8px 0 0;
   color: var(--muted);
   line-height: 1.45;
+}
+
+.result-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.result-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(175, 95, 60, 0.1);
+  color: var(--accent-deep);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .score-chip {
@@ -435,6 +461,7 @@ body {
   margin: 8px 0 10px;
   font-size: 1.45rem;
   line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .preview-meta {
