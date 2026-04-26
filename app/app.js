@@ -18,7 +18,9 @@ const ui = {
   resultsCount: document.getElementById("results-count"),
   resultsList: document.getElementById("results-list"),
   emptyState: document.getElementById("empty-state"),
+  previewKicker: document.getElementById("preview-kicker"),
   previewTitle: document.getElementById("preview-title"),
+  previewLabel: document.getElementById("preview-label"),
   previewRank: document.getElementById("preview-rank"),
   previewScore: document.getElementById("preview-score"),
   previewExcerpt: document.getElementById("preview-excerpt")
@@ -30,6 +32,7 @@ const state = {
   selectedArticle: null,
   selectedResultId: null,
   suggestions: [],
+  highlightedSuggestionIndex: -1,
   results: [],
   isLoadingSearch: false,
   isLoadingResults: false
@@ -98,8 +101,26 @@ function attachEvents() {
   });
 
   ui.queryInput.addEventListener("keydown", async (event) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      if (state.suggestions.length) {
+        event.preventDefault();
+        moveSuggestionHighlight(direction);
+      }
+      return;
+    }
+
     if (event.key === "Enter") {
       event.preventDefault();
+      if (
+        state.highlightedSuggestionIndex >= 0 &&
+        state.highlightedSuggestionIndex < state.suggestions.length
+      ) {
+        const article = state.suggestions[state.highlightedSuggestionIndex];
+        ui.queryInput.value = article.display_title || formatTitle(article.title);
+        selectStartingArticle(article);
+        return;
+      }
       await handleQuerySubmit();
     }
   });
@@ -138,11 +159,13 @@ async function refreshSuggestions(query) {
       return;
     }
     state.suggestions = payload.results;
+    state.highlightedSuggestionIndex = query.trim() && state.suggestions.length ? 0 : -1;
     renderSuggestions();
   } catch (error) {
     if (requestId !== latestSearchRequest) {
       return;
     }
+    state.highlightedSuggestionIndex = -1;
     ui.suggestionsList.innerHTML = `<li class="helper-text">${error.message}</li>`;
   } finally {
     if (requestId === latestSearchRequest) {
@@ -153,15 +176,16 @@ async function refreshSuggestions(query) {
 
 function renderSuggestions() {
   if (!state.suggestions.length) {
+    state.highlightedSuggestionIndex = -1;
     ui.suggestionsList.innerHTML = `<li class="helper-text">No matching article titles found.</li>`;
     return;
   }
 
   ui.suggestionsList.innerHTML = state.suggestions
-      .map(
-        (item) => `
+    .map(
+      (item, index) => `
         <li>
-          <button class="suggestion-item" type="button" data-title="${escapeHtml(item.title)}">
+          <button class="suggestion-item ${index === state.highlightedSuggestionIndex ? "is-highlighted" : ""}" type="button" data-title="${escapeHtml(item.title)}">
             ${escapeHtml(item.display_title || formatTitle(item.title))}
             <small>${escapeHtml(item.label)}</small>
           </button>
@@ -179,6 +203,22 @@ function renderSuggestions() {
       }
     });
   });
+}
+
+function moveSuggestionHighlight(direction) {
+  if (!state.suggestions.length) {
+    state.highlightedSuggestionIndex = -1;
+    return;
+  }
+
+  if (state.highlightedSuggestionIndex < 0) {
+    state.highlightedSuggestionIndex = direction > 0 ? 0 : state.suggestions.length - 1;
+  } else {
+    state.highlightedSuggestionIndex =
+      (state.highlightedSuggestionIndex + direction + state.suggestions.length) % state.suggestions.length;
+  }
+
+  renderSuggestions();
 }
 
 async function handleQuerySubmit() {
@@ -319,7 +359,11 @@ function selectResult(resultId) {
     return;
   }
 
+  ui.previewKicker.textContent = state.selectedArticle
+    ? `From ${state.selectedArticle.display_title || formatTitle(state.selectedArticle.title)}`
+    : "Selected recommendation";
   ui.previewTitle.textContent = item.display_title || formatTitle(item.title);
+  ui.previewLabel.textContent = item.label;
   ui.previewRank.textContent = `Rank ${item.rank}`;
   ui.previewScore.textContent = `Score ${Number(item.score).toFixed(4)}`;
   ui.previewExcerpt.textContent = item.excerpt;
@@ -328,7 +372,9 @@ function selectResult(resultId) {
 }
 
 function resetPreview() {
+  ui.previewKicker.textContent = "Nothing selected";
   ui.previewTitle.textContent = "Choose a recommended article";
+  ui.previewLabel.textContent = "Preview";
   ui.previewRank.textContent = "Rank -";
   ui.previewScore.textContent = "Score -";
   ui.previewExcerpt.textContent =
@@ -338,6 +384,7 @@ function resetPreview() {
 function resetSelection() {
   state.selectedArticle = null;
   state.selectedResultId = null;
+  state.highlightedSuggestionIndex = -1;
   state.results = [];
   ui.queryInput.value = "";
   ui.selectedArticleCard.classList.add("is-hidden");

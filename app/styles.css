@@ -293,6 +293,12 @@ body {
   background: #fffefb;
 }
 
+.suggestion-item.is-highlighted {
+  border-color: rgba(175, 95, 60, 0.34);
+  background: linear-gradient(180deg, rgba(255, 248, 239, 0.96), rgba(250, 241, 231, 0.98));
+  box-shadow: 0 10px 22px rgba(89, 57, 33, 0.08);
+}
+
 .candidate-item small,
 .suggestion-item small {
   display: block;
@@ -471,6 +477,24 @@ body {
   color: var(--muted);
   font-weight: 700;
   font-size: 0.92rem;
+}
+
+.preview-label-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.preview-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(81, 124, 92, 0.12);
+  color: #34523d;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .preview-excerpt {
