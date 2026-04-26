@@ -40,9 +40,10 @@ The eight models span three categories:
     \item \textbf{Combined approaches:} Concatenation of heterogeneous embeddings
 \end{enumerate}
 
-Key findings include the surprising dominance of uncorrected Node2Vec, the failure
-of combined embedding concatenation, and the strong performance of purely
-structural GCN embeddings learned without any text features.
+Key findings include the surprising dominance of uncorrected Node2Vec, the
+continued failure of naive uncorrected embedding concatenation, the competitive
+performance of exact rank fusion between GCN and BGE-M3, and the strong
+performance of purely structural GCN embeddings learned without any text features.
 
 % ═══════════════════════════════════════════════════════════════════════════
 \section{Models Compared}
@@ -62,7 +63,7 @@ structural GCN embeddings learned without any text features.
 4 & GCN Only & GNN & 2-layer GCN (64→128→64) trained on graph structure alone, no text input \\
 5 & Node2Vec (uncorrected) & Structural & Raw 128-dim Node2Vec embeddings without any degree correction \\
 6 & BGE-M3 + Node2Vec (uncorrected) & Combined & 1152-dim concatenation without any correction \\
-7 & GCN + BGE-M3 (rank fusion) & Fusion & Reciprocal Rank Fusion of GCN and BGE-M3 rankings (skipped -- too slow) \\
+7 & GCN + BGE-M3 (rank fusion) & Fusion & Exact Reciprocal Rank Fusion of GCN and BGE-M3 rankings over the full shared candidate set \\
 8 & GraphSAGE Only & GNN & 2-layer GraphSAGE (64→128→64) trained on graph structure alone \\
 \bottomrule
 \end{tabular}
@@ -136,13 +137,13 @@ For each test edge $(s, t)$ where $s$ is the source and $t$ is the target:
 \toprule
 \textbf{Model} & \textbf{Hit@1} & \textbf{Hit@10} & \textbf{Hit@50} & \textbf{Hit@100} & \textbf{MRR} & \textbf{NDCG} & \textbf{Recall} & \textbf{MAP} \\
 \midrule
-BGE-M3 Only & 2.15\% & 10.21\% & 24.36\% & 33.08\% & 0.0507 & 0.1005 & 0.3308 & 0.0492 \\
+BGE-M3 Only & 2.14\% & 10.20\% & 24.37\% & 33.08\% & 0.0506 & 0.1004 & 0.3308 & 0.0492 \\
 Node2Vec (corrected) & 1.57\% & 7.95\% & 11.85\% & 12.98\% & 0.0351 & 0.0539 & 0.1298 & 0.0342 \\
-BGE-M3 + Node2Vec (corrected) & 0.02\% & 0.05\% & 0.10\% & 0.13\% & 0.0004 & 0.0005 & 0.0013 & 0.0003 \\
+BGE-M3 + Node2Vec (corrected) & 1.81\% & 9.82\% & 24.65\% & 33.83\% & 0.0471 & 0.0987 & 0.3383 & 0.0456 \\
 GCN Only & 0.76\% & 6.20\% & 22.87\% & 34.70\% & 0.0302 & 0.0842 & 0.3470 & 0.0285 \\
 Node2Vec (uncorrected) & 2.63\% & 16.06\% & 47.80\% & 64.33\% & 0.0751 & 0.1766 & 0.6433 & 0.0738 \\
 BGE-M3 + Node2Vec (uncorrected) & 0.06\% & 0.24\% & 0.89\% & 1.67\% & 0.0019 & 0.0039 & 0.0167 & 0.0014 \\
-GCN + BGE-M3 (rank fusion) & 0.37\% & 3.49\% & 13.62\% & 23.22\% & 0.0181 & 0.0532 & 0.2322 & 0.0162 \\
+GCN + BGE-M3 (rank fusion) & 1.52\% & 11.04\% & 31.47\% & 44.24\% & 0.0495 & 0.1187 & 0.4424 & 0.0478 \\
 GraphSAGE Only & 0.19\% & 1.43\% & 5.72\% & 10.33\% & 0.0087 & 0.0235 & 0.1033 & 0.0072 \\
 \bottomrule
 \end{tabular}
@@ -151,19 +152,19 @@ GraphSAGE Only & 0.19\% & 1.43\% & 5.72\% & 10.33\% & 0.0087 & 0.0235 & 0.1033 &
 \subsection{Key Observations}
 
 \begin{enumerate}
-    \item \textbf{Node2Vec (uncorrected) dominates all other models} with Hit@10 = 16.06\% and Hit@100 = 64.33\%.  This is a surprising result: applying degree correction actually \emph{hurts} performance on link prediction.
+    \item \textbf{Node2Vec (uncorrected) dominates all other models} with Hit@10 = 16.06\% and Hit@100 = 64.33\%.  This remains the strongest result in the study and shows that applying degree correction to pure structural similarity \emph{hurts} link-prediction performance.
 
-    \item \textbf{BGE-M3 semantic embeddings are the strongest single signal.} BGE-M3 Only (10.21\% Hit@10) substantially outperforms all corrected and GNN models.
+    \item \textbf{BGE-M3 semantic embeddings remain the strongest single non-structural signal.} BGE-M3 Only achieves 10.20\% Hit@10 and 0.0506 MRR, narrowly outperforming the corrected combined embedding and substantially outperforming corrected Node2Vec and both standalone GNN models by Hit@10.
 
-    \item \textbf{Combined embeddings perform catastrophically poorly.} Both concatenated models (corrected and uncorrected) achieve near-zero Hit@10, suggesting that directly joining heterogeneous 1024-dim semantic and 128-dim structural spaces is fundamentally broken.
+    \item \textbf{Naive concatenation is highly sensitive to whether the structural component is degree-corrected.} The uncorrected combined embedding still performs catastrophically (0.24\% Hit@10), but the corrected combined embedding recovers to 9.82\% Hit@10 and 0.0471 MRR.  This suggests that direct concatenation is not universally broken, but without controlling the structural popularity signal it becomes unusable.
 
     \item \textbf{GCN learns meaningful structural embeddings without any text input.} GCN Only achieves 6.20\% Hit@10 and an impressive 34.70\% Hit@100, demonstrating that graph structure alone captures substantial link-prediction signal.
 
     \item \textbf{GraphSAGE underperforms GCN} in this transductive link-prediction setting (1.43\% vs 6.20\% Hit@10).
 
-    \item \textbf{Degree correction backfires for Node2Vec.} Corrected Node2Vec (7.95\% Hit@10) performs worse than uncorrected (16.06\% Hit@10), suggesting that the power-law penalty may be too aggressive or misapplied.
+    \item \textbf{Degree correction backfires for pure Node2Vec, but helps stabilize the combined embedding.} Corrected Node2Vec (7.95\% Hit@10) performs much worse than uncorrected Node2Vec (16.06\% Hit@10), yet the corrected combined embedding (9.82\% Hit@10) is dramatically better than the uncorrected combined embedding (0.24\% Hit@10).  The penalty therefore appears harmful for pure structural retrieval but helpful when structural and semantic spaces are fused.
 
-    \item \textbf{Rank fusion (GCN + BGE-M3) achieves 3.49\% Hit@10} using top-500 optimization.  While substantially better than combined embedding concatenation (0.24\%), it still underperforms both individual models, suggesting that simple RRF merging of heterogeneous spaces is not optimal.
+    \item \textbf{Exact rank fusion (GCN + BGE-M3) is competitive.} With 11.04\% Hit@10 and 44.24\% Hit@100, full-candidate Reciprocal Rank Fusion slightly improves Hit@10 over BGE-M3 alone (10.20\%) while trailing it slightly on MRR (0.0495 vs 0.0506).  This suggests that ranking-level fusion is a viable alternative to raw concatenation when heterogeneous spaces need to be combined.
 \end{enumerate}
 
 % ═══════════════════════════════════════════════════════════════════════════
@@ -476,13 +477,13 @@ for topic-level queries.
 \textbf{Rank} & \textbf{Model} & \textbf{Hit@10} & \textbf{MRR} \\
 \midrule
 1 & Node2Vec (uncorrected) & 16.06\% & 0.0751 \\
-2 & BGE-M3 Only & 10.21\% & 0.0507 \\
-3 & Node2Vec (corrected) & 7.95\% & 0.0351 \\
-4 & GCN Only & 6.20\% & 0.0302 \\
-5 & GCN + BGE-M3 (rank fusion) & 3.49\% & 0.0181 \\
-6 & GraphSAGE Only & 1.43\% & 0.0087 \\
-7 & BGE-M3 + Node2Vec (uncorrected) & 0.24\% & 0.0019 \\
-8 & BGE-M3 + Node2Vec (corrected) & 0.05\% & 0.0004 \\
+2 & GCN + BGE-M3 (rank fusion) & 11.04\% & 0.0495 \\
+3 & BGE-M3 Only & 10.20\% & 0.0506 \\
+4 & BGE-M3 + Node2Vec (corrected) & 9.82\% & 0.0471 \\
+5 & Node2Vec (corrected) & 7.95\% & 0.0351 \\
+6 & GCN Only & 6.20\% & 0.0302 \\
+7 & GraphSAGE Only & 1.43\% & 0.0087 \\
+8 & BGE-M3 + Node2Vec (uncorrected) & 0.24\% & 0.0019 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -492,17 +493,17 @@ Key findings:
 \begin{itemize}
     \item \textbf{Uncorrected Node2Vec is the strongest model overall.} With 16.06\% Hit@10 and 64.33\% Hit@100, it substantially outperforms even the BGE-M3 semantic baseline. This suggests that the graph's topological structure (as captured by Node2Vec random walks) contains more link-prediction signal than text semantics for this particular task.
 
-    \item \textbf{Semantic embeddings (BGE-M3) are the second-best single signal.} At 10.21\% Hit@10, text-based similarity confirms that content matters for link prediction, but less than structure.
+    \item \textbf{Rank fusion and semantic retrieval form the next-best tier.} Exact GCN+BGE-M3 rank fusion reaches 11.04\% Hit@10, while BGE-M3 alone reaches 10.20\%.  This shows that semantic information is highly useful and can be strengthened further by ranking-level structural fusion.
 
-    \item \textbf{Degree correction hurts Node2Vec performance.} The power-law penalty reduces Node2Vec's Hit@10 from 16.06\% to 7.95\%. This suggests that hub nodes, despite their high connectivity, carry important structural information that should not be penalized.
+    \item \textbf{Degree correction hurts pure Node2Vec performance.} The power-law penalty reduces Node2Vec's Hit@10 from 16.06\% to 7.95\%. This suggests that hub nodes, despite their high connectivity, carry important structural information that should not be suppressed in the standalone structural model.
 
-    \item \textbf{Combined embedding concatenation is fundamentally broken.} Both combined models (with and without correction) achieve near-zero Hit@10. The 1152-dimensional space is dominated by the 1024-dimensional BGE-M3 component, and the heterogeneous dimensionality makes cosine similarity meaningless across spaces.
+    \item \textbf{Uncorrected combined concatenation is broken, but corrected concatenation is competitive.} The uncorrected combined model collapses to 0.24\% Hit@10, whereas the corrected combined model reaches 9.82\% Hit@10.  This indicates that fusion by concatenation is only viable here when the structural component is explicitly damped before combination.
 
     \item \textbf{GCN learns strong structural representations from scratch.} Achieving 6.20\% Hit@10 and 34.70\% Hit@100 without any text input demonstrates that the graph structure alone contains substantial predictive signal.
 
     \item \textbf{GraphSAGE underperforms GCN} in transductive link prediction (1.43\% vs 6.20\% Hit@10).
 
-    \item \textbf{Rank fusion (GCN + BGE-M3) with top-500 optimization achieves 3.49\% Hit@10.} While substantially better than combined embedding concatenation (0.24\%), it underperforms both individual models. This suggests that simple RRF merging of rankings from heterogeneous embedding spaces is not optimal.
+    \item \textbf{Exact rank fusion (GCN + BGE-M3) performs well.} With 11.04\% Hit@10 and 0.0495 MRR, full-candidate RRF clearly outperforms both uncorrected combined concatenation and corrected Node2Vec, and slightly exceeds the BGE-M3 baseline on Hit@10.  This suggests that ranking-level fusion is a more reliable way to combine heterogeneous spaces than raw vector concatenation.
 \end{itemize}
 
 % ═══════════════════════════════════════════════════════════════════════════
@@ -511,27 +512,30 @@ Key findings:
 
 This 8-model evaluation reveals that for Wikipedia article link prediction on
 Custom-WikiCS, \textbf{structural embeddings (Node2Vec) outperform semantic
-embeddings (BGE-M3)}, which in turn outperform graph neural networks (GCN,
-GraphSAGE).  The surprising dominance of uncorrected Node2Vec (Hit@10 = 16.06\%)
-over the semantic baseline (10.21\%) suggests that graph topology alone captures
-more link-prediction signal than article text semantics.
+embeddings (BGE-M3)}, while exact rank fusion between GCN and BGE-M3 forms a
+strong second tier.  The surprising dominance of uncorrected Node2Vec
+(Hit@10 = 16.06\%) over the semantic baseline (10.20\%) suggests that graph
+topology alone captures more link-prediction signal than article text semantics.
 
-The catastrophic failure of combined embedding concatenation (both variants <
-0.25\% Hit@10) highlights a fundamental challenge: directly joining heterogeneous
-embedding spaces (1024-dim text + 128-dim structure) is not a viable approach.
-Future work should explore learned weighting or attention-based fusion instead
-of naive concatenation.
+The catastrophic failure of the \emph{uncorrected} combined embedding
+(0.24\% Hit@10) highlights a fundamental challenge: directly joining
+heterogeneous embedding spaces (1024-dim text + 128-dim structure) is highly
+unstable when the structural component is left unnormalized.  However, the
+degree-corrected combined embedding reaches 9.82\% Hit@10, showing that simple
+concatenation is not inherently hopeless if the structural signal is first
+controlled.  Future work should explore learned weighting or attention-based
+fusion instead of fixed concatenation.
 
 The GCN-only model, trained purely from graph structure with learnable random
 embeddings, achieves 6.20\% Hit@10 and 34.70\% Hit@100, demonstrating that
 sufficient training on graph structure can capture meaningful node representations
 without any domain knowledge or text features.
 
-The rank fusion approach (GCN + BGE-M3 with top-500 optimization) achieves
-3.49\% Hit@10, substantially better than combined embedding concatenation but
-still underperforming both individual models.  This suggests that simple rank
-fusion of heterogeneous spaces is not optimal; learned weighting or attention-based
-fusion may be more effective.
+The exact rank fusion approach (GCN + BGE-M3) achieves 11.04\% Hit@10 and
+44.24\% Hit@100, making it competitive with the best semantic baseline and far
+better than uncorrected combined concatenation.  This suggests that ranking-level
+fusion of heterogeneous spaces is a viable direction, and likely more robust than
+raw vector concatenation.
 
 All code and evaluation results are available at:
 \texttt{WikiCS/custom-wiki/notebooks/eval/eval-2.ipynb}
