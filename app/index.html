@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WikiPath App Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Custom WikiCS Recommender</p>
+          <h1>WikiPath Prototype</h1>
+        </div>
+        <div class="topbar-meta">
+          <span class="status-dot"></span>
+          <span>Ranking UI first, LLM tree later</span>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside class="panel panel-left">
+          <section class="panel-section">
+            <p class="section-label">Model</p>
+            <label class="field-label" for="model-select">Recommendation model</label>
+            <select id="model-select" class="select-input"></select>
+            <p class="helper-text" id="model-description"></p>
+          </section>
+
+          <section class="panel-section">
+            <div class="panel-section-header">
+              <div>
+                <p class="section-label">Search</p>
+                <h2>Pick a starting article</h2>
+              </div>
+              <button id="clear-query" class="ghost-button" type="button">Reset</button>
+            </div>
+
+            <label class="field-label" for="query-input">Article title</label>
+            <div class="search-row">
+              <input
+                id="query-input"
+                class="text-input"
+                type="text"
+                autocomplete="off"
+                placeholder="Type: Programming_language"
+              >
+              <button id="search-button" class="primary-button" type="button">Search</button>
+            </div>
+            <p class="helper-text">
+              Partial matches appear while you type. If you submit without choosing one,
+              the app will ask you to disambiguate.
+            </p>
+
+            <div id="selected-article-card" class="selected-card is-hidden">
+              <p class="section-label">Starting article</p>
+              <h3 id="selected-article-title"></h3>
+              <p id="selected-article-meta" class="muted-copy"></p>
+            </div>
+
+            <div class="suggestions-block">
+              <p class="field-label">Suggestions</p>
+              <ul id="suggestions-list" class="suggestions-list"></ul>
+            </div>
+
+            <div id="disambiguation-block" class="disambiguation-block is-hidden">
+              <div class="inline-note">
+                <strong>No article selected yet.</strong>
+                <span>Choose one of the closest matches below to continue.</span>
+              </div>
+              <ul id="disambiguation-list" class="candidate-list"></ul>
+            </div>
+          </section>
+
+          <section class="panel-section panel-section-soft">
+            <p class="section-label">Future layer</p>
+            <h2>Learning tree</h2>
+            <p class="muted-copy">
+              The LLM structuring layer is intentionally not active in this prototype.
+              The center column currently shows the flat top-20 order that the future
+              tree layer will consume.
+            </p>
+          </section>
+        </aside>
+
+        <main class="panel panel-center">
+          <section class="panel-section hero-block">
+            <div>
+              <p class="section-label">Main output</p>
+              <h2>Recommended learning order</h2>
+              <p class="muted-copy">
+                Top 20 related articles ranked by the selected model.
+              </p>
+            </div>
+            <div class="hero-badges">
+              <div class="metric-pill">
+                <span class="metric-label">Active model</span>
+                <strong id="active-model-pill">BGE-M3 + Node2Vec (corrected)</strong>
+              </div>
+              <div class="metric-pill">
+                <span class="metric-label">Current source</span>
+                <strong id="active-source-pill">None selected</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel-section">
+            <div class="results-toolbar">
+              <div>
+                <p class="section-label">Results</p>
+                <h3 id="results-title">Start by selecting an article</h3>
+              </div>
+              <div class="results-count" id="results-count">0 items</div>
+            </div>
+            <ol id="results-list" class="results-list"></ol>
+            <div id="empty-state" class="empty-state">
+              <h3>No recommendations yet</h3>
+              <p>
+                Choose a model, search for an article title, and select a starting
+                article to generate a ranked result set.
+              </p>
+            </div>
+          </section>
+        </main>
+
+        <aside class="panel panel-right">
+          <section class="panel-section">
+            <p class="section-label">Preview</p>
+            <h2>Article excerpt</h2>
+            <p class="muted-copy">
+              Click any ranked recommendation to inspect a sample text excerpt here.
+            </p>
+          </section>
+
+          <section id="preview-card" class="preview-card">
+            <p class="preview-kicker">Nothing selected</p>
+            <h3 id="preview-title">Choose a recommended article</h3>
+            <div class="preview-meta">
+              <span id="preview-rank">Rank -</span>
+              <span id="preview-score">Score -</span>
+            </div>
+            <p id="preview-excerpt" class="preview-excerpt">
+              The right panel will show a compact title, score, and representative
+              article excerpt once a result is selected from the center column.
+            </p>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
