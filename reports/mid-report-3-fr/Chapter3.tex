@@ -72,7 +72,7 @@ colonne afin de rendre la comparaison globale plus facile à lire.
 \setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.12}
 \resizebox{\textwidth}{!}{
-\begin{tabular}{>{\raggedright\arraybackslash}p{0.28\textwidth}ccccccccccccc}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}*{13}{c}@{}}
 \toprule
 \textbf{Modèle} &
 \textbf{H@1} &
@@ -111,7 +111,7 @@ GraphSAGE Only & 0.17\% & 1.22\% & 4.96\% & 8.72\% & 0.0076 & 0.0199 & 0.0872 & 
 \setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.12}
 \resizebox{\textwidth}{!}{
-\begin{tabular}{>{\raggedright\arraybackslash}p{0.28\textwidth}cccccccccccccc}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}*{14}{c}@{}}
 \toprule
 \textbf{Modèle} &
 \textbf{Total} &
@@ -182,12 +182,12 @@ révisée :
 \centering
 \caption{Résultats de vérification des GNN structurels sur la branche révisée.}
 \label{tab:gnn-auc}
-\begin{tabular}{lcc}
+\begin{tabular}{lc}
 \toprule
-\textbf{Modèle} & \textbf{AUC de validation} & \textbf{AUC de test} \\
+\textbf{Modèle} & \textbf{AUC de test} \\
 \midrule
-GCN Only & --- & 0.9304 \\
-GraphSAGE Only & --- & 0.9190 \\
+GCN Only & 0.9304 \\
+GraphSAGE Only & 0.9190 \\
 \bottomrule
 \end{tabular}
 \end{table}

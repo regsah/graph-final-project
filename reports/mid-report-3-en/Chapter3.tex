@@ -65,7 +65,7 @@ ranks to make the global comparison easier to scan.
 \setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.12}
 \resizebox{\textwidth}{!}{
-\begin{tabular}{>{\raggedright\arraybackslash}p{0.28\textwidth}ccccccccccccc}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}*{13}{c}@{}}
 \toprule
 \textbf{Model} &
 \textbf{H@1} &
@@ -104,7 +104,7 @@ GraphSAGE Only & 0.17\% & 1.22\% & 4.96\% & 8.72\% & 0.0076 & 0.0199 & 0.0872 & 
 \setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.12}
 \resizebox{\textwidth}{!}{
-\begin{tabular}{>{\raggedright\arraybackslash}p{0.28\textwidth}cccccccccccccc}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}*{14}{c}@{}}
 \toprule
 \textbf{Model} &
 \textbf{Total} &
@@ -165,18 +165,18 @@ a result, some earlier conclusions, especially the apparent dominance of raw
 Node2Vec, had to be treated with caution and were explicitly reevaluated under
 the revised undirected branch.
 
-The GNN baselines were also verified independently through their link-prediction
-test AUC values on the revised branch:
+The GNN baselines were also verified independently through their final
+link-prediction test AUC values on the revised branch:
 \begin{table}[H]
 \centering
 \caption{Revised-branch structural GNN verification results.}
 \label{tab:gnn-auc}
-\begin{tabular}{lcc}
+\begin{tabular}{lc}
 \toprule
-\textbf{Model} & \textbf{Validation AUC} & \textbf{Test AUC} \\
+\textbf{Model} & \textbf{Test AUC} \\
 \midrule
-GCN Only & --- & 0.9304 \\
-GraphSAGE Only & --- & 0.9190 \\
+GCN Only & 0.9304 \\
+GraphSAGE Only & 0.9190 \\
 \bottomrule
 \end{tabular}
 \end{table}
