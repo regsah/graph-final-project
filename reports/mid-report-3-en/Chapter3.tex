@@ -3,8 +3,87 @@
 
 \section{Result Analysis}
 
-% Analyze the initial outputs and explain what they suggest with respect to the project objectives.
+The revised branch changes the project story in a meaningful way. Earlier
+reports suggested that raw structural retrieval, especially uncorrected
+Node2Vec, was the strongest direction. After the methodological corrections
+introduced in the new branch, the highest-performing family is now the corrected
+hybrid family:
+\begin{itemize}
+    \item \textbf{BGE pooled + Node2Vec (corrected)} gives the best Hit@10
+    score, at 0.0867.
+    \item \textbf{BGE-M3 + Node2Vec (corrected)} is essentially tied on Hit@10
+    and slightly stronger on MRR, Recall, and MAP.
+\end{itemize}
+
+This result is more coherent with the actual objective of the project. Since
+the system aims at article recommendation rather than pure graph completion, it
+is reasonable that the best models combine semantic similarity with structural
+context. The new branch therefore supports a more balanced conclusion: pure
+graph structure remains useful, but semantic-structural fusion is now the most
+convincing direction for the final system.
+
+Another important result concerns pooling. In the previous concatenation setup,
+BGE-M3 contributed 1024 dimensions while Node2Vec contributed only 128. The
+new pooled models compress BGE-M3 to 128 dimensions before concatenation. This
+does not produce a dramatic jump, but it does slightly improve the best top-line
+Hit@10 result and makes the hybrid representation dimensionally balanced.
+
+Earlier semantic-structural analysis also supports the project direction at a
+more local level. Figure~\ref{fig:cosine-assortativity} shows that linked node
+pairs tend to have higher cosine similarity than random node pairs. This result
+does not by itself solve recommendation, but it verifies that textual-semantic
+similarity carries a meaningful signal aligned with the graph structure.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/cosine-similarity-assortativity.png}
+\caption{Cosine similarity distributions for linked versus random node pairs. Linked pairs are shifted toward higher similarity, indicating that semantic closeness is informative for recommendation and evaluation.}
+\label{fig:cosine-assortativity}
+\end{figure}
+
+Finally, the recommendation-oriented metrics reveal a second axis of model
+quality beyond ranking accuracy. GCN Only remains weak on Hit@10 and MRR, but
+it performs strongly on diversity-oriented metrics such as Aggregate Diversity,
+Novelty, and Intra-List Distance. By contrast, BGE-M3 Only is more
+popularity-driven. The corrected hybrid models occupy the most useful middle
+ground: they retain competitive ranking quality while avoiding the strongest
+popularity collapse.
 
 \section{Verification and Consistency Checks}
 
-% Document how the results were checked, corrected, and validated.
+The current results were not accepted at face value; they were repeatedly
+checked and corrected during development. The main verification steps were:
+\begin{itemize}
+    \item validation of the revised phase-0 split statistics:
+    216,123 undirected edges, 172,900 training edges, 43,223 test edges, and
+    no new isolated nodes introduced by the split,
+    \item re-estimation of the structural power-law coefficient on the revised
+    branch, giving $\alpha \approx 2.9966$,
+    \item separation of validation and test information during GCN and
+    GraphSAGE training on the revised branch,
+    \item consistency checking between notebooks, generated caches, and the
+    final result tables included in the reports,
+    \item correction of earlier notebook-state problems, including a malformed
+    JSON notebook file and outdated cached results.
+\end{itemize}
+
+The GNN baselines were also verified independently through their link-prediction
+test AUC values on the revised branch:
+\begin{table}[H]
+\centering
+\caption{Revised-branch structural GNN verification results.}
+\label{tab:gnn-auc}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Model} & \textbf{Validation AUC} & \textbf{Test AUC} \\
+\midrule
+GCN Only & --- & 0.9304 \\
+GraphSAGE Only & --- & 0.9190 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These AUC values confirm that both structural GNN baselines are learning
+non-trivial graph structure, even if their recommendation ranking performance is
+below the top hybrid models. Overall, the current branch can therefore be
+considered both empirically informative and technically verified.

@@ -3,12 +3,56 @@
 
 \section{Methodological Problems}
 
-% Use this section for issues such as evaluation leakage, invalid notebook state, or unfair comparisons.
+The most significant problem encountered during this phase was methodological.
+The earlier evaluation branch used a directed outgoing-edge split while the
+structural models, especially Node2Vec, ultimately operated on undirected graph
+structure. This created a mismatch between the benchmark definition and the way
+the structural signal was consumed by the model. The effect was especially
+important for Node2Vec, whose earlier dominance became questionable once the
+evaluation branch was redesigned.
+
+A second methodological issue concerned fairness across model families. Reusing
+old GCN and GraphSAGE caches alongside the revised Node2Vec branch would have
+created an apples-to-oranges comparison. This was avoided by creating separate
+retraining notebooks for the revised structural branch.
 
 \section{Implementation and Engineering Problems}
 
-% Use this section for practical issues encountered in notebooks, caches, and the web application.
+Several practical problems also emerged during implementation:
+\begin{itemize}
+    \item one evaluation notebook became malformed at the JSON level even though
+    the code logic itself was still meaningful,
+    \item outdated caches in the old evaluation branch no longer matched the
+    corrected logic,
+    \item early stopping in the first draft of the revised GNN notebooks used
+    the wrong edge set and therefore risked test leakage,
+    \item the web application initially used only a subset of models and needed
+    to be aligned with the full experimental family,
+    \item title handling and search interaction in the interface required
+    cleanup because Wikipedia article identifiers contain underscores while the
+    user-facing interface should display natural titles.
+\end{itemize}
 
 \section{Adopted or Planned Solutions}
 
-% Summarize the solutions that were applied and the ones planned next.
+The solutions adopted in this phase are now part of the project baseline:
+\begin{itemize}
+    \item a new phase-0 notebook creates an undirected structural branch and
+    exports leakage-free Node2Vec caches,
+    \item new GCN and GraphSAGE notebooks retrain the structural GNN baselines
+    on the same revised branch,
+    \item the final ten-model evaluation is centralized in a dedicated notebook
+    and cached under a separate namespace,
+    \item stale caches from invalid branches were deleted or isolated instead of
+    being silently reused,
+    \item the web application was updated to expose all tested models and to
+    provide a more stable search and preview experience.
+\end{itemize}
+
+Two additional solution directions remain active for the next phase:
+\begin{itemize}
+    \item using the recommendation output as the input to a constrained local
+    LLM layer for learning-path organization,
+    \item extending the revised branch with future experiments on pooling and
+    recommendation quality without returning to the earlier flawed split logic.
+\end{itemize}

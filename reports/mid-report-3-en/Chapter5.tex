@@ -3,12 +3,75 @@
 
 \section{Existing Evaluation Metrics}
 
-% Describe the ranking metrics already used in the project.
+For continuity with the earlier report series, the project still uses the
+standard ranking metrics below:
+\begin{itemize}
+    \item \textbf{Hit@1, Hit@10, Hit@50, Hit@100:} proportion of test targets
+    recovered within the first $K$ ranked positions,
+    \item \textbf{MRR:} mean reciprocal rank of the true target over all
+    evaluation queries,
+    \item \textbf{NDCG:} normalized discounted cumulative gain, used to reflect
+    the quality of the ranking position,
+    \item \textbf{Recall:} fraction of relevant targets retrieved within the
+    inspected cutoff,
+    \item \textbf{MAP:} mean average precision, summarizing ranking quality over
+    the evaluation set.
+\end{itemize}
+
+These metrics remain useful because they preserve comparability with earlier
+branches and quantify how well the system recovers held-out graph relations.
 
 \section{New Recommendation-Oriented Metrics}
 
-% Describe the diversity, novelty, and popularity-bias metrics introduced in the revised branch.
+Because the project is ultimately about recommendation rather than pure link
+prediction, the revised branch adds a second family of metrics:
+\begin{itemize}
+    \item \textbf{Popularity Lift:} measures how strongly a model concentrates
+    on popular articles compared with the baseline graph frequency,
+    \item \textbf{Gini Index:} measures how concentrated or uneven the
+    recommendation distribution is across the article set,
+    \item \textbf{Aggregate Diversity:} counts how many distinct articles are
+    surfaced across all recommendation lists,
+    \item \textbf{Novelty:} rewards models that recommend less obvious articles,
+    \item \textbf{Intra-List Distance (ILD):} measures how diverse the contents
+    of each recommendation list are.
+\end{itemize}
+
+These metrics are important because two models with similar Hit@10 values can
+still behave very differently as recommendation systems. A model may recover
+many correct links while repeatedly surfacing the same high-degree or highly
+popular nodes. The new metric family makes those tradeoffs visible.
 
 \section{Evaluation Protocol}
 
-% Explain the evaluation protocol used for the revised experiments and how it differs from earlier ones.
+The current official evaluation protocol is based on the revised undirected
+structural branch. The procedure is summarized in
+Table~\ref{tab:eval-branch-stats}.
+
+\begin{table}[H]
+\centering
+\caption{Revised evaluation branch statistics and protocol parameters.}
+\label{tab:eval-branch-stats}
+\begin{tabular}{p{0.52\textwidth}p{0.28\textwidth}}
+\toprule
+\textbf{Quantity} & \textbf{Value} \\
+\midrule
+Full directed graph edges & 291,039 \\
+Full undirected structural edges & 216,123 \\
+Training edges (undirected branch) & 172,900 \\
+Test edges (undirected branch) & 43,223 \\
+Expanded evaluation pairs & 86,446 \\
+Evaluation nodes & 9,022 \\
+Structural power-law coefficient & $\alpha \approx 2.9966$ \\
+Recommendation list length for new metrics & Top-20 \\
+Number of models in the revised comparison & 10 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Under this protocol, each undirected test edge $\{u,v\}$ is expanded into two
+directional evaluation queries, $u \rightarrow v$ and $v \rightarrow u$, for the
+ranking metrics. Recommendation-oriented metrics are then computed on the top-20
+lists produced for each evaluation node. This dual evaluation design allows the
+project to assess both graph-recovery quality and practical recommendation
+behavior within the same experimental branch.

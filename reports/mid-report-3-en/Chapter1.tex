@@ -3,8 +3,48 @@
 
 \section{Project Scope}
 
-% This chapter should briefly restate the project objective and the scope of this third mid-report.
+This project studies Wikipedia article recommendation in the computer science
+domain. The long-term objective is not only to retrieve related articles, but
+also to organize them into useful learning paths for a reader. The project
+therefore combines three families of components:
+\begin{itemize}
+    \item semantic text embeddings obtained from article content,
+    \item structural graph embeddings learned from Wikipedia hyperlink
+    structure,
+    \item graph neural network baselines and a future learning-path layer for
+    presentation.
+\end{itemize}
+
+The experimental backbone of the work remains the Custom-WikiCS dataset, which
+extends the Wiki-CS benchmark~\cite{mernyei2020wikics} with article text,
+embedding caches, and evaluation artifacts tailored to recommendation-oriented
+experiments. In the current branch, the project uses BGE-M3 text
+embeddings~\cite{chen2025bgem3}, Node2Vec-style structural embeddings, a
+Graph Convolutional Network (GCN) baseline~\cite{kipf2017semi}, and a
+GraphSAGE baseline~\cite{hamilton2017inductive}. Graph Attention Networks
+(GAT)~\cite{velickovic2018graph} remain part of the conceptual direction, but
+the most stable results at this stage are obtained from the revised
+evaluation branch centered on semantic-structural hybrid retrieval.
 
 \section{Status at the Start of Mid-Report 3}
 
-% This section can summarize the project state inherited from the previous reports before presenting new results.
+At the beginning of this third mid-report, the project has moved well beyond
+problem definition and dataset construction. The following major milestones are
+already complete:
+\begin{itemize}
+    \item construction of a cleaned Wikipedia article graph with 11,701 nodes
+    and 291,039 directed edges,
+    \item generation of BGE-M3 text embeddings and multiple Node2Vec-based
+    structural branches,
+    \item implementation of GCN and GraphSAGE structural baselines,
+    \item development of a local web application prototype for interactive
+    article retrieval,
+    \item correction of earlier evaluation issues and creation of a revised
+    undirected structural branch for fairer comparison.
+\end{itemize}
+
+The main purpose of this report is to present the first consolidated results of
+that revised branch, analyze what changed compared with earlier experiments,
+document the problems encountered during the process, and formalize the
+performance metrics and evaluation protocol currently used for project
+verification.
