@@ -573,7 +573,7 @@ def stream_ollama_content(messages: list[dict[str, str]], model: str, on_chunk) 
     return "".join(collected)
 
 
-def make_core_decision_messages(
+def make_path_group_messages(
     source: dict[str, object],
     candidate: dict[str, object],
     current_counts: dict[str, int],
@@ -582,12 +582,12 @@ def make_core_decision_messages(
     instructions = (
         "Return only valid JSON. "
         "You are making the first-stage learning-path decision for one recommended Wikipedia article. "
-        "Decide only whether the candidate should be learned as part of the target itself. "
-        "Return is_core = yes only if the candidate is a central concept, direct subtopic, canonical task, or core application of the target. "
-        "Return is_core = no if it is mostly a prerequisite, later specialization, or side topic. "
+        "Choose the broader learning lane first, not the final section. "
+        "Choose foundation_or_core if the candidate should usually be learned before the target or as part of the target itself. "
+        "Choose advanced_or_adjacent if the candidate should usually be learned after the target or treated as a neighboring side topic. "
         "Use the current counts only as soft context. "
         "Keep the reason short. "
-        "Output shape: {\"is_core\":\"yes|no\",\"why\":\"Short reason.\"}"
+        "Output shape: {\"group\":\"foundation_or_core|advanced_or_adjacent\",\"why\":\"Short reason.\"}"
     )
     user_payload = {
         "target": {
@@ -605,11 +605,12 @@ def make_core_decision_messages(
         },
         "question": (
             f'For a learner trying to understand "{prettify_title(str(source["title"]))}", '
-            f'should "{candidate["display_title"]}" usually be learned as part of the target itself?'
+            f'should "{candidate["display_title"]}" be grouped with concepts that come before/as part of the target, '
+            f'or with concepts that come after/next to the target?'
         ),
         "current_section_counts": current_counts,
         "items_remaining_including_this_one": items_remaining,
-        "allowed_answers": ["yes", "no"],
+        "allowed_answers": ["foundation_or_core", "advanced_or_adjacent"],
     }
     return [
         {"role": "system", "content": instructions},
@@ -617,24 +618,50 @@ def make_core_decision_messages(
     ]
 
 
-def make_subtype_decision_messages(
+def make_group_refinement_messages(
     source: dict[str, object],
     candidate: dict[str, object],
     current_counts: dict[str, int],
     items_remaining: int,
+    chosen_group: str,
+    previous_reason: str,
 ) -> list[dict[str, str]]:
-    instructions = (
-        "Return only valid JSON. "
-        "You are making the second-stage learning-path decision for one recommended Wikipedia article. "
-        "The candidate is already known to be non-core. "
-        "Choose exactly one subtype: prerequisite, specialization, or side-topic. "
-        "Interpret them as: prerequisite = should usually be learned before the target; "
-        "specialization = should usually be learned after the target as a deeper or narrower follow-up; "
-        "side-topic = related but not central and not strictly required. "
-        "Use the current counts only as soft context. "
-        "Keep the reason short. "
-        "Output shape: {\"subtype\":\"prerequisite|specialization|side-topic\",\"why\":\"Short reason.\"}"
-    )
+    if chosen_group == "foundation_or_core":
+        allowed = ["foundations", "core"]
+        question = (
+            f'You already decided "{candidate["display_title"]}" belongs in the before/as-part-of lane. '
+            "Now choose whether it is better treated as a prerequisite foundation or as a core concept."
+        )
+        instructions = (
+            "Return only valid JSON. "
+            "You are making the second-stage learning-path decision for one recommended Wikipedia article. "
+            "The candidate is already known to belong in the before/as-part-of lane. "
+            "Choose exactly one final section: foundations or core. "
+            "Interpret them as: foundations = broad prerequisite background usually learned before the target; "
+            "core = a concept, subtopic, task, or component that is part of understanding the target itself. "
+            "Do not contradict the previous lane decision. "
+            "Use the current counts only as soft context. "
+            "Keep the reason short. "
+            "Output shape: {\"section\":\"foundations|core\",\"why\":\"Short reason.\"}"
+        )
+    else:
+        allowed = ["advanced", "adjacent"]
+        question = (
+            f'You already decided "{candidate["display_title"]}" belongs in the after/next-to lane. '
+            "Now choose whether it is better treated as an advanced follow-up or an adjacent side topic."
+        )
+        instructions = (
+            "Return only valid JSON. "
+            "You are making the second-stage learning-path decision for one recommended Wikipedia article. "
+            "The candidate is already known to belong in the after/next-to lane. "
+            "Choose exactly one final section: advanced or adjacent. "
+            "Interpret them as: advanced = a narrower, deeper, or later follow-up after the target; "
+            "adjacent = related and useful, but not central and not a clear follow-up path. "
+            "Do not contradict the previous lane decision. "
+            "Use the current counts only as soft context. "
+            "Keep the reason short. "
+            "Output shape: {\"section\":\"advanced|adjacent\",\"why\":\"Short reason.\"}"
+        )
     user_payload = {
         "target": {
             "canonical_title": source["title"],
@@ -649,13 +676,11 @@ def make_subtype_decision_messages(
             "score": round(float(candidate["score"]), 4),
             "link_pattern": linked_pattern_text(candidate),
         },
-        "question": (
-            f'For a learner trying to understand "{prettify_title(str(source["title"]))}", '
-            f'is "{candidate["display_title"]}" better treated as a prerequisite, a later specialization, or a side topic?'
-        ),
+        "previous_lane_decision": {"group": chosen_group, "why": previous_reason},
+        "question": question,
         "current_section_counts": current_counts,
         "items_remaining_including_this_one": items_remaining,
-        "allowed_answers": ["prerequisite", "specialization", "side-topic"],
+        "allowed_answers": allowed,
     }
     return [
         {"role": "system", "content": instructions},
@@ -681,42 +706,45 @@ def make_item_repair_messages(
     ]
 
 
-def validate_core_decision(raw_obj: object) -> tuple[dict[str, str], list[str]]:
+def validate_path_group_decision(raw_obj: object) -> tuple[dict[str, str], list[str]]:
     errors: list[str] = []
     if not isinstance(raw_obj, dict):
         return {}, ["Top-level JSON must be an object."]
 
-    is_core = raw_obj.get("is_core")
+    group = raw_obj.get("group")
     why = raw_obj.get("why")
-    if is_core not in {"yes", "no"}:
-        errors.append(f"Invalid is_core value: {is_core}")
+    if group not in {"foundation_or_core", "advanced_or_adjacent"}:
+        errors.append(f"Invalid group value: {group}")
     if not isinstance(why, str) or not why.strip():
         errors.append("Missing or empty `why`.")
 
     if errors:
         return {}, errors
     return {
-        "is_core": str(is_core),
+        "group": str(group),
         "why": " ".join(str(why).split()),
     }, []
 
 
-def validate_subtype_decision(raw_obj: object) -> tuple[dict[str, str], list[str]]:
+def validate_group_refinement_decision(
+    raw_obj: object,
+    allowed_sections: set[str],
+) -> tuple[dict[str, str], list[str]]:
     errors: list[str] = []
     if not isinstance(raw_obj, dict):
         return {}, ["Top-level JSON must be an object."]
 
-    subtype = raw_obj.get("subtype")
+    section = raw_obj.get("section")
     why = raw_obj.get("why")
-    if subtype not in {"prerequisite", "specialization", "side-topic"}:
-        errors.append(f"Invalid subtype: {subtype}")
+    if section not in allowed_sections:
+        errors.append(f"Invalid section: {section}")
     if not isinstance(why, str) or not why.strip():
         errors.append("Missing or empty `why`.")
 
     if errors:
         return {}, errors
     return {
-        "subtype": str(subtype),
+        "section": str(section),
         "why": " ".join(str(why).split()),
     }, []
 
@@ -968,7 +996,7 @@ def build_learning_path(recommendation_payload: dict[str, object], organizer_mod
 
     total_candidates = len(recommendation_payload["results"])
     for item_index, candidate in enumerate(recommendation_payload["results"], start=1):
-        base_messages = make_core_decision_messages(
+        base_messages = make_path_group_messages(
             source,
             candidate,
             current_counts=current_counts.copy(),
@@ -995,65 +1023,67 @@ def build_learning_path(recommendation_payload: dict[str, object], organizer_mod
                 messages = make_item_repair_messages(base_messages, content, last_error)
                 continue
 
-            normalized, validation_errors = validate_core_decision(raw_obj)
+            normalized, validation_errors = validate_path_group_decision(raw_obj)
             if validation_errors:
                 last_error = "; ".join(validation_errors)
                 messages = make_item_repair_messages(base_messages, content, last_error)
                 continue
 
-            if normalized["is_core"] == "yes":
-                final_section = "core"
-                final_why = normalized["why"]
-            else:
-                subtype_messages = make_subtype_decision_messages(
-                    source,
-                    candidate,
-                    current_counts=current_counts.copy(),
-                    items_remaining=total_candidates - item_index + 1,
-                )
-                subtype_prompt = list(subtype_messages)
-                subtype_success = False
-                subtype_why = normalized["why"]
-                final_section = "adjacent"
+            refinement_messages = make_group_refinement_messages(
+                source,
+                candidate,
+                current_counts=current_counts.copy(),
+                items_remaining=total_candidates - item_index + 1,
+                chosen_group=normalized["group"],
+                previous_reason=normalized["why"],
+            )
+            refinement_prompt = list(refinement_messages)
+            refinement_success = False
+            final_section = "core" if normalized["group"] == "foundation_or_core" else "adjacent"
+            final_why = normalized["why"]
+            allowed_sections = (
+                {"foundations", "core"}
+                if normalized["group"] == "foundation_or_core"
+                else {"advanced", "adjacent"}
+            )
 
-                for subtype_attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
-                    attempts_used = max(attempts_used, subtype_attempt)
-                    try:
-                        subtype_content, _ = call_ollama_json(subtype_prompt, organizer_model)
-                        raw_outputs.append(
-                            f'Subtype question for "{candidate["display_title"]}" (attempt {subtype_attempt}):\n{subtype_content}'
-                        )
-                    except RuntimeError as exc:
-                        last_error = str(exc)
-                        break
-
-                    try:
-                        subtype_obj = json.loads(subtype_content)
-                    except json.JSONDecodeError as exc:
-                        last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
-                        subtype_prompt = make_item_repair_messages(subtype_messages, subtype_content, last_error)
-                        continue
-
-                    subtype_normalized, subtype_errors = validate_subtype_decision(subtype_obj)
-                    if subtype_errors:
-                        last_error = "; ".join(subtype_errors)
-                        subtype_prompt = make_item_repair_messages(subtype_messages, subtype_content, last_error)
-                        continue
-
-                    final_section = {
-                        "prerequisite": "foundations",
-                        "specialization": "advanced",
-                        "side-topic": "adjacent",
-                    }[subtype_normalized["subtype"]]
-                    final_why = subtype_normalized["why"]
-                    subtype_success = True
+            for refinement_attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
+                attempts_used = max(attempts_used, refinement_attempt)
+                try:
+                    refinement_content, _ = call_ollama_json(refinement_prompt, organizer_model)
+                    raw_outputs.append(
+                        f'Refinement question for "{candidate["display_title"]}" (attempt {refinement_attempt}):\n{refinement_content}'
+                    )
+                except RuntimeError as exc:
+                    last_error = str(exc)
                     break
 
-                if not subtype_success and normalized["is_core"] == "no":
-                    fallback = heuristic_learning_path(recommendation_payload)
-                    fallback["warning"] = f"{fallback['warning']} Last error: {last_error}"
-                    fallback["raw_llm_output"] = "\n\n".join(raw_outputs)
-                    return fallback
+                try:
+                    refinement_obj = json.loads(refinement_content)
+                except json.JSONDecodeError as exc:
+                    last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
+                    refinement_prompt = make_item_repair_messages(refinement_messages, refinement_content, last_error)
+                    continue
+
+                refinement_normalized, refinement_errors = validate_group_refinement_decision(
+                    refinement_obj,
+                    allowed_sections=allowed_sections,
+                )
+                if refinement_errors:
+                    last_error = "; ".join(refinement_errors)
+                    refinement_prompt = make_item_repair_messages(refinement_messages, refinement_content, last_error)
+                    continue
+
+                final_section = refinement_normalized["section"]
+                final_why = refinement_normalized["why"]
+                refinement_success = True
+                break
+
+            if not refinement_success:
+                fallback = heuristic_learning_path(recommendation_payload)
+                fallback["warning"] = f"{fallback['warning']} Last error: {last_error}"
+                fallback["raw_llm_output"] = "\n\n".join(raw_outputs)
+                return fallback
 
             placements.append({**candidate, "section": final_section, "why": final_why})
             current_counts[final_section] += 1
@@ -1216,11 +1246,11 @@ class AppHandler(BaseHTTPRequestHandler):
                             f"Current counts: foundations={current_counts['foundations']}, "
                             f"core={current_counts['core']}, advanced={current_counts['advanced']}, "
                             f"adjacent={current_counts['adjacent']}\n"
-                            "Step 1: decide whether this is core or not\n\n"
+                            "Step 1: choose the broader lane: before/as-part-of OR after/next-to\n\n"
                         ),
                     },
                 )
-                base_messages = make_core_decision_messages(
+                base_messages = make_path_group_messages(
                     source,
                     candidate,
                     current_counts=current_counts.copy(),
@@ -1255,77 +1285,81 @@ class AppHandler(BaseHTTPRequestHandler):
                         messages = make_item_repair_messages(base_messages, raw_output, last_error)
                         continue
 
-                    normalized, validation_errors = validate_core_decision(raw_obj)
+                    normalized, validation_errors = validate_path_group_decision(raw_obj)
                     if validation_errors:
                         last_error = "; ".join(validation_errors)
                         messages = make_item_repair_messages(base_messages, raw_output, last_error)
                         continue
 
-                    if normalized["is_core"] == "yes":
-                        final_section = "core"
-                        final_why = normalized["why"]
-                    else:
-                        send_event(
-                            "token",
-                            {
-                                "chunk": "\nStep 2: non-core item, decide prerequisite vs specialization vs side-topic\n",
-                            },
-                        )
-                        subtype_messages = make_subtype_decision_messages(
-                            source,
-                            candidate,
-                            current_counts=current_counts.copy(),
-                            items_remaining=len(recommendation_payload["results"]) - item_index + 1,
-                        )
-                        subtype_prompt = list(subtype_messages)
-                        subtype_success = False
-                        final_section = "adjacent"
-                        final_why = normalized["why"]
+                    send_event(
+                        "token",
+                        {
+                            "chunk": (
+                                f"\nStep 2: refine the chosen lane ({normalized['group']}) into the final section\n"
+                            ),
+                        },
+                    )
+                    refinement_messages = make_group_refinement_messages(
+                        source,
+                        candidate,
+                        current_counts=current_counts.copy(),
+                        items_remaining=len(recommendation_payload["results"]) - item_index + 1,
+                        chosen_group=normalized["group"],
+                        previous_reason=normalized["why"],
+                    )
+                    refinement_prompt = list(refinement_messages)
+                    refinement_success = False
+                    final_section = "core" if normalized["group"] == "foundation_or_core" else "adjacent"
+                    final_why = normalized["why"]
+                    allowed_sections = (
+                        {"foundations", "core"}
+                        if normalized["group"] == "foundation_or_core"
+                        else {"advanced", "adjacent"}
+                    )
 
-                        for subtype_attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
-                            attempts_used = max(attempts_used, subtype_attempt)
-                            if subtype_attempt > 1:
-                                send_event(
-                                    "token",
-                                    {
-                                        "chunk": f"\n[Subtype retry {subtype_attempt}/{MAX_ORGANIZER_ATTEMPTS}]\n",
-                                    },
-                                )
-
-                            subtype_output = stream_ollama_content(
-                                subtype_prompt,
-                                organizer_model,
-                                lambda chunk: send_event("token", {"chunk": chunk}),
-                            )
-                            raw_outputs.append(
-                                f'Subtype question for "{candidate["display_title"]}" (attempt {subtype_attempt}):\n{subtype_output}'
+                    for refinement_attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
+                        attempts_used = max(attempts_used, refinement_attempt)
+                        if refinement_attempt > 1:
+                            send_event(
+                                "token",
+                                {
+                                    "chunk": f"\n[Refinement retry {refinement_attempt}/{MAX_ORGANIZER_ATTEMPTS}]\n",
+                                },
                             )
 
-                            try:
-                                subtype_obj = json.loads(subtype_output)
-                            except json.JSONDecodeError as exc:
-                                last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
-                                subtype_prompt = make_item_repair_messages(subtype_messages, subtype_output, last_error)
-                                continue
+                        refinement_output = stream_ollama_content(
+                            refinement_prompt,
+                            organizer_model,
+                            lambda chunk: send_event("token", {"chunk": chunk}),
+                        )
+                        raw_outputs.append(
+                            f'Refinement question for "{candidate["display_title"]}" (attempt {refinement_attempt}):\n{refinement_output}'
+                        )
 
-                            subtype_normalized, subtype_errors = validate_subtype_decision(subtype_obj)
-                            if subtype_errors:
-                                last_error = "; ".join(subtype_errors)
-                                subtype_prompt = make_item_repair_messages(subtype_messages, subtype_output, last_error)
-                                continue
+                        try:
+                            refinement_obj = json.loads(refinement_output)
+                        except json.JSONDecodeError as exc:
+                            last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
+                            refinement_prompt = make_item_repair_messages(refinement_messages, refinement_output, last_error)
+                            continue
 
-                            final_section = {
-                                "prerequisite": "foundations",
-                                "specialization": "advanced",
-                                "side-topic": "adjacent",
-                            }[subtype_normalized["subtype"]]
-                            final_why = subtype_normalized["why"]
-                            subtype_success = True
-                            break
+                        refinement_normalized, refinement_errors = validate_group_refinement_decision(
+                            refinement_obj,
+                            allowed_sections=allowed_sections,
+                        )
+                        if refinement_errors:
+                            last_error = "; ".join(refinement_errors)
+                            refinement_prompt = make_item_repair_messages(refinement_messages, refinement_output, last_error)
+                            continue
 
-                        if not subtype_success:
-                            last_error = last_error or "Unknown subtype classification failure"
-                            break
+                        final_section = refinement_normalized["section"]
+                        final_why = refinement_normalized["why"]
+                        refinement_success = True
+                        break
+
+                    if not refinement_success:
+                        last_error = last_error or "Unknown refinement classification failure"
+                        break
 
                     placements.append({**candidate, "section": final_section, "why": final_why})
                     current_counts[final_section] += 1
