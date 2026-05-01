@@ -1,0 +1,94 @@
+\chapter{PROBLÈMES RENCONTRÉS ET SOLUTIONS PROPOSÉES}
+\thispagestyle{empty}
+
+\section{Problèmes méthodologiques}
+
+Le problème le plus important rencontré pendant cette phase a été de nature
+méthodologique. La branche d'évaluation antérieure utilisait une séparation
+sur des arêtes sortantes orientées, alors que les modèles structurels, en
+particulier Node2Vec, opéraient finalement sur une structure de graphe non
+orientée. Cela a créé un décalage entre la définition du benchmark et la façon
+dont le signal structurel était consommé par le modèle. L'effet a été
+particulièrement important pour Node2Vec, dont la domination antérieure est
+devenue discutable dès que la branche d'évaluation a été redessinée.
+
+Un second problème méthodologique concernait l'équité entre familles de
+modèles. Réutiliser d'anciens caches GCN et GraphSAGE aux côtés de la branche
+Node2Vec révisée aurait produit une comparaison hétérogène. Ce problème a été
+évité en créant des notebooks distincts de réentraînement pour la branche
+structurelle révisée.
+
+\section{Problèmes d'implémentation et d'ingénierie}
+
+Plusieurs problèmes pratiques sont également apparus au cours de
+l'implémentation :
+\begin{itemize}
+    \item un notebook d'évaluation est devenu mal formé au niveau JSON alors
+    même que la logique du code restait pertinente,
+    \item des caches obsolètes dans l'ancienne branche d'évaluation ne
+    correspondaient plus à la logique corrigée,
+    \item l'arrêt anticipé dans la première version des notebooks GNN révisés
+    utilisait le mauvais ensemble d'arêtes et risquait donc d'introduire une
+    fuite d'information depuis le test,
+    \item l'application web n'exposait initialement qu'un sous-ensemble de
+    modèles et devait être réalignée avec la famille expérimentale complète,
+    \item la gestion des titres et l'interaction de recherche dans l'interface
+    nécessitaient un nettoyage, car les identifiants d'articles Wikipedia
+    contiennent des underscores alors que l'interface destinée à l'utilisateur
+    doit afficher des titres naturels,
+    \item la couche expérimentale de LLM local pour la génération de parcours
+    d'apprentissage s'est révélée beaucoup moins stable que la couche de
+    récupération ordonnée. Les sorties du petit modèle étaient souvent
+    incohérentes, trop concentrées dans une seule catégorie, ou faiblement
+    justifiées au niveau sémantique.
+\end{itemize}
+
+\section{Solutions adoptées ou prévues}
+
+Les solutions adoptées pendant cette phase font désormais partie de la base du
+projet :
+\begin{itemize}
+    \item un nouveau notebook de phase 0 crée une branche structurelle non
+    orientée et exporte des caches Node2Vec sans fuite,
+    \item de nouveaux notebooks GCN et GraphSAGE réentraînent les bases de
+    référence GNN structurelles sur la même branche révisée,
+    \item l'évaluation finale à dix modèles est centralisée dans un notebook
+    dédié et mise en cache sous un espace de noms séparé,
+    \item les caches obsolètes issus de branches invalides ont été supprimés ou
+    isolés au lieu d'être réutilisés silencieusement,
+    \item l'application web a été mise à jour pour exposer tous les modèles
+    testés et offrir une expérience de recherche et de prévisualisation plus
+    stable.
+\end{itemize}
+
+La couche de parcours d'apprentissage fondée sur un LLM a également dû être
+repensée pendant cette phase. La première tentative demandait au modèle local
+de produire en une seule fois un parcours JSON structuré sur l'ensemble du
+top-20 recommandé. Cette approche était trop fragile pour un petit modèle
+local et produisait fréquemment des sorties mal formées ou incomplètes.
+L'implémentation actuelle utilise donc une stratégie plus simple de
+classification par article en deux étapes : chaque article candidat est
+d'abord placé dans un groupe large, puis raffiné vers l'une des sections
+finales (fondations, cœur, avancé, adjacent). Cette solution ne résout pas
+complètement le problème de qualité, mais elle produit un comportement de
+prototype plus robuste que la génération monolithique initiale.
+
+Même après cette refonte, les limites de l'organisateur local restent nettes.
+Comme le modèle actuel est de petite taille, il produit parfois des
+classifications sémantiquement faibles ou regroupe trop d'articles dans des
+catégories similaires. Pour cette raison, le présent rapport traite la couche
+de parcours d'apprentissage comme une extension expérimentale plutôt que comme
+un composant validé du système de recommandation. Un modèle local plus grand,
+ou un modèle suivant mieux les instructions avec une meilleure cohérence de
+classification, améliorerait vraisemblablement cette partie du pipeline de
+manière substantielle.
+
+Deux directions de solution supplémentaires restent actives pour la phase
+suivante :
+\begin{itemize}
+    \item améliorer l'organisateur de parcours d'apprentissage avec un modèle
+    local plus fort et une stratégie de sectionnement plus fiable,
+    \item étendre la branche révisée avec de futures expériences sur le pooling
+    et sur la qualité de recommandation sans revenir à l'ancienne logique de
+    séparation, qui était défectueuse.
+\end{itemize}

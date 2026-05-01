@@ -49,6 +49,94 @@ popularity-driven. The corrected hybrid models occupy the most useful middle
 ground: they retain competitive ranking quality while avoiding the strongest
 popularity collapse.
 
+\section{Extended Metric Tables}
+
+For completeness, the revised branch also includes the full combined metric
+table and the per-metric rank summary originally assembled in the detailed
+report series. Table~\ref{tab:mid-combined-metrics} reproduces the combined
+old and new metrics for the ten-model branch, while
+Table~\ref{tab:mid-rank-summary} converts those raw values into per-column
+ranks to make the global comparison easier to scan.
+
+\begin{table}[H]
+\centering
+\caption{Combined old and new metrics on the revised ten-model branch.}
+\label{tab:mid-combined-metrics}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.12}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.28\textwidth}ccccccccccccc}
+\toprule
+\textbf{Model} &
+\textbf{H@1} &
+\textbf{H@10} &
+\textbf{H@50} &
+\textbf{H@100} &
+\textbf{MRR} &
+\textbf{NDCG} &
+\textbf{Recall} &
+\textbf{MAP} &
+\textbf{Pop. Lift} &
+\textbf{Gini} &
+\textbf{Agg. Div.} &
+\textbf{Novelty} &
+\textbf{ILD} \\
+\midrule
+BGE pooled + Node2Vec (corrected) & 1.03\% & 8.67\% & 31.46\% & 47.81\% & 0.0410 & 0.1160 & 0.4781 & 0.0392 & 1.3301 & 0.4110 & 11,326 & 14.2738 & 0.4372 \\
+BGE-M3 + Node2Vec (corrected) & 1.07\% & 8.67\% & 32.41\% & 49.81\% & 0.0421 & 0.1202 & 0.4981 & 0.0403 & 1.3081 & 0.4127 & 11,268 & 14.2783 & 0.4316 \\
+BGE pooled + Node2Vec (uncorrected) & 0.76\% & 7.83\% & 32.64\% & 50.74\% & 0.0376 & 0.1176 & 0.5074 & 0.0358 & 1.3397 & 0.4613 & 11,186 & 14.0351 & 0.4558 \\
+BGE-M3 + Node2Vec (uncorrected) & 0.76\% & 7.83\% & 32.64\% & 50.74\% & 0.0376 & 0.1176 & 0.5074 & 0.0358 & 1.3400 & 0.4605 & 11,164 & 14.0340 & 0.4557 \\
+Node2Vec (uncorrected) & 0.75\% & 7.81\% & 32.52\% & 50.60\% & 0.0375 & 0.1172 & 0.5060 & 0.0357 & 1.3374 & 0.4482 & 10,966 & 14.0466 & 0.4569 \\
+Node2Vec (corrected) & 0.75\% & 7.81\% & 32.52\% & 50.60\% & 0.0375 & 0.1172 & 0.5060 & 0.0356 & 1.3374 & 0.4482 & 10,966 & 14.0466 & 0.4569 \\
+GCN + BGE-M3 (rank fusion) & 0.85\% & 7.63\% & 23.14\% & 33.77\% & 0.0335 & 0.0862 & 0.3377 & 0.0317 & 1.6650 & 0.4228 & 11,655 & 13.9222 & 0.4366 \\
+BGE-M3 Only & 1.35\% & 7.57\% & 19.69\% & 27.73\% & 0.0366 & 0.0788 & 0.2773 & 0.0351 & 1.9413 & 0.5172 & 10,905 & 13.8459 & 0.3713 \\
+GCN Only & 0.38\% & 3.46\% & 14.12\% & 22.91\% & 0.0180 & 0.0530 & 0.2291 & 0.0163 & 1.1879 & 0.2607 & 11,685 & 14.3293 & 0.5135 \\
+GraphSAGE Only & 0.17\% & 1.22\% & 4.96\% & 8.72\% & 0.0076 & 0.0199 & 0.0872 & 0.0061 & 1.3134 & 0.2517 & 11,628 & 14.2087 & 0.5313 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Per-metric rank summary on the revised ten-model branch. Lower total rank is better overall.}
+\label{tab:mid-rank-summary}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.12}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.28\textwidth}cccccccccccccc}
+\toprule
+\textbf{Model} &
+\textbf{Total} &
+\textbf{H@1} &
+\textbf{H@10} &
+\textbf{H@50} &
+\textbf{H@100} &
+\textbf{MRR} &
+\textbf{NDCG} &
+\textbf{Recall} &
+\textbf{MAP} &
+\textbf{Agg. Div.} &
+\textbf{Novelty} &
+\textbf{ILD} &
+\textbf{Pop. Lift} &
+\textbf{Gini} \\
+\midrule
+BGE-M3 + Node2Vec (corrected) & 1 & 2 & 2 & 3 & 3 & 1 & 1 & 3 & 1 & 4 & 2 & 7 & 3 & 4 \\
+BGE pooled + Node2Vec (corrected) & 2 & 3 & 1 & 6 & 6 & 2 & 4 & 6 & 2 & 5 & 3 & 6 & 1 & 3 \\
+Node2Vec (corrected) & 3 & 6 & 6 & 5 & 5 & 5 & 6 & 5 & 6 & 9 & 6 & 2 & 4 & 5 \\
+Node2Vec (uncorrected) & 4 & 5 & 5 & 4 & 4 & 4 & 5 & 4 & 5 & 10 & 5 & 1 & 5 & 6 \\
+BGE pooled + Node2Vec (uncorrected) & 5 & 8 & 3 & 1 & 1 & 6 & 2 & 1 & 3 & 7 & 8 & 4 & 7 & 8 \\
+BGE-M3 + Node2Vec (uncorrected) & 6 & 7 & 4 & 2 & 2 & 7 & 3 & 2 & 4 & 8 & 9 & 5 & 8 & 7 \\
+GCN Only & 7 & 9 & 9 & 8 & 8 & 9 & 8 & 8 & 9 & 1 & 1 & 3 & 10 & 2 \\
+GCN + BGE-M3 (rank fusion) & 8 & 4 & 7 & 7 & 7 & 8 & 7 & 7 & 8 & 2 & 10 & 8 & 9 & 9 \\
+BGE-M3 Only & 9 & 1 & 8 & 9 & 9 & 3 & 9 & 9 & 7 & 10 & 11 & 10 & 11 & 10 \\
+GraphSAGE Only & 10 & 10 & 10 & 10 & 10 & 10 & 10 & 10 & 10 & 3 & 7 & 9 & 2 & 1 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
 \section{Verification and Consistency Checks}
 
 The current results were not accepted at face value; they were repeatedly
@@ -66,6 +154,16 @@ checked and corrected during development. The main verification steps were:
     \item correction of earlier notebook-state problems, including a malformed
     JSON notebook file and outdated cached results.
 \end{itemize}
+
+The revised branch also clarifies a problem that affected the interpretation of
+the earlier report-6 line. In that earlier stage, a directed outgoing-edge
+holdout was combined with structural modeling that ultimately consumed an
+undirected graph, especially in the Node2Vec family. This created a leakage
+risk or, at minimum, a methodological mismatch: the model could benefit from a
+structural view that did not fully respect the directed holdout definition. As
+a result, some earlier conclusions, especially the apparent dominance of raw
+Node2Vec, had to be treated with caution and were explicitly reevaluated under
+the revised undirected branch.
 
 The GNN baselines were also verified independently through their link-prediction
 test AUC values on the revised branch:

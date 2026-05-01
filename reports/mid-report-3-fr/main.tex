@@ -1,0 +1,111 @@
+% ATTENTION: Si vous n'etes pas familier de Latex, NE MODIFIEZ PAS le contenu de ce document!!!
+\documentclass[12pt,oneside]{book}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ left=35mm,
+ right=25mm,
+ top=35mm,
+ bottom=25mm,
+ }
+\linespread{1.50}
+    
+\usepackage[list=off]{subcaption}
+\usepackage[figurename = Figure, tablename = Tableau]{caption}
+\usepackage{tocbibind}
+\usepackage{tocloft}
+\usepackage{float}
+\usepackage{mathptmx}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{natbib}
+\usepackage{multirow}
+\usepackage{algorithm2e}
+\usepackage{fancyvrb}
+\usepackage{listings}
+
+\pagestyle{plain}
+
+\AtBeginDocument{
+	\renewcommand\contentsname{Table des Matieres}
+	\renewcommand\listfigurename{Liste des Figures}
+	\renewcommand\listtablename{Liste des Tableaux}
+    \renewcommand\bibname{Bibliographie}
+}
+\setlength\parindent{0pt}
+
+\setcounter{secnumdepth}{4}
+
+\titleformat{\section}
+  {\normalfont\fontsize{12}{15}\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\fontsize{12}{15}\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalfont\fontsize{12}{15}}{\thesubsubsection}{1em}{}
+
+\renewcommand\cftchapdotsep{\cftdotsep}
+\renewcommand\cftchapnumwidth{3em}
+\renewcommand\cftsecindent{3em}
+\renewcommand\thechapter{\arabic{chapter}}
+\renewcommand\thesection{\arabic{chapter}.\arabic{section}}
+
+\renewcommand{\theequation}{\arabic{equation}}
+
+\setcounter{tocdepth}{4}
+\setlength{\cftbeforetoctitleskip}{-3em}
+\setlength{\cftaftertoctitleskip}{12pt}
+\renewcommand\cfttoctitlefont{\large\bf}
+
+\setlength{\cftbeforeloftitleskip}{-3em}
+\setlength{\cftafterloftitleskip}{12pt}
+\renewcommand\cftloftitlefont{\large\bf}
+
+\setlength{\cftbeforelottitleskip}{-3em}
+\setlength{\cftafterlottitleskip}{12pt}
+\renewcommand\cftlottitlefont{\large\bf}
+
+\setlength{\parskip}{12pt plus 1pt minus 1pt}
+\titlespacing{\chapter}{0pt}{-50pt}{36pt}
+\titlespacing{\section}{0pt}{24pt}{0pt}
+\titlespacing{\subsection}{0pt}{0pt}{0cm}
+\titlespacing{\subsubsection}{0pt}{0pt}{0cm}
+\titleformat{\chapter}{\normalfont\large\bf}{\thechapter}{14pt}{\large\bf}
+
+\begin{document}
+\input{titlepage}
+\frontmatter
+\clearpage
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+\mainmatter
+
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyhead{}
+\fancyfoot{}
+\chead{\arabic{page}}
+
+\input{Chapter1}
+\input{Chapter2}
+\input{Chapter3}
+\input{Chapter4}
+\input{Chapter5}
+\backmatter
+
+\thispagestyle{empty}
+\bibliographystyle{apalike2}
+\thispagestyle{empty}
+\bibliography{ref}
+\thispagestyle{empty}
+
+\end{document}

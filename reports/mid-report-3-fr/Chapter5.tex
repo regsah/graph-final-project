@@ -1,0 +1,84 @@
+\chapter{MÉTRIQUES DE PERFORMANCE ET MÉTHODES D'ÉVALUATION}
+\thispagestyle{empty}
+
+\section{Métriques d'évaluation existantes}
+
+Afin d'assurer la continuité avec la série précédente de rapports, le projet
+utilise encore les métriques standard de classement suivantes :
+\begin{itemize}
+    \item \textbf{Hit@1, Hit@10, Hit@50, Hit@100 :} proportion des cibles de
+    test retrouvées parmi les $K$ premières positions classées,
+    \item \textbf{MRR :} rang réciproque moyen de la vraie cible sur l'ensemble
+    des requêtes d'évaluation,
+    \item \textbf{NDCG :} gain cumulatif actualisé normalisé, utilisé pour
+    refléter la qualité de la position dans le classement,
+    \item \textbf{Recall :} fraction des cibles pertinentes retrouvées dans le
+    seuil inspecté,
+    \item \textbf{MAP :} précision moyenne moyenne, résumant la qualité du
+    classement sur l'ensemble d'évaluation.
+\end{itemize}
+
+Ces métriques restent utiles car elles préservent la comparabilité avec les
+branches antérieures et quantifient la capacité du système à retrouver des
+relations de graphe mises de côté pour le test.
+
+\section{Nouvelles métriques orientées recommandation}
+
+Comme le projet porte en définitive sur la recommandation plutôt que sur la
+seule prédiction de liens, la branche révisée ajoute une seconde famille de
+métriques :
+\begin{itemize}
+    \item \textbf{Popularity Lift :} mesure à quel point un modèle se
+    concentre sur les articles populaires par rapport à la fréquence de base du
+    graphe,
+    \item \textbf{Gini Index :} mesure le degré de concentration ou
+    d'inégalité de la distribution des recommandations à travers l'ensemble des
+    articles,
+    \item \textbf{Aggregate Diversity :} compte combien d'articles distincts
+    sont effectivement proposés à travers toutes les listes de recommandation,
+    \item \textbf{Novelty :} valorise les modèles qui recommandent des articles
+    moins évidents,
+    \item \textbf{Intra-List Distance (ILD) :} mesure à quel point le contenu
+    de chaque liste de recommandation est diversifié.
+\end{itemize}
+
+Ces métriques sont importantes car deux modèles ayant des valeurs de Hit@10
+similaires peuvent néanmoins se comporter très différemment comme systèmes de
+recommandation. Un modèle peut retrouver de nombreuses bonnes relations tout en
+proposant sans cesse les mêmes nœuds très connectés ou très populaires. Cette
+nouvelle famille de métriques rend ces compromis visibles.
+
+\section{Protocole d'évaluation}
+
+Le protocole officiel d'évaluation actuel est fondé sur la branche structurelle
+non orientée révisée. La procédure est résumée dans le
+Tableau~\ref{tab:eval-branch-stats}.
+
+\begin{table}[H]
+\centering
+\caption{Statistiques de la branche d'évaluation révisée et paramètres du protocole.}
+\label{tab:eval-branch-stats}
+\begin{tabular}{p{0.52\textwidth}p{0.28\textwidth}}
+\toprule
+\textbf{Quantité} & \textbf{Valeur} \\
+\midrule
+Arêtes du graphe orienté complet & 291,039 \\
+Arêtes structurelles non orientées complètes & 216,123 \\
+Arêtes d'entraînement (branche non orientée) & 172,900 \\
+Arêtes de test (branche non orientée) & 43,223 \\
+Paires d'évaluation étendues & 86,446 \\
+Nœuds d'évaluation & 9,022 \\
+Coefficient structurel de loi de puissance & $\alpha \approx 2.9966$ \\
+Longueur de liste recommandée pour les nouvelles métriques & Top-20 \\
+Nombre de modèles dans la comparaison révisée & 10 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Dans ce protocole, chaque arête de test non orientée $\{u,v\}$ est étendue en
+deux requêtes directionnelles d'évaluation, $u \rightarrow v$ et $v \rightarrow u$,
+pour les métriques de classement. Les métriques orientées recommandation sont
+ensuite calculées sur les listes Top-20 produites pour chaque nœud
+d'évaluation. Cette conception d'évaluation duale permet au projet d'évaluer
+à la fois la qualité de récupération du graphe et le comportement pratique de
+recommandation au sein d'une même branche expérimentale.

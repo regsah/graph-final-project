@@ -1,0 +1,54 @@
+\chapter{INTRODUCTION}
+\thispagestyle{empty}
+
+\section{Portée du projet}
+
+Ce projet étudie la recommandation d'articles Wikipedia dans le domaine de
+l'informatique. L'objectif à long terme n'est pas seulement de retrouver des
+articles liés, mais aussi de les organiser en parcours d'apprentissage utiles
+pour un lecteur. Le projet combine donc trois familles de composants :
+\begin{itemize}
+    \item des plongements sémantiques de texte obtenus à partir du contenu des
+    articles,
+    \item des plongements structurels de graphe appris à partir de la structure
+    des hyperliens de Wikipedia,
+    \item des modèles de référence fondés sur les réseaux de neurones sur
+    graphes et une future couche de présentation orientée parcours
+    d'apprentissage.
+\end{itemize}
+
+Le socle expérimental du travail reste le jeu de données Custom-WikiCS, qui
+étend le benchmark Wiki-CS~\cite{mernyei2020wikics} avec le texte des
+articles, des caches de plongements et des artefacts d'évaluation adaptés à
+des expériences orientées recommandation. Dans la branche actuelle, le projet
+utilise les plongements textuels BGE-M3~\cite{chen2025bgem3}, des plongements
+structurels de type Node2Vec, une base de référence Graph Convolutional Network
+(GCN)~\cite{kipf2017semi} et une base de référence GraphSAGE~\cite{hamilton2017inductive}.
+Les Graph Attention Networks (GAT)~\cite{velickovic2018graph} restent présents
+dans l'orientation conceptuelle du projet, mais les résultats les plus stables
+à ce stade proviennent de la branche d'évaluation révisée centrée sur une
+recherche hybride sémantique-structurelle.
+
+\section{État du projet au début du troisième rapport intermédiaire}
+
+Au début de ce troisième rapport intermédiaire, le projet a largement dépassé
+le stade de la définition du problème et de la construction du jeu de données.
+Les jalons majeurs suivants sont déjà atteints :
+\begin{itemize}
+    \item construction d'un graphe d'articles Wikipedia nettoyé comportant
+    11\,701 nœuds et 291\,039 arêtes orientées,
+    \item génération des plongements textuels BGE-M3 et de plusieurs branches
+    structurelles fondées sur Node2Vec,
+    \item implémentation des bases de référence structurelles GCN et
+    GraphSAGE,
+    \item développement d'un prototype local d'application web pour la
+    recherche interactive d'articles,
+    \item correction des problèmes d'évaluation antérieurs et création d'une
+    branche structurelle non orientée révisée pour une comparaison plus juste.
+\end{itemize}
+
+L'objectif principal de ce rapport est de présenter les premiers résultats
+consolidés de cette branche révisée, d'analyser ce qui a changé par rapport
+aux expériences antérieures, de documenter les problèmes rencontrés au cours
+du processus et de formaliser les métriques de performance ainsi que le
+protocole d'évaluation actuellement utilisés pour la vérification du projet.
