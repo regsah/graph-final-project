@@ -580,14 +580,13 @@ def make_path_group_messages(
     items_remaining: int,
 ) -> list[dict[str, str]]:
     instructions = (
-        "Return only valid JSON. "
-        "You are making the first-stage learning-path decision for one recommended Wikipedia article. "
-        "Choose the broader learning lane first, not the final section. "
-        "Choose foundation_or_core if the candidate should usually be learned before the target or as part of the target itself. "
-        "Choose advanced_or_adjacent if the candidate should usually be learned after the target or treated as a neighboring side topic. "
-        "Use the current counts only as soft context. "
-        "Keep the reason short. "
-        "Output shape: {\"group\":\"foundation_or_core|advanced_or_adjacent\",\"why\":\"Short reason.\"}"
+        "Return JSON only. "
+        "Target is fixed. Classify the candidate relative to the target. "
+        "Choose one group: inside_or_before or after_or_side. "
+        "inside_or_before = learn before target, or learn as part of target. "
+        "after_or_side = learn after target, or related side topic. "
+        "Keep why short. "
+        "Output: {\"group\":\"inside_or_before|after_or_side\",\"why\":\"short reason\"}"
     )
     user_payload = {
         "target": {
@@ -603,14 +602,15 @@ def make_path_group_messages(
             "score": round(float(candidate["score"]), 4),
             "link_pattern": linked_pattern_text(candidate),
         },
+        "task_rule": "The target is fixed. Decide the role of the candidate relative to the target.",
         "question": (
-            f'For a learner trying to understand "{prettify_title(str(source["title"]))}", '
-            f'should "{candidate["display_title"]}" be grouped with concepts that come before/as part of the target, '
-            f'or with concepts that come after/next to the target?'
+            f'Target: "{prettify_title(str(source["title"]))}". '
+            f'Candidate: "{candidate["display_title"]}". '
+            "Choose one: inside_or_before or after_or_side."
         ),
         "current_section_counts": current_counts,
         "items_remaining_including_this_one": items_remaining,
-        "allowed_answers": ["foundation_or_core", "advanced_or_adjacent"],
+        "allowed_answers": ["inside_or_before", "after_or_side"],
     }
     return [
         {"role": "system", "content": instructions},
@@ -624,43 +624,38 @@ def make_group_refinement_messages(
     current_counts: dict[str, int],
     items_remaining: int,
     chosen_group: str,
-    previous_reason: str,
 ) -> list[dict[str, str]]:
-    if chosen_group == "foundation_or_core":
+    if chosen_group == "inside_or_before":
         allowed = ["foundations", "core"]
         question = (
-            f'You already decided "{candidate["display_title"]}" belongs in the before/as-part-of lane. '
-            "Now choose whether it is better treated as a prerequisite foundation or as a core concept."
+            f'Target: "{prettify_title(str(source["title"]))}". '
+            f'Candidate: "{candidate["display_title"]}". '
+            "Choose one: foundations or core."
         )
         instructions = (
-            "Return only valid JSON. "
-            "You are making the second-stage learning-path decision for one recommended Wikipedia article. "
-            "The candidate is already known to belong in the before/as-part-of lane. "
-            "Choose exactly one final section: foundations or core. "
-            "Interpret them as: foundations = broad prerequisite background usually learned before the target; "
-            "core = a concept, subtopic, task, or component that is part of understanding the target itself. "
-            "Do not contradict the previous lane decision. "
-            "Use the current counts only as soft context. "
-            "Keep the reason short. "
-            "Output shape: {\"section\":\"foundations|core\",\"why\":\"Short reason.\"}"
+            "Return JSON only. "
+            "Target is fixed. Classify the candidate relative to the target. "
+            "Choose one section: foundations or core. "
+            "foundations = broad background learned before target. "
+            "core = type, part, task, or standard concept inside target. "
+            "Keep why short. "
+            "Output: {\"section\":\"foundations|core\",\"why\":\"short reason\"}"
         )
     else:
         allowed = ["advanced", "adjacent"]
         question = (
-            f'You already decided "{candidate["display_title"]}" belongs in the after/next-to lane. '
-            "Now choose whether it is better treated as an advanced follow-up or an adjacent side topic."
+            f'Target: "{prettify_title(str(source["title"]))}". '
+            f'Candidate: "{candidate["display_title"]}". '
+            "Choose one: advanced or adjacent."
         )
         instructions = (
-            "Return only valid JSON. "
-            "You are making the second-stage learning-path decision for one recommended Wikipedia article. "
-            "The candidate is already known to belong in the after/next-to lane. "
-            "Choose exactly one final section: advanced or adjacent. "
-            "Interpret them as: advanced = a narrower, deeper, or later follow-up after the target; "
-            "adjacent = related and useful, but not central and not a clear follow-up path. "
-            "Do not contradict the previous lane decision. "
-            "Use the current counts only as soft context. "
-            "Keep the reason short. "
-            "Output shape: {\"section\":\"advanced|adjacent\",\"why\":\"Short reason.\"}"
+            "Return JSON only. "
+            "Target is fixed. Classify the candidate relative to the target. "
+            "Choose one section: advanced or adjacent. "
+            "advanced = deeper follow-up after target. "
+            "adjacent = related side topic, not a main next step. "
+            "Keep why short. "
+            "Output: {\"section\":\"advanced|adjacent\",\"why\":\"short reason\"}"
         )
     user_payload = {
         "target": {
@@ -676,7 +671,8 @@ def make_group_refinement_messages(
             "score": round(float(candidate["score"]), 4),
             "link_pattern": linked_pattern_text(candidate),
         },
-        "previous_lane_decision": {"group": chosen_group, "why": previous_reason},
+        "chosen_group": chosen_group,
+        "task_rule": "The target is fixed. Decide the role of the candidate relative to the target.",
         "question": question,
         "current_section_counts": current_counts,
         "items_remaining_including_this_one": items_remaining,
@@ -713,7 +709,7 @@ def validate_path_group_decision(raw_obj: object) -> tuple[dict[str, str], list[
 
     group = raw_obj.get("group")
     why = raw_obj.get("why")
-    if group not in {"foundation_or_core", "advanced_or_adjacent"}:
+    if group not in {"inside_or_before", "after_or_side"}:
         errors.append(f"Invalid group value: {group}")
     if not isinstance(why, str) or not why.strip():
         errors.append("Missing or empty `why`.")
@@ -770,86 +766,6 @@ def build_sectioned_learning_path(
             for section in LEARNING_PATH_SECTIONS
         ],
     }
-
-
-def learning_path_is_collapsed(placements: list[dict[str, object]]) -> bool:
-    counts = {section_id: 0 for section_id in SECTION_IDS}
-    for item in placements:
-        counts[str(item["section"])] += 1
-    non_empty = sum(1 for count in counts.values() if count > 0)
-    max_bucket = max(counts.values()) if counts else 0
-    return non_empty < 3 or max_bucket >= max(15, len(placements) - 1)
-
-
-def rebalance_learning_path_sections(placements: list[dict[str, object]]) -> list[dict[str, object]]:
-    items = [{**item} for item in placements]
-    n = len(items)
-    if n == 0:
-        return items
-
-    target_foundations = min(4, n)
-    target_adjacent = min(4, max(0, n - target_foundations))
-    target_advanced = min(4, max(0, n - target_foundations - target_adjacent))
-    target_core = max(0, n - target_foundations - target_adjacent - target_advanced)
-
-    by_rank = sorted(items, key=lambda item: int(item["rank"]))
-    by_degree = sorted(items, key=lambda item: (-int(item["total_degree"]), int(item["rank"])))
-    by_low_score = sorted(items, key=lambda item: (float(item["score"]), int(item["rank"])))
-
-    selected_ids: set[int] = set()
-
-    def choose(pool: list[dict[str, object]], count: int, section_id: str, why: str) -> list[dict[str, object]]:
-        chosen: list[dict[str, object]] = []
-        for item in pool:
-            if len(chosen) >= count:
-                break
-            if int(item["id"]) in selected_ids:
-                continue
-            selected_ids.add(int(item["id"]))
-            item["section"] = section_id
-            item["why"] = why
-            chosen.append(item)
-        return chosen
-
-    foundations = choose(
-        by_degree,
-        target_foundations,
-        "foundations",
-        "Rebalanced as a broad prerequisite based on graph centrality.",
-    )
-
-    adjacent_pool = [
-        item for item in by_low_score
-        if not item.get("linked_from_source") and not item.get("linked_to_source")
-    ] + by_low_score
-    adjacent = choose(
-        adjacent_pool,
-        target_adjacent,
-        "adjacent",
-        "Rebalanced as a related but less central neighboring topic.",
-    )
-
-    core = choose(
-        by_rank,
-        target_core,
-        "core",
-        "Rebalanced as a direct or central topic close to the target.",
-    )
-
-    remaining = [item for item in by_rank if int(item["id"]) not in selected_ids]
-    advanced = choose(
-        remaining,
-        target_advanced,
-        "advanced",
-        "Rebalanced as a deeper or more specialized follow-up topic.",
-    )
-
-    leftovers = [item for item in by_rank if int(item["id"]) not in selected_ids]
-    for item in leftovers:
-        item["section"] = "advanced"
-        item["why"] = "Rebalanced as a specialized remaining topic."
-
-    return foundations + core + advanced + adjacent + leftovers
 
 
 def validate_learning_path(raw_obj: object, candidate_map: dict[str, dict[str, object]], target_title: str) -> tuple[dict[str, object], list[str]]:
@@ -1035,15 +951,14 @@ def build_learning_path(recommendation_payload: dict[str, object], organizer_mod
                 current_counts=current_counts.copy(),
                 items_remaining=total_candidates - item_index + 1,
                 chosen_group=normalized["group"],
-                previous_reason=normalized["why"],
             )
             refinement_prompt = list(refinement_messages)
             refinement_success = False
-            final_section = "core" if normalized["group"] == "foundation_or_core" else "adjacent"
+            final_section = "core" if normalized["group"] == "inside_or_before" else "adjacent"
             final_why = normalized["why"]
             allowed_sections = (
                 {"foundations", "core"}
-                if normalized["group"] == "foundation_or_core"
+                if normalized["group"] == "inside_or_before"
                 else {"advanced", "adjacent"}
             )
 
@@ -1096,21 +1011,12 @@ def build_learning_path(recommendation_payload: dict[str, object], organizer_mod
             fallback["raw_llm_output"] = "\n\n".join(raw_outputs)
             return fallback
 
-    rebalanced = False
-    if learning_path_is_collapsed(placements):
-        placements = rebalance_learning_path_sections(placements)
-        rebalanced = True
-
     normalized = build_sectioned_learning_path(source, placements)
     return {
         **normalized,
         "organizer_model": organizer_model,
-        "mode": "llm_rebalanced" if rebalanced else "llm",
-        "warning": (
-            "The local LLM classified all items, but the section distribution was heavily collapsed, so a balancing pass was applied."
-            if rebalanced
-            else None
-        ),
+        "mode": "llm",
+        "warning": None,
         "attempts": attempts_used,
         "raw_llm_output": "\n\n".join(raw_outputs),
     }
@@ -1246,7 +1152,7 @@ class AppHandler(BaseHTTPRequestHandler):
                             f"Current counts: foundations={current_counts['foundations']}, "
                             f"core={current_counts['core']}, advanced={current_counts['advanced']}, "
                             f"adjacent={current_counts['adjacent']}\n"
-                            "Step 1: choose the broader lane: before/as-part-of OR after/next-to\n\n"
+                            "Step 1: choose one group: inside_or_before OR after_or_side\n\n"
                         ),
                     },
                 )
@@ -1305,15 +1211,14 @@ class AppHandler(BaseHTTPRequestHandler):
                         current_counts=current_counts.copy(),
                         items_remaining=len(recommendation_payload["results"]) - item_index + 1,
                         chosen_group=normalized["group"],
-                        previous_reason=normalized["why"],
                     )
                     refinement_prompt = list(refinement_messages)
                     refinement_success = False
-                    final_section = "core" if normalized["group"] == "foundation_or_core" else "adjacent"
+                    final_section = "core" if normalized["group"] == "inside_or_before" else "adjacent"
                     final_why = normalized["why"]
                     allowed_sections = (
                         {"foundations", "core"}
-                        if normalized["group"] == "foundation_or_core"
+                        if normalized["group"] == "inside_or_before"
                         else {"advanced", "adjacent"}
                     )
 
@@ -1382,21 +1287,12 @@ class AppHandler(BaseHTTPRequestHandler):
                     break
 
             if len(placements) == len(recommendation_payload["results"]):
-                rebalanced = False
-                if learning_path_is_collapsed(placements):
-                    placements = rebalance_learning_path_sections(placements)
-                    rebalanced = True
-
                 normalized_path = build_sectioned_learning_path(source, placements)
                 payload = {
                     **normalized_path,
                     "organizer_model": organizer_model,
-                    "mode": "llm_rebalanced" if rebalanced else "llm",
-                    "warning": (
-                        "The local LLM classified all items, but the section distribution was heavily collapsed, so a balancing pass was applied."
-                        if rebalanced
-                        else None
-                    ),
+                    "mode": "llm",
+                    "warning": None,
                     "attempts": attempts_used,
                     "raw_llm_output": "\n\n".join(raw_outputs),
                 }
