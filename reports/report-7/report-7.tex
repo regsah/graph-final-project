@@ -1,0 +1,355 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\geometry{margin=1in}
+
+\title{Custom-WikiCS Graph Analysis -- Part 7\\[4pt]
+\large Revised Undirected Structural Evaluation: 10-Model Comparison with Recommendation Metrics}
+\author{Sahin Uregil}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+This report presents a revised evaluation branch for the Custom-WikiCS
+recommendation project. The earlier comparison reports were useful, but they
+mixed a directed edge-holdout setup with structural models that ultimately
+operate on undirected graph structure. In particular, Node2Vec was trained on an
+undirected graph, while the old train/test split was defined over directed
+outgoing edges. That created a methodological mismatch and made it difficult to
+separate true structural generalization from artifacts of the split design.
+
+The new branch therefore changes the evaluation setup in three ways:
+
+\begin{itemize}
+    \item The structural branch now uses an \textbf{undirected train/test split}
+          built directly on the undirected graph.
+    \item The Node2Vec family is retrained on that new branch, and both
+          \textbf{uncorrected} and \textbf{power-law corrected} versions are
+          reevaluated.
+    \item The report adds a second table of \textbf{recommendation-quality
+          metrics} so that models are evaluated not only as edge-recovery
+          systems, but also as recommendation systems.
+\end{itemize}
+
+This revised setup also introduces two new pooled hybrid models that balance
+BGE-M3 and Node2Vec dimensionally before fusion.
+
+\section{Revised Evaluation Setup}
+
+\subsection{Undirected Structural Split}
+The full structural graph is first converted to an undirected graph. Undirected
+edges are then split into train and test sets with an approximately 80/20
+ratio. To avoid weakening the structural train graph unnecessarily, the split
+preserves train connectivity where possible and repairs any accidental new train
+isolates.
+
+The resulting branch statistics are:
+
+\begin{itemize}
+    \item Full undirected structural edges: 216,123
+    \item Train edges: 172,900
+    \item Test edges: 43,223
+    \item Expanded evaluation pairs: 86,446
+    \item Evaluation nodes: 9,022
+\end{itemize}
+
+For ranking-based evaluation, each undirected test edge $\{u,v\}$ is expanded
+into two directional queries: $u \rightarrow v$ and $v \rightarrow u$.
+
+\subsection{Power-Law Correction}
+The power-law correction parameter is refitted on the new undirected train
+graph. The fitted value for this branch is:
+
+\[
+\alpha_{\text{structural}} \approx 2.9966
+\]
+
+In this report, the terms ``corrected'' and ``uncorrected'' refer only to
+whether this power-law penalty is applied to the Node2Vec representation.
+
+\subsection{Pooled Hybrid Models}
+The previous combined representation used:
+
+\begin{itemize}
+    \item BGE-M3: 1024 dimensions
+    \item Node2Vec: 128 dimensions
+\end{itemize}
+
+To test whether this dimensional imbalance was hurting hybrid fusion, a pooled
+variant was introduced. BGE-M3 is compressed from 1024 to 128 dimensions using
+simple mean-pooling over contiguous blocks, then concatenated with 128-dim
+Node2Vec. This creates a balanced 256-dimensional hybrid representation.
+
+\section{Models Compared}
+
+\begin{table}[H]
+\centering
+\caption{Summary of the 10 models evaluated in the revised branch.}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.05\textwidth}
+                >{\raggedright\arraybackslash}p{0.34\textwidth}
+                >{\raggedright\arraybackslash}p{0.16\textwidth}
+                >{\raggedright\arraybackslash}p{0.35\textwidth}}
+\toprule
+\textbf{\#} & \textbf{Model} & \textbf{Category} & \textbf{Description} \\
+\midrule
+1 & BGE-M3 Only & Semantic & Cosine similarity on 1024-dim BGE-M3 text embeddings \\
+2 & Node2Vec (uncorrected) & Structural & Undirected-branch Node2Vec without power-law penalty \\
+3 & Node2Vec (corrected) & Structural & Undirected-branch Node2Vec with power-law penalty \\
+4 & BGE-M3 + Node2Vec (uncorrected) & Combined & 1024+128 concatenation on the new undirected branch \\
+5 & BGE-M3 + Node2Vec (corrected) & Combined & 1024+128 concatenation with corrected Node2Vec component \\
+6 & GCN Only & GNN & Structural GCN retrained on the revised branch \\
+7 & GCN + BGE-M3 (rank fusion) & Fusion & Reciprocal Rank Fusion between revised-branch GCN and BGE-M3 \\
+8 & GraphSAGE Only & GNN & Structural GraphSAGE retrained on the revised branch \\
+9 & BGE pooled + Node2Vec (uncorrected) & Combined & 128-dim pooled BGE + 128-dim uncorrected Node2Vec \\
+10 & BGE pooled + Node2Vec (corrected) & Combined & 128-dim pooled BGE + 128-dim corrected Node2Vec \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Metric Families}
+
+\subsection{Existing Ranking Metrics}
+For continuity with the earlier report series, the following metrics are
+retained:
+
+\begin{itemize}
+    \item Hit@1
+    \item Hit@10
+    \item Hit@50
+    \item Hit@100
+    \item MRR
+    \item NDCG
+    \item Recall
+    \item MAP
+\end{itemize}
+
+\subsection{New Recommendation Metrics}
+To better reflect the actual recommendation objective, the following metrics are
+added:
+
+\begin{itemize}
+    \item Popularity Lift
+    \item Gini Index
+    \item Aggregate Diversity
+    \item Novelty
+    \item Intra-List Distance
+\end{itemize}
+
+\section{10-Model Results}
+
+\subsection{Ranking Metrics}
+
+\begin{table}[H]
+\centering
+\caption{Ranking results on the revised undirected structural branch (86,446 expanded evaluation pairs).}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.33\textwidth}
+                >{\raggedleft\arraybackslash}p{0.07\textwidth}
+                >{\raggedleft\arraybackslash}p{0.07\textwidth}
+                >{\raggedleft\arraybackslash}p{0.07\textwidth}
+                >{\raggedleft\arraybackslash}p{0.07\textwidth}
+                >{\raggedleft\arraybackslash}p{0.07\textwidth}
+                >{\raggedleft\arraybackslash}p{0.07\textwidth}
+                >{\raggedleft\arraybackslash}p{0.07\textwidth}
+                >{\raggedleft\arraybackslash}p{0.07\textwidth}}
+\toprule
+\textbf{Model} & \textbf{H@1} & \textbf{H@10} & \textbf{H@50} & \textbf{H@100} & \textbf{MRR} & \textbf{NDCG} & \textbf{Recall} & \textbf{MAP} \\
+\midrule
+BGE pooled + Node2Vec (corrected) & 1.03\% & 8.67\% & 31.46\% & 47.81\% & 0.0410 & 0.1160 & 0.4781 & 0.0392 \\
+BGE-M3 + Node2Vec (corrected) & 1.07\% & 8.67\% & 32.41\% & 49.81\% & 0.0421 & 0.1202 & 0.4981 & 0.0403 \\
+BGE pooled + Node2Vec (uncorrected) & 0.76\% & 7.83\% & 32.64\% & 50.74\% & 0.0376 & 0.1176 & 0.5074 & 0.0358 \\
+BGE-M3 + Node2Vec (uncorrected) & 0.76\% & 7.83\% & 32.64\% & 50.74\% & 0.0376 & 0.1176 & 0.5074 & 0.0358 \\
+Node2Vec (uncorrected) & 0.75\% & 7.81\% & 32.52\% & 50.60\% & 0.0375 & 0.1172 & 0.5060 & 0.0357 \\
+Node2Vec (corrected) & 0.75\% & 7.81\% & 32.52\% & 50.60\% & 0.0375 & 0.1172 & 0.5060 & 0.0356 \\
+GCN + BGE-M3 (rank fusion) & 0.85\% & 7.63\% & 23.14\% & 33.77\% & 0.0335 & 0.0862 & 0.3377 & 0.0317 \\
+BGE-M3 Only & 1.35\% & 7.57\% & 19.69\% & 27.73\% & 0.0366 & 0.0788 & 0.2773 & 0.0351 \\
+GCN Only & 0.38\% & 3.46\% & 14.12\% & 22.91\% & 0.0180 & 0.0530 & 0.2291 & 0.0163 \\
+GraphSAGE Only & 0.17\% & 1.22\% & 4.96\% & 8.72\% & 0.0076 & 0.0199 & 0.0872 & 0.0061 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Recommendation-Quality Metrics}
+
+\begin{table}[H]
+\centering
+\caption{Recommendation-quality metrics on top-20 recommendation lists over 9,022 evaluation nodes.}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.30\textwidth}
+                >{\raggedleft\arraybackslash}p{0.10\textwidth}
+                >{\raggedleft\arraybackslash}p{0.09\textwidth}
+                >{\raggedleft\arraybackslash}p{0.12\textwidth}
+                >{\raggedleft\arraybackslash}p{0.09\textwidth}
+                >{\raggedleft\arraybackslash}p{0.12\textwidth}}
+\toprule
+\textbf{Model} & \textbf{Pop. Lift} & \textbf{Gini} & \textbf{Agg. Div.} & \textbf{Novelty} & \textbf{ILD} \\
+\midrule
+GCN Only & 1.1879 & 0.2607 & 11,685 & 14.3293 & 0.5135 \\
+GCN + BGE-M3 (rank fusion) & 1.6650 & 0.4228 & 11,655 & 13.9222 & 0.4366 \\
+GraphSAGE Only & 1.3134 & 0.2517 & 11,628 & 14.2087 & 0.5313 \\
+BGE pooled + Node2Vec (corrected) & 1.3301 & 0.4110 & 11,326 & 14.2738 & 0.4372 \\
+BGE-M3 + Node2Vec (corrected) & 1.3081 & 0.4127 & 11,268 & 14.2783 & 0.4316 \\
+BGE pooled + Node2Vec (uncorrected) & 1.3397 & 0.4613 & 11,186 & 14.0351 & 0.4558 \\
+BGE-M3 + Node2Vec (uncorrected) & 1.3400 & 0.4605 & 11,164 & 14.0340 & 0.4557 \\
+Node2Vec (uncorrected) & 1.3374 & 0.4482 & 10,966 & 14.0466 & 0.4569 \\
+Node2Vec (corrected) & 1.3374 & 0.4482 & 10,966 & 14.0466 & 0.4569 \\
+BGE-M3 Only & 1.9413 & 0.5172 & 10,905 & 13.8459 & 0.3713 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{What Changed Under the New Setup}
+
+\subsection{Node2Vec No Longer Dominates}
+The most important change is that \textbf{pure Node2Vec is no longer the clear
+winner}. Under the older branch, uncorrected Node2Vec was the strongest model by
+a large margin. Under the revised undirected structural branch, both Node2Vec
+variants settle around:
+
+\begin{itemize}
+    \item Hit@10 $\approx 7.81\%$
+    \item MRR $\approx 0.0375$
+\end{itemize}
+
+This is no longer a dominant result. The revised branch therefore weakens the
+earlier conclusion that structural Node2Vec alone is the strongest model in the
+project.
+
+\subsection{Hybrid Models Now Form the Top Tier}
+The strongest models are now the \textbf{corrected hybrid models}:
+
+\begin{itemize}
+    \item \textbf{BGE pooled + Node2Vec (corrected)} achieves the best Hit@10:
+          $8.67\%$
+    \item \textbf{BGE-M3 + Node2Vec (corrected)} is essentially tied on Hit@10
+          and slightly stronger on MRR, Hit@50, Hit@100, Recall and MAP
+\end{itemize}
+
+This is a much more plausible outcome for the intended project direction. It
+suggests that the best-performing family is not pure structure alone, but
+hybrid semantic-structural retrieval.
+
+\subsection{Pooling Helps Slightly, But Not Universally}
+The pooling experiment was worthwhile. Dimensionally balancing BGE-M3 and
+Node2Vec does improve the top-line Hit@10 very slightly:
+
+\begin{itemize}
+    \item pooled corrected hybrid: Hit@10 = $8.6736\%$
+    \item plain corrected hybrid: Hit@10 = $8.6690\%$
+\end{itemize}
+
+However, the gain is very small, and the plain corrected hybrid is still
+slightly stronger on several secondary ranking metrics. So the correct
+interpretation is:
+
+\begin{itemize}
+    \item pooling helps a little
+    \item but it does not completely replace the non-pooled corrected hybrid
+\end{itemize}
+
+\subsection{Degree Correction Behaves Differently Now}
+Another important shift is that \textbf{degree correction no longer severely
+damages pure Node2Vec}. On this new branch, corrected and uncorrected Node2Vec
+are almost identical.
+
+That means the earlier strong claim
+``power-law correction hurts pure Node2Vec badly'' does not survive the revised
+evaluation setup. The effect appears to have been highly dependent on the old
+branch.
+
+\section{Interpretation of the New Recommendation Metrics}
+
+\subsection{GCN Has the Best Diversity Profile}
+Although GCN Only is weak on edge-recovery metrics, it looks strong under the
+new recommendation-oriented metrics:
+
+\begin{itemize}
+    \item lowest popularity lift among strong baselines
+    \item highest aggregate diversity
+    \item high novelty
+    \item strong intra-list distance
+\end{itemize}
+
+So GCN appears to trade off ranking accuracy for broader and less popularity-led
+recommendation behavior.
+
+\subsection{BGE-M3 Is the Most Popularity-Driven}
+BGE-M3 Only shows:
+
+\begin{itemize}
+    \item the highest popularity lift ($1.9413$)
+    \item the highest Gini concentration ($0.5172$)
+    \item the lowest novelty among the major families
+    \item the lowest intra-list diversity ($0.3713$)
+\end{itemize}
+
+This suggests that pure semantic retrieval tends to collapse more strongly onto
+popular or obvious recommendations.
+
+\subsection{Hybrids Occupy the Best Middle Ground}
+The corrected hybrid models appear to offer the best compromise:
+
+\begin{itemize}
+    \item clearly better ranking accuracy than GCN and GraphSAGE
+    \item much less popularity bias than pure BGE-M3
+    \item strong diversity and novelty without sacrificing top-line performance
+\end{itemize}
+
+This is exactly the kind of tradeoff that matters for the actual product
+objective of article recommendation and learning-path generation.
+
+\section{GNN Branch Notes}
+The revised-branch GNN retraining succeeded and produced:
+
+\begin{itemize}
+    \item GCN Only test AUC $\approx 0.9304$
+    \item GraphSAGE Only test AUC $\approx 0.9190$
+\end{itemize}
+
+This preserves the earlier pattern that GCN outperforms GraphSAGE on this
+transductive structural task, even though both remain weaker than the top hybrid
+models under ranking metrics.
+
+\section{Conclusions}
+The revised undirected structural branch changes the project story in an
+important way.
+
+\begin{itemize}
+    \item \textbf{Pure Node2Vec is no longer the dominant model.}
+    \item \textbf{Corrected hybrid models now form the strongest overall tier.}
+    \item \textbf{Pooling provides a small but real improvement on Hit@10.}
+    \item \textbf{The old claim that degree correction strongly harms Node2Vec
+          does not appear robust.}
+    \item \textbf{Recommendation-quality metrics reveal a second axis of model
+          quality beyond edge recovery.}
+\end{itemize}
+
+The strongest overall interpretation of this report is therefore:
+
+\begin{quote}
+Under the revised, recommendation-oriented structural setup, the best models are
+hybrid semantic-structural models, not pure structure alone. The corrected
+hybrid family is now the most convincing direction for the project's final
+system.
+\end{quote}
+
+Among those, the two main candidates are:
+
+\begin{itemize}
+    \item \textbf{BGE pooled + Node2Vec (corrected)} if Hit@10 is prioritized
+    \item \textbf{BGE-M3 + Node2Vec (corrected)} if the slightly stronger MRR,
+          Recall and MAP profile is prioritized
+\end{itemize}
+
+This revised branch is therefore both methodologically cleaner and better
+aligned with the true article-recommendation objective of the project.
+
+\end{document}
