@@ -34,6 +34,7 @@ GCN_PATH = CUSTOM_WIKI_DIR / "cache" / "eval-3" / "gcn_only_results_eval3.pkl"
 SAGE_PATH = CUSTOM_WIKI_DIR / "cache" / "eval-3" / "graphsage_results_eval3.pkl"
 OLLAMA_BASE_URL = os.environ.get("WIKIPATH_OLLAMA_URL", "http://127.0.0.1:11434")
 OLLAMA_MODEL = os.environ.get("WIKIPATH_OLLAMA_MODEL", "llama3.2:3b")
+MAX_ORGANIZER_ATTEMPTS = 4
 
 
 MODEL_CATALOG = [
@@ -107,6 +108,7 @@ LEARNING_PATH_SECTIONS = [
     {"id": "advanced", "title": "Advanced Topics", "summary": "Articles that deepen or specialize the topic."},
     {"id": "adjacent", "title": "Adjacent Topics", "summary": "Useful supporting or neighboring concepts."},
 ]
+SECTION_IDS = [section["id"] for section in LEARNING_PATH_SECTIONS]
 
 
 def normalize_rows(matrix: np.ndarray) -> np.ndarray:
@@ -571,46 +573,255 @@ def stream_ollama_content(messages: list[dict[str, str]], model: str, on_chunk) 
     return "".join(collected)
 
 
-def make_learning_path_prompt(recommendation_payload: dict[str, object]) -> list[dict[str, str]]:
-    source = recommendation_payload["source"]
-    candidates = []
-    for item in recommendation_payload["results"]:
-        candidates.append(
-            {
-                "title": item["title"],
-                "label": item["label"],
-                "rank": item["rank"],
-                "score": round(float(item["score"]), 4),
-                "link_pattern": linked_pattern_text(item),
-            }
-        )
-
+def make_core_decision_messages(
+    source: dict[str, object],
+    candidate: dict[str, object],
+    current_counts: dict[str, int],
+    items_remaining: int,
+) -> list[dict[str, str]]:
     instructions = (
-        "Return only valid JSON.\n"
-        "You are assigning retrieved Wikipedia computer-science articles into learning-path buckets.\n"
-        "Use only canonical candidate titles from the provided list.\n"
-        "Allowed sections are exactly: foundations, core, advanced, adjacent.\n"
-        "Do not invent titles.\n"
-        "Do not duplicate titles.\n"
-        "Keep each why field very short.\n"
-        "Return exactly one placement for every candidate title.\n"
-        "Output shape: {\"placements\": [{\"title\": \"Candidate_title\", \"rank\": 1, \"section\": \"foundations|core|advanced|adjacent\", \"why\": \"Short reason.\"}]}"
+        "Return only valid JSON. "
+        "You are making the first-stage learning-path decision for one recommended Wikipedia article. "
+        "Decide only whether the candidate should be learned as part of the target itself. "
+        "Return is_core = yes only if the candidate is a central concept, direct subtopic, canonical task, or core application of the target. "
+        "Return is_core = no if it is mostly a prerequisite, later specialization, or side topic. "
+        "Use the current counts only as soft context. "
+        "Keep the reason short. "
+        "Output shape: {\"is_core\":\"yes|no\",\"why\":\"Short reason.\"}"
     )
-
     user_payload = {
         "target": {
             "canonical_title": source["title"],
+            "display_title": prettify_title(str(source["title"])),
             "label": source["label"],
         },
-        "retrieval_model": recommendation_payload["model_id"],
-        "candidate_articles": candidates,
-        "allowed_sections": [section["id"] for section in LEARNING_PATH_SECTIONS],
+        "candidate": {
+            "title": candidate["title"],
+            "display_title": candidate["display_title"],
+            "label": candidate["label"],
+            "rank": candidate["rank"],
+            "score": round(float(candidate["score"]), 4),
+            "link_pattern": linked_pattern_text(candidate),
+        },
+        "question": (
+            f'For a learner trying to understand "{prettify_title(str(source["title"]))}", '
+            f'should "{candidate["display_title"]}" usually be learned as part of the target itself?'
+        ),
+        "current_section_counts": current_counts,
+        "items_remaining_including_this_one": items_remaining,
+        "allowed_answers": ["yes", "no"],
     }
-
     return [
         {"role": "system", "content": instructions},
         {"role": "user", "content": json.dumps(user_payload, ensure_ascii=True)},
     ]
+
+
+def make_subtype_decision_messages(
+    source: dict[str, object],
+    candidate: dict[str, object],
+    current_counts: dict[str, int],
+    items_remaining: int,
+) -> list[dict[str, str]]:
+    instructions = (
+        "Return only valid JSON. "
+        "You are making the second-stage learning-path decision for one recommended Wikipedia article. "
+        "The candidate is already known to be non-core. "
+        "Choose exactly one subtype: prerequisite, specialization, or side-topic. "
+        "Interpret them as: prerequisite = should usually be learned before the target; "
+        "specialization = should usually be learned after the target as a deeper or narrower follow-up; "
+        "side-topic = related but not central and not strictly required. "
+        "Use the current counts only as soft context. "
+        "Keep the reason short. "
+        "Output shape: {\"subtype\":\"prerequisite|specialization|side-topic\",\"why\":\"Short reason.\"}"
+    )
+    user_payload = {
+        "target": {
+            "canonical_title": source["title"],
+            "display_title": prettify_title(str(source["title"])),
+            "label": source["label"],
+        },
+        "candidate": {
+            "title": candidate["title"],
+            "display_title": candidate["display_title"],
+            "label": candidate["label"],
+            "rank": candidate["rank"],
+            "score": round(float(candidate["score"]), 4),
+            "link_pattern": linked_pattern_text(candidate),
+        },
+        "question": (
+            f'For a learner trying to understand "{prettify_title(str(source["title"]))}", '
+            f'is "{candidate["display_title"]}" better treated as a prerequisite, a later specialization, or a side topic?'
+        ),
+        "current_section_counts": current_counts,
+        "items_remaining_including_this_one": items_remaining,
+        "allowed_answers": ["prerequisite", "specialization", "side-topic"],
+    }
+    return [
+        {"role": "system", "content": instructions},
+        {"role": "user", "content": json.dumps(user_payload, ensure_ascii=True)},
+    ]
+
+
+def make_item_repair_messages(
+    base_messages: list[dict[str, str]],
+    content: str,
+    error_message: str,
+) -> list[dict[str, str]]:
+    return list(base_messages) + [
+        {"role": "assistant", "content": content},
+        {
+            "role": "user",
+            "content": (
+                f"Your previous output was invalid for this single-item classification. "
+                f"Problem: {error_message}. "
+                "Return corrected JSON only."
+            ),
+        },
+    ]
+
+
+def validate_core_decision(raw_obj: object) -> tuple[dict[str, str], list[str]]:
+    errors: list[str] = []
+    if not isinstance(raw_obj, dict):
+        return {}, ["Top-level JSON must be an object."]
+
+    is_core = raw_obj.get("is_core")
+    why = raw_obj.get("why")
+    if is_core not in {"yes", "no"}:
+        errors.append(f"Invalid is_core value: {is_core}")
+    if not isinstance(why, str) or not why.strip():
+        errors.append("Missing or empty `why`.")
+
+    if errors:
+        return {}, errors
+    return {
+        "is_core": str(is_core),
+        "why": " ".join(str(why).split()),
+    }, []
+
+
+def validate_subtype_decision(raw_obj: object) -> tuple[dict[str, str], list[str]]:
+    errors: list[str] = []
+    if not isinstance(raw_obj, dict):
+        return {}, ["Top-level JSON must be an object."]
+
+    subtype = raw_obj.get("subtype")
+    why = raw_obj.get("why")
+    if subtype not in {"prerequisite", "specialization", "side-topic"}:
+        errors.append(f"Invalid subtype: {subtype}")
+    if not isinstance(why, str) or not why.strip():
+        errors.append("Missing or empty `why`.")
+
+    if errors:
+        return {}, errors
+    return {
+        "subtype": str(subtype),
+        "why": " ".join(str(why).split()),
+    }, []
+
+
+def build_sectioned_learning_path(
+    source: dict[str, object],
+    placements: list[dict[str, object]],
+) -> dict[str, object]:
+    by_section: dict[str, list[dict[str, object]]] = {section["id"]: [] for section in LEARNING_PATH_SECTIONS}
+    for placement in placements:
+        by_section[str(placement["section"])].append(placement)
+
+    return {
+        "target": source["title"],
+        "view_type": "learning_path",
+        "sections": [
+            {
+                "id": section["id"],
+                "title": section["title"],
+                "summary": section["summary"],
+                "items": sorted(by_section[section["id"]], key=lambda item: int(item["rank"])),
+            }
+            for section in LEARNING_PATH_SECTIONS
+        ],
+    }
+
+
+def learning_path_is_collapsed(placements: list[dict[str, object]]) -> bool:
+    counts = {section_id: 0 for section_id in SECTION_IDS}
+    for item in placements:
+        counts[str(item["section"])] += 1
+    non_empty = sum(1 for count in counts.values() if count > 0)
+    max_bucket = max(counts.values()) if counts else 0
+    return non_empty < 3 or max_bucket >= max(15, len(placements) - 1)
+
+
+def rebalance_learning_path_sections(placements: list[dict[str, object]]) -> list[dict[str, object]]:
+    items = [{**item} for item in placements]
+    n = len(items)
+    if n == 0:
+        return items
+
+    target_foundations = min(4, n)
+    target_adjacent = min(4, max(0, n - target_foundations))
+    target_advanced = min(4, max(0, n - target_foundations - target_adjacent))
+    target_core = max(0, n - target_foundations - target_adjacent - target_advanced)
+
+    by_rank = sorted(items, key=lambda item: int(item["rank"]))
+    by_degree = sorted(items, key=lambda item: (-int(item["total_degree"]), int(item["rank"])))
+    by_low_score = sorted(items, key=lambda item: (float(item["score"]), int(item["rank"])))
+
+    selected_ids: set[int] = set()
+
+    def choose(pool: list[dict[str, object]], count: int, section_id: str, why: str) -> list[dict[str, object]]:
+        chosen: list[dict[str, object]] = []
+        for item in pool:
+            if len(chosen) >= count:
+                break
+            if int(item["id"]) in selected_ids:
+                continue
+            selected_ids.add(int(item["id"]))
+            item["section"] = section_id
+            item["why"] = why
+            chosen.append(item)
+        return chosen
+
+    foundations = choose(
+        by_degree,
+        target_foundations,
+        "foundations",
+        "Rebalanced as a broad prerequisite based on graph centrality.",
+    )
+
+    adjacent_pool = [
+        item for item in by_low_score
+        if not item.get("linked_from_source") and not item.get("linked_to_source")
+    ] + by_low_score
+    adjacent = choose(
+        adjacent_pool,
+        target_adjacent,
+        "adjacent",
+        "Rebalanced as a related but less central neighboring topic.",
+    )
+
+    core = choose(
+        by_rank,
+        target_core,
+        "core",
+        "Rebalanced as a direct or central topic close to the target.",
+    )
+
+    remaining = [item for item in by_rank if int(item["id"]) not in selected_ids]
+    advanced = choose(
+        remaining,
+        target_advanced,
+        "advanced",
+        "Rebalanced as a deeper or more specialized follow-up topic.",
+    )
+
+    leftovers = [item for item in by_rank if int(item["id"]) not in selected_ids]
+    for item in leftovers:
+        item["section"] = "advanced"
+        item["why"] = "Rebalanced as a specialized remaining topic."
+
+    return foundations + core + advanced + adjacent + leftovers
 
 
 def validate_learning_path(raw_obj: object, candidate_map: dict[str, dict[str, object]], target_title: str) -> tuple[dict[str, object], list[str]]:
@@ -748,77 +959,131 @@ def heuristic_learning_path(recommendation_payload: dict[str, object]) -> dict[s
 
 
 def build_learning_path(recommendation_payload: dict[str, object], organizer_model: str) -> dict[str, object]:
-    candidate_map = {
-        canonicalize_title_for_match(str(item["title"])): item
-        for item in recommendation_payload["results"]
-    }
-    base_messages = make_learning_path_prompt(recommendation_payload)
-    messages = list(base_messages)
+    source = recommendation_payload["source"]
+    placements: list[dict[str, object]] = []
+    raw_outputs: list[str] = []
     last_error = "unknown error"
-    last_content = ""
+    attempts_used = 0
+    current_counts = {section_id: 0 for section_id in SECTION_IDS}
 
-    for attempt in range(1, 2):
-        try:
-            content, _ = call_ollama_json(messages, organizer_model)
-            last_content = content
-        except RuntimeError as exc:
-            last_error = str(exc)
+    total_candidates = len(recommendation_payload["results"])
+    for item_index, candidate in enumerate(recommendation_payload["results"], start=1):
+        base_messages = make_core_decision_messages(
+            source,
+            candidate,
+            current_counts=current_counts.copy(),
+            items_remaining=total_candidates - item_index + 1,
+        )
+        messages = list(base_messages)
+        success = False
+
+        for attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
+            attempts_used = max(attempts_used, attempt)
+            try:
+                content, _ = call_ollama_json(messages, organizer_model)
+                raw_outputs.append(
+                    f'Question for "{candidate["display_title"]}" (attempt {attempt}):\n{content}'
+                )
+            except RuntimeError as exc:
+                last_error = str(exc)
+                break
+
+            try:
+                raw_obj = json.loads(content)
+            except json.JSONDecodeError as exc:
+                last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
+                messages = make_item_repair_messages(base_messages, content, last_error)
+                continue
+
+            normalized, validation_errors = validate_core_decision(raw_obj)
+            if validation_errors:
+                last_error = "; ".join(validation_errors)
+                messages = make_item_repair_messages(base_messages, content, last_error)
+                continue
+
+            if normalized["is_core"] == "yes":
+                final_section = "core"
+                final_why = normalized["why"]
+            else:
+                subtype_messages = make_subtype_decision_messages(
+                    source,
+                    candidate,
+                    current_counts=current_counts.copy(),
+                    items_remaining=total_candidates - item_index + 1,
+                )
+                subtype_prompt = list(subtype_messages)
+                subtype_success = False
+                subtype_why = normalized["why"]
+                final_section = "adjacent"
+
+                for subtype_attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
+                    attempts_used = max(attempts_used, subtype_attempt)
+                    try:
+                        subtype_content, _ = call_ollama_json(subtype_prompt, organizer_model)
+                        raw_outputs.append(
+                            f'Subtype question for "{candidate["display_title"]}" (attempt {subtype_attempt}):\n{subtype_content}'
+                        )
+                    except RuntimeError as exc:
+                        last_error = str(exc)
+                        break
+
+                    try:
+                        subtype_obj = json.loads(subtype_content)
+                    except json.JSONDecodeError as exc:
+                        last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
+                        subtype_prompt = make_item_repair_messages(subtype_messages, subtype_content, last_error)
+                        continue
+
+                    subtype_normalized, subtype_errors = validate_subtype_decision(subtype_obj)
+                    if subtype_errors:
+                        last_error = "; ".join(subtype_errors)
+                        subtype_prompt = make_item_repair_messages(subtype_messages, subtype_content, last_error)
+                        continue
+
+                    final_section = {
+                        "prerequisite": "foundations",
+                        "specialization": "advanced",
+                        "side-topic": "adjacent",
+                    }[subtype_normalized["subtype"]]
+                    final_why = subtype_normalized["why"]
+                    subtype_success = True
+                    break
+
+                if not subtype_success and normalized["is_core"] == "no":
+                    fallback = heuristic_learning_path(recommendation_payload)
+                    fallback["warning"] = f"{fallback['warning']} Last error: {last_error}"
+                    fallback["raw_llm_output"] = "\n\n".join(raw_outputs)
+                    return fallback
+
+            placements.append({**candidate, "section": final_section, "why": final_why})
+            current_counts[final_section] += 1
+            success = True
             break
 
-        try:
-            raw_obj = json.loads(content)
-        except json.JSONDecodeError as exc:
-            last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
-            messages = list(base_messages) + [
-                {
-                    "role": "assistant",
-                    "content": content,
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        f"Your previous output was invalid JSON. Error: {last_error}. "
-                        "Return corrected JSON only. Do not include markdown or commentary."
-                    ),
-                },
-            ]
-            continue
+        if not success:
+            fallback = heuristic_learning_path(recommendation_payload)
+            fallback["warning"] = f"{fallback['warning']} Last error: {last_error}"
+            fallback["raw_llm_output"] = "\n\n".join(raw_outputs)
+            return fallback
 
-        normalized, validation_errors = validate_learning_path(
-            raw_obj,
-            candidate_map=candidate_map,
-            target_title=str(recommendation_payload["source"]["title"]),
-        )
-        if not validation_errors:
-            return {
-                **normalized,
-                "organizer_model": organizer_model,
-                "mode": "llm",
-                "warning": None,
-                "attempts": attempt,
-                "raw_llm_output": last_content,
-            }
+    rebalanced = False
+    if learning_path_is_collapsed(placements):
+        placements = rebalance_learning_path_sections(placements)
+        rebalanced = True
 
-        last_error = "; ".join(validation_errors)
-        messages = list(base_messages) + [
-            {
-                "role": "assistant",
-                "content": content,
-            },
-            {
-                "role": "user",
-                "content": (
-                    "The previous JSON parsed but failed validation. "
-                    f"Problems: {last_error}. "
-                    "Return corrected JSON only. Use only candidate titles."
-                ),
-            },
-        ]
-
-    fallback = heuristic_learning_path(recommendation_payload)
-    fallback["warning"] = f"{fallback['warning']} Last error: {last_error}"
-    fallback["raw_llm_output"] = last_content
-    return fallback
+    normalized = build_sectioned_learning_path(source, placements)
+    return {
+        **normalized,
+        "organizer_model": organizer_model,
+        "mode": "llm_rebalanced" if rebalanced else "llm",
+        "warning": (
+            "The local LLM classified all items, but the section distribution was heavily collapsed, so a balancing pass was applied."
+            if rebalanced
+            else None
+        ),
+        "attempts": attempts_used,
+        "raw_llm_output": "\n\n".join(raw_outputs),
+    }
 
 
 class AppHandler(BaseHTTPRequestHandler):
@@ -932,40 +1197,182 @@ class AppHandler(BaseHTTPRequestHandler):
 
         try:
             recommendation_payload = RECOMMENDER.recommend(title, model_id, top_k=top_k)
-            candidate_map = {
-                canonicalize_title_for_match(str(item["title"])): item
-                for item in recommendation_payload["results"]
-            }
-            messages = make_learning_path_prompt(recommendation_payload)
-            raw_output = stream_ollama_content(
-                messages,
-                organizer_model,
-                lambda chunk: send_event("token", {"chunk": chunk}),
-            )
+            payload = None
+            last_error = "unknown error"
+            raw_outputs: list[str] = []
+            placements: list[dict[str, object]] = []
+            attempts_used = 0
+            source = recommendation_payload["source"]
+            current_counts = {section_id: 0 for section_id in SECTION_IDS}
 
-            raw_obj = json.loads(raw_output)
-            normalized, validation_errors = validate_learning_path(
-                raw_obj,
-                candidate_map=candidate_map,
-                target_title=str(recommendation_payload["source"]["title"]),
-            )
+            for item_index, candidate in enumerate(recommendation_payload["results"], start=1):
+                send_event(
+                    "token",
+                    {
+                        "chunk": (
+                            f"\n\n========== Question {item_index}/{len(recommendation_payload['results'])} ==========\n"
+                            f'Target: "{prettify_title(str(source["title"]))}"\n'
+                            f'Candidate: "{candidate["display_title"]}"\n'
+                            f"Current counts: foundations={current_counts['foundations']}, "
+                            f"core={current_counts['core']}, advanced={current_counts['advanced']}, "
+                            f"adjacent={current_counts['adjacent']}\n"
+                            "Step 1: decide whether this is core or not\n\n"
+                        ),
+                    },
+                )
+                base_messages = make_core_decision_messages(
+                    source,
+                    candidate,
+                    current_counts=current_counts.copy(),
+                    items_remaining=len(recommendation_payload["results"]) - item_index + 1,
+                )
+                messages = list(base_messages)
+                success = False
 
-            if validation_errors:
+                for attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
+                    attempts_used = max(attempts_used, attempt)
+                    if attempt > 1:
+                        send_event(
+                            "token",
+                            {
+                                "chunk": f"\n[Retry {attempt}/{MAX_ORGANIZER_ATTEMPTS} for this candidate]\n",
+                            },
+                        )
+
+                    raw_output = stream_ollama_content(
+                        messages,
+                        organizer_model,
+                        lambda chunk: send_event("token", {"chunk": chunk}),
+                    )
+                    raw_outputs.append(
+                        f'Question for "{candidate["display_title"]}" (attempt {attempt}):\n{raw_output}'
+                    )
+
+                    try:
+                        raw_obj = json.loads(raw_output)
+                    except json.JSONDecodeError as exc:
+                        last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
+                        messages = make_item_repair_messages(base_messages, raw_output, last_error)
+                        continue
+
+                    normalized, validation_errors = validate_core_decision(raw_obj)
+                    if validation_errors:
+                        last_error = "; ".join(validation_errors)
+                        messages = make_item_repair_messages(base_messages, raw_output, last_error)
+                        continue
+
+                    if normalized["is_core"] == "yes":
+                        final_section = "core"
+                        final_why = normalized["why"]
+                    else:
+                        send_event(
+                            "token",
+                            {
+                                "chunk": "\nStep 2: non-core item, decide prerequisite vs specialization vs side-topic\n",
+                            },
+                        )
+                        subtype_messages = make_subtype_decision_messages(
+                            source,
+                            candidate,
+                            current_counts=current_counts.copy(),
+                            items_remaining=len(recommendation_payload["results"]) - item_index + 1,
+                        )
+                        subtype_prompt = list(subtype_messages)
+                        subtype_success = False
+                        final_section = "adjacent"
+                        final_why = normalized["why"]
+
+                        for subtype_attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
+                            attempts_used = max(attempts_used, subtype_attempt)
+                            if subtype_attempt > 1:
+                                send_event(
+                                    "token",
+                                    {
+                                        "chunk": f"\n[Subtype retry {subtype_attempt}/{MAX_ORGANIZER_ATTEMPTS}]\n",
+                                    },
+                                )
+
+                            subtype_output = stream_ollama_content(
+                                subtype_prompt,
+                                organizer_model,
+                                lambda chunk: send_event("token", {"chunk": chunk}),
+                            )
+                            raw_outputs.append(
+                                f'Subtype question for "{candidate["display_title"]}" (attempt {subtype_attempt}):\n{subtype_output}'
+                            )
+
+                            try:
+                                subtype_obj = json.loads(subtype_output)
+                            except json.JSONDecodeError as exc:
+                                last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
+                                subtype_prompt = make_item_repair_messages(subtype_messages, subtype_output, last_error)
+                                continue
+
+                            subtype_normalized, subtype_errors = validate_subtype_decision(subtype_obj)
+                            if subtype_errors:
+                                last_error = "; ".join(subtype_errors)
+                                subtype_prompt = make_item_repair_messages(subtype_messages, subtype_output, last_error)
+                                continue
+
+                            final_section = {
+                                "prerequisite": "foundations",
+                                "specialization": "advanced",
+                                "side-topic": "adjacent",
+                            }[subtype_normalized["subtype"]]
+                            final_why = subtype_normalized["why"]
+                            subtype_success = True
+                            break
+
+                        if not subtype_success:
+                            last_error = last_error or "Unknown subtype classification failure"
+                            break
+
+                    placements.append({**candidate, "section": final_section, "why": final_why})
+                    current_counts[final_section] += 1
+                    send_event(
+                        "token",
+                        {
+                            "chunk": (
+                                f'\n[Accepted as {final_section}] '
+                                f"(counts now: foundations={current_counts['foundations']}, "
+                                f"core={current_counts['core']}, advanced={current_counts['advanced']}, "
+                                f"adjacent={current_counts['adjacent']})\n"
+                            ),
+                        },
+                    )
+                    success = True
+                    break
+
+                if not success:
+                    last_error = last_error or "Unknown classification failure"
+                    break
+
+            if len(placements) == len(recommendation_payload["results"]):
+                rebalanced = False
+                if learning_path_is_collapsed(placements):
+                    placements = rebalance_learning_path_sections(placements)
+                    rebalanced = True
+
+                normalized_path = build_sectioned_learning_path(source, placements)
+                payload = {
+                    **normalized_path,
+                    "organizer_model": organizer_model,
+                    "mode": "llm_rebalanced" if rebalanced else "llm",
+                    "warning": (
+                        "The local LLM classified all items, but the section distribution was heavily collapsed, so a balancing pass was applied."
+                        if rebalanced
+                        else None
+                    ),
+                    "attempts": attempts_used,
+                    "raw_llm_output": "\n\n".join(raw_outputs),
+                }
+            else:
                 payload = heuristic_learning_path(recommendation_payload)
                 payload["warning"] = (
                     "The local LLM organizer returned invalid structured output and a heuristic path was used instead. "
-                    f"Last error: {'; '.join(validation_errors)}"
+                    f"Last error: {last_error}"
                 )
-                payload["raw_llm_output"] = raw_output
-            else:
-                payload = {
-                    **normalized,
-                    "organizer_model": organizer_model,
-                    "mode": "llm",
-                    "warning": None,
-                    "attempts": 1,
-                    "raw_llm_output": raw_output,
-                }
+                payload["raw_llm_output"] = "\n\n".join(raw_outputs)
 
             payload.update(
                 {
