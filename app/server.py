@@ -28,10 +28,10 @@ from utils.graph_utils import fuzzy_search, load_graph_data, resolve_title  # no
 
 DATA_PATH = CUSTOM_WIKI_DIR / "data" / "data-embeddings.json"
 BGE_PATH = CUSTOM_WIKI_DIR / "cap-embeddings" / "BAAI_bge-m3" / "master_embeddings.parquet"
-N2V_PATH = CUSTOM_WIKI_DIR / "cap-embeddings" / "node2vec" / "master_embeddings.parquet"
-ALPHA_PATH = CUSTOM_WIKI_DIR / "cache" / "recommendation-1" / "alpha.pkl"
-GCN_PATH = CUSTOM_WIKI_DIR / "cache" / "gcn" / "gcn_only_results.pkl"
-SAGE_PATH = CUSTOM_WIKI_DIR / "cache" / "graphSAGE" / "graphsage_results.pkl"
+N2V_UNCORRECTED_PATH = CUSTOM_WIKI_DIR / "cache" / "node2vec-2" / "node2vec_undirected_uncorrected.parquet"
+N2V_CORRECTED_PATH = CUSTOM_WIKI_DIR / "cache" / "node2vec-2" / "node2vec_undirected_corrected.parquet"
+GCN_PATH = CUSTOM_WIKI_DIR / "cache" / "eval-3" / "gcn_only_results_eval3.pkl"
+SAGE_PATH = CUSTOM_WIKI_DIR / "cache" / "eval-3" / "graphsage_results_eval3.pkl"
 OLLAMA_BASE_URL = os.environ.get("WIKIPATH_OLLAMA_URL", "http://127.0.0.1:11434")
 OLLAMA_MODEL = os.environ.get("WIKIPATH_OLLAMA_MODEL", "llama3.2:3b")
 
@@ -40,42 +40,52 @@ MODEL_CATALOG = [
     {
         "id": "bge-only",
         "name": "BGE-M3 Only",
-        "description": "Semantic-only retrieval using article content similarity."
+        "description": "Semantic-only retrieval using article content similarity on the revised eval-3 branch."
     },
     {
         "id": "n2v-uncorrected",
         "name": "Node2Vec (uncorrected)",
-        "description": "Pure graph structure without degree damping."
+        "description": "Leakage-free undirected structural retrieval without power-law correction."
     },
     {
         "id": "n2v-corrected",
         "name": "Node2Vec (corrected)",
-        "description": "Pure structure with popularity damping from the power-law correction."
-    },
-    {
-        "id": "hybrid-corrected",
-        "name": "BGE-M3 + Node2Vec (corrected)",
-        "description": "Hybrid recommendation model blending semantics with corrected structural signal."
-    },
-    {
-        "id": "gcn-only",
-        "name": "GCN Only",
-        "description": "Graph convolutional node embeddings used directly for structural recommendation."
-    },
-    {
-        "id": "gcn-bge-fusion",
-        "name": "GCN + BGE-M3 (rank fusion)",
-        "description": "Ranking-level fusion between graph-learned and text-based similarity."
+        "description": "Leakage-free undirected structural retrieval with power-law correction."
     },
     {
         "id": "hybrid-uncorrected",
         "name": "BGE-M3 + Node2Vec (uncorrected)",
-        "description": "Direct semantic + structural concatenation without popularity correction."
+        "description": "Full-size semantic-structural hybrid using revised uncorrected Node2Vec."
+    },
+    {
+        "id": "hybrid-corrected",
+        "name": "BGE-M3 + Node2Vec (corrected)",
+        "description": "Top-tier hybrid on the revised branch, blending BGE-M3 with corrected structural signal."
+    },
+    {
+        "id": "gcn-only",
+        "name": "GCN Only",
+        "description": "Revised-branch structural GCN baseline with strong diversity characteristics."
+    },
+    {
+        "id": "gcn-bge-fusion",
+        "name": "GCN + BGE-M3 (rank fusion)",
+        "description": "Ranking-level fusion between revised GCN embeddings and BGE-M3 similarity."
     },
     {
         "id": "sage-only",
         "name": "GraphSAGE Only",
-        "description": "GraphSAGE node embeddings used directly for structural recommendation."
+        "description": "Revised-branch GraphSAGE structural baseline."
+    },
+    {
+        "id": "pooled-hybrid-uncorrected",
+        "name": "BGE pooled + Node2Vec (uncorrected)",
+        "description": "Balanced 128+128 hybrid using pooled BGE-M3 and uncorrected Node2Vec."
+    },
+    {
+        "id": "pooled-hybrid-corrected",
+        "name": "BGE pooled + Node2Vec (corrected)",
+        "description": "Best Hit@10 model on the revised branch: pooled BGE-M3 plus corrected Node2Vec."
     },
 ]
 
@@ -104,6 +114,13 @@ def normalize_rows(matrix: np.ndarray) -> np.ndarray:
     norms = np.linalg.norm(matrix, axis=1, keepdims=True)
     norms = np.maximum(norms, 1e-8)
     return matrix / norms
+
+
+def pool_bge_blocks(matrix: np.ndarray, block_size: int = 8) -> np.ndarray:
+    if matrix.shape[1] % block_size != 0:
+        raise ValueError("BGE dimensionality must be divisible by the pooling block size.")
+    pooled = matrix.reshape(matrix.shape[0], matrix.shape[1] // block_size, block_size).mean(axis=2)
+    return pooled.astype(np.float32)
 
 
 def shorten_text(text: str, limit: int = 320) -> str:
@@ -173,34 +190,35 @@ class RepoRecommender:
         self.searchable_titles = sorted(self.article_by_title.keys(), key=str.lower)
 
     def _load_model_data(self) -> None:
-        with open(ALPHA_PATH, "rb") as f:
-            alpha_data = pickle.load(f)
-        self.alpha = float(alpha_data["alpha"])
-
         df_bge = pd.read_parquet(BGE_PATH).sort_values("id").reset_index(drop=True)
-        df_n2v = pd.read_parquet(N2V_PATH).sort_values("id").reset_index(drop=True)
-        if not (df_bge["id"].astype(int).values == df_n2v["id"].astype(int).values).all():
-            raise ValueError("BGE and Node2Vec embeddings are not aligned by id.")
+        df_n2v_unc = pd.read_parquet(N2V_UNCORRECTED_PATH).sort_values("id").reset_index(drop=True)
+        df_n2v_cor = pd.read_parquet(N2V_CORRECTED_PATH).sort_values("id").reset_index(drop=True)
+        if not (df_bge["id"].astype(int).values == df_n2v_unc["id"].astype(int).values).all():
+            raise ValueError("BGE and uncorrected Node2Vec embeddings are not aligned by id.")
+        if not (df_bge["id"].astype(int).values == df_n2v_cor["id"].astype(int).values).all():
+            raise ValueError("BGE and corrected Node2Vec embeddings are not aligned by id.")
 
         self.ids = df_bge["id"].astype(int).to_numpy()
         self.id_to_idx = {node_id: idx for idx, node_id in enumerate(self.ids)}
 
         self.bge_norm = normalize_rows(np.stack(df_bge["embedding"].values))
-        self.n2v_raw = np.stack(df_n2v["embedding"].values).astype(np.float32)
-        self.n2v_norm = normalize_rows(self.n2v_raw)
+        self.bge_pooled_norm = normalize_rows(pool_bge_blocks(self.bge_norm))
+        self.n2v_uncorrected_raw = np.stack(df_n2v_unc["embedding"].values).astype(np.float32)
+        self.n2v_corrected_raw = np.stack(df_n2v_cor["embedding"].values).astype(np.float32)
+        self.n2v_uncorrected_norm = normalize_rows(self.n2v_uncorrected_raw)
+        self.n2v_corrected_norm = normalize_rows(self.n2v_corrected_raw)
 
-        degrees = dict(self.graph_undirected.degree())
-        self.degree_penalty = np.array(
-            [(np.log(max(degrees.get(int(node_id), 1), 1) + 1) ** self.alpha) for node_id in self.ids],
-            dtype=np.float32,
-        )
-
-        n2v_scaled = self.n2v_raw / self.degree_penalty[:, np.newaxis]
-        combined_uncorrected = np.concatenate([self.bge_norm, self.n2v_raw], axis=1)
+        combined_uncorrected = np.concatenate([self.bge_norm, self.n2v_uncorrected_raw], axis=1)
         self.hybrid_uncorrected_norm = normalize_rows(combined_uncorrected)
 
-        combined_corrected = np.concatenate([self.bge_norm, n2v_scaled], axis=1)
+        combined_corrected = np.concatenate([self.bge_norm, self.n2v_corrected_raw], axis=1)
         self.hybrid_corrected_norm = normalize_rows(combined_corrected)
+
+        pooled_uncorrected = np.concatenate([self.bge_pooled_norm, self.n2v_uncorrected_raw], axis=1)
+        self.pooled_hybrid_uncorrected_norm = normalize_rows(pooled_uncorrected)
+
+        pooled_corrected = np.concatenate([self.bge_pooled_norm, self.n2v_corrected_raw], axis=1)
+        self.pooled_hybrid_corrected_norm = normalize_rows(pooled_corrected)
 
         with open(GCN_PATH, "rb") as f:
             gcn_data = pickle.load(f)
@@ -342,12 +360,11 @@ class RepoRecommender:
 
     def _scores_n2v_uncorrected(self, source_id: int) -> np.ndarray:
         src_idx = self.id_to_idx[source_id]
-        return self.n2v_norm[src_idx] @ self.n2v_norm.T
+        return self.n2v_uncorrected_norm[src_idx] @ self.n2v_uncorrected_norm.T
 
     def _scores_n2v_corrected(self, source_id: int) -> np.ndarray:
         src_idx = self.id_to_idx[source_id]
-        base = self.n2v_norm[src_idx] @ self.n2v_norm.T
-        return base / (self.degree_penalty[src_idx] * self.degree_penalty)
+        return self.n2v_corrected_norm[src_idx] @ self.n2v_corrected_norm.T
 
     def _scores_hybrid_corrected(self, source_id: int) -> np.ndarray:
         src_idx = self.id_to_idx[source_id]
@@ -356,6 +373,14 @@ class RepoRecommender:
     def _scores_hybrid_uncorrected(self, source_id: int) -> np.ndarray:
         src_idx = self.id_to_idx[source_id]
         return self.hybrid_uncorrected_norm[src_idx] @ self.hybrid_uncorrected_norm.T
+
+    def _scores_pooled_hybrid_uncorrected(self, source_id: int) -> np.ndarray:
+        src_idx = self.id_to_idx[source_id]
+        return self.pooled_hybrid_uncorrected_norm[src_idx] @ self.pooled_hybrid_uncorrected_norm.T
+
+    def _scores_pooled_hybrid_corrected(self, source_id: int) -> np.ndarray:
+        src_idx = self.id_to_idx[source_id]
+        return self.pooled_hybrid_corrected_norm[src_idx] @ self.pooled_hybrid_corrected_norm.T
 
     def _scores_gcn_only(self, source_id: int) -> tuple[np.ndarray, np.ndarray]:
         src_idx = self.gcn_node_to_idx[source_id]
@@ -410,21 +435,29 @@ class RepoRecommender:
         elif model_id == "n2v-corrected":
             scores = self._scores_n2v_corrected(source_id)
             results = self._top_results_from_scores(source_id, scores, top_k)
+        elif model_id == "hybrid-uncorrected":
+            scores = self._scores_hybrid_uncorrected(source_id)
+            results = self._top_results_from_scores(source_id, scores, top_k)
         elif model_id == "hybrid-corrected":
             scores = self._scores_hybrid_corrected(source_id)
             results = self._top_results_from_scores(source_id, scores, top_k)
         elif model_id == "gcn-only":
             candidate_ids, scores = self._scores_gcn_only(source_id)
             results = self._top_results_from_scores_with_ids(source_id, candidate_ids, scores, top_k)
-        elif model_id == "hybrid-uncorrected":
-            scores = self._scores_hybrid_uncorrected(source_id)
+        elif model_id == "gcn-bge-fusion":
+            scores = self._scores_rank_fusion(source_id)
+            results = self._top_results_from_scores(source_id, scores, top_k)
+        elif model_id == "pooled-hybrid-uncorrected":
+            scores = self._scores_pooled_hybrid_uncorrected(source_id)
+            results = self._top_results_from_scores(source_id, scores, top_k)
+        elif model_id == "pooled-hybrid-corrected":
+            scores = self._scores_pooled_hybrid_corrected(source_id)
             results = self._top_results_from_scores(source_id, scores, top_k)
         elif model_id == "sage-only":
             candidate_ids, scores = self._scores_sage_only(source_id)
             results = self._top_results_from_scores_with_ids(source_id, candidate_ids, scores, top_k)
         else:
-            scores = self._scores_rank_fusion(source_id)
-            results = self._top_results_from_scores(source_id, scores, top_k)
+            raise KeyError(f"Unknown model: {model_id}")
 
         for item in results:
             rec_id = int(item["id"])
@@ -830,7 +863,7 @@ class AppHandler(BaseHTTPRequestHandler):
 
             if parsed.path == "/api/recommend":
                 title = unquote(params.get("title", [""])[0]).strip()
-                model_id = params.get("model", ["hybrid-corrected"])[0]
+                model_id = params.get("model", ["pooled-hybrid-corrected"])[0]
                 top_k = int(params.get("top_k", ["20"])[0])
                 if not title:
                     self._send_json({"error": "Missing title parameter."}, status=HTTPStatus.BAD_REQUEST)
@@ -854,7 +887,7 @@ class AppHandler(BaseHTTPRequestHandler):
             body = json.loads(raw_body)
 
             title = str(body.get("title", "")).strip()
-            model_id = str(body.get("model_id", "hybrid-corrected"))
+            model_id = str(body.get("model_id", "pooled-hybrid-corrected"))
             top_k = int(body.get("top_k", 20))
             organizer_model = str(body.get("organizer_model", OLLAMA_MODEL))
 
@@ -881,7 +914,7 @@ class AppHandler(BaseHTTPRequestHandler):
     def _handle_organize_stream(self, parsed) -> None:
         params = parse_qs(parsed.query)
         title = unquote(params.get("title", [""])[0]).strip()
-        model_id = params.get("model_id", ["hybrid-corrected"])[0]
+        model_id = params.get("model_id", ["pooled-hybrid-corrected"])[0]
         top_k = int(params.get("top_k", ["20"])[0])
         organizer_model = params.get("organizer_model", [OLLAMA_MODEL])[0]
 

@@ -35,7 +35,7 @@ const ui = {
 
 const state = {
   models: [],
-  selectedModel: "hybrid-corrected",
+  selectedModel: "pooled-hybrid-corrected",
   viewMode: "ranked",
   selectedArticle: null,
   selectedResultId: null,
@@ -94,7 +94,7 @@ async function init() {
     renderModelOptions();
     updateModelUI();
     await refreshSuggestions("");
-    setStatus("Connected to the local WikiCS app server and ready for real recommendations.");
+    setStatus("Connected to the revised eval-3 app server and ready for real recommendations.");
   } catch (error) {
     setStatus(
       "The app could not reach the local server. Start it with `python app/server.py`, then refresh this page.",
