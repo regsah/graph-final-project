@@ -17,13 +17,15 @@ than only preliminary code fragments. The most important artifacts are:
 \end{itemize}
 
 Figure~\ref{fig:architecture} summarizes the overall project pipeline. It
-captures the three main stages that now structure the implementation:
-data preparation, embedding generation, and recommendation/presentation.
+captures the three main stages that structure the project direction:
+data preparation, embedding generation, and recommendation/presentation. At
+this point, it should be read as a conceptual roadmap rather than as an exact
+line-by-line description of the current organizer implementation.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.88\textwidth]{figures/architecture.png}
-\caption{Overall architecture of the project pipeline, from graph creation to recommendation and future learning-path presentation.}
+\caption{Conceptual architecture of the project pipeline, from graph creation to recommendation and future learning-path presentation. The figure reflects the intended overall direction rather than every detail of the current prototype implementation.}
 \label{fig:architecture}
 \end{figure}
 
@@ -42,6 +44,18 @@ branch and exposes the current ten-model family.
 \includegraphics[width=\textwidth]{figures/UI/query-and-results.png}
 \caption{Implemented ranked-view interface of the local WikiPath prototype. The application supports article search, real model selection, top-20 retrieval, and contextual preview.}
 \label{fig:ui-ranked}
+\end{figure}
+
+Figure~\ref{fig:ui-models} further shows that the implemented prototype is not
+hard-wired to a single recommendation strategy. The interface exposes the full
+revised model family, allowing direct qualitative comparison between semantic,
+structural, hybrid, pooled, and GNN-based alternatives.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/UI/model-selection.png}
+\caption{Model-selection panel of the implemented prototype. The interface exposes the revised evaluation family rather than a single fixed recommender.}
+\label{fig:ui-models}
 \end{figure}
 
 The same prototype also contains an experimental learning-path mode shown in
