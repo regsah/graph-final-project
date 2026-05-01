@@ -29,17 +29,43 @@ data preparation, embedding generation, and recommendation/presentation.
 
 The project also includes an interactive user-facing prototype. The current web
 application supports live article search, model selection, ranked retrieval,
-article preview, and an experimental learning-path view. The interface design
-direction is illustrated in Figure~\ref{fig:mockup}; the implemented local
-prototype now follows the same high-level idea, with search on the left,
-recommendations in the center, and contextual detail on the right.
+article preview, and an experimental learning-path view. Unlike the earlier
+design stage, the report can now show the implemented interface itself rather
+than only a mockup. The ranked retrieval view in
+Figure~\ref{fig:ui-ranked} shows the current three-panel layout: search and
+model selection on the left, recommendation output in the center, and article
+detail on the right. The interface is already connected to the revised eval-3
+branch and exposes the current ten-model family.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figures/interface-mockup.png}
-\caption{Interface concept for the recommendation system, showing the move from flat retrieval toward structured learning-path presentation.}
-\label{fig:mockup}
+\includegraphics[width=\textwidth]{figures/UI/query-and-results.png}
+\caption{Implemented ranked-view interface of the local WikiPath prototype. The application supports article search, real model selection, top-20 retrieval, and contextual preview.}
+\label{fig:ui-ranked}
 \end{figure}
+
+The same prototype also contains an experimental learning-path mode shown in
+Figure~\ref{fig:ui-path}. In this mode, the top retrieved articles are
+reorganized into sections such as foundations, core concepts, advanced topics,
+and adjacent topics. This part of the application should still be understood as
+an exploratory interface layer rather than a finalized recommendation product,
+but it already demonstrates how the flat ranked list can be transformed into a
+more learner-oriented presentation.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/UI/path-result.png}
+\caption{Experimental learning-path view of the prototype. The ranked recommendation set is reorganized into sectioned learning groups for a reader-oriented presentation.}
+\label{fig:ui-path}
+\end{figure}
+
+At the moment, this learning-path view is driven by a small local LLM through
+Ollama rather than a large hosted model. This keeps the prototype fully local
+and practical to run on ordinary hardware, but it also means that the path
+organization quality is more variable than the ranked retrieval quality. The
+current implementation is therefore useful as a prototype of the interaction
+pattern, while the underlying path-generation quality still requires further
+improvement.
 
 The structural analysis outputs from earlier stages also remain relevant. The
 degree distribution of the graph continues to exhibit a heavy-tailed behavior,
@@ -117,4 +143,7 @@ These results already suggest two important conclusions. First, the older
 impression that uncorrected Node2Vec clearly dominates the project no longer
 holds under the revised branch. Second, the best-performing models are now the
 semantic-structural hybrids, especially the corrected variants that combine
-BGE-M3 with leakage-free structural information.
+BGE-M3 with leakage-free structural information. The model-selection interface
+shown in the prototype makes these alternatives directly accessible during
+interactive testing, which has also helped qualitative comparison across model
+families.

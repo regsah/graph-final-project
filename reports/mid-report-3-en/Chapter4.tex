@@ -30,7 +30,11 @@ Several practical problems also emerged during implementation:
     to be aligned with the full experimental family,
     \item title handling and search interaction in the interface required
     cleanup because Wikipedia article identifiers contain underscores while the
-    user-facing interface should display natural titles.
+    user-facing interface should display natural titles,
+    \item the experimental local LLM layer for learning-path generation proved
+    much less stable than the ranked retrieval layer. Small-model outputs were
+    often inconsistent, over-concentrated in a single category, or weakly
+    justified at the semantic level.
 \end{itemize}
 
 \section{Adopted or Planned Solutions}
@@ -49,10 +53,30 @@ The solutions adopted in this phase are now part of the project baseline:
     provide a more stable search and preview experience.
 \end{itemize}
 
+The LLM-based learning-path layer also had to be redesigned during this phase.
+The first organizer attempt asked the local model to produce a full structured
+JSON path over the entire top-20 recommendation set in one shot. This approach
+was too brittle for a small local model and frequently produced malformed or
+incomplete outputs. The current implementation therefore uses a simpler
+two-stage per-item classification strategy: each candidate article is first
+placed into a broad group and then refined into one of the final sections
+(foundations, core, advanced, adjacent). This does not fully solve the quality
+problem, but it produces a more robust prototype behavior than the original
+monolithic generation attempt.
+
+Even after this redesign, the limitations of the local organizer remain clear.
+Because the current model is small, it sometimes produces semantically weak
+classifications or collapses too many articles into similar categories. For
+that reason, the present report treats the learning-path layer as an
+experimental extension rather than a validated component of the recommendation
+system. A larger local model, or a stronger instruction-following model with
+better classification consistency, would likely improve this part of the
+pipeline substantially.
+
 Two additional solution directions remain active for the next phase:
 \begin{itemize}
-    \item using the recommendation output as the input to a constrained local
-    LLM layer for learning-path organization,
+    \item improving the learning-path organizer with a stronger local model and
+    a more reliable sectioning strategy,
     \item extending the revised branch with future experiments on pooling and
     recommendation quality without returning to the earlier flawed split logic.
 \end{itemize}
