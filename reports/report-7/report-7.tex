@@ -7,6 +7,7 @@
 \usepackage{float}
 \usepackage{array}
 \usepackage{amsmath}
+\usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{xcolor}
 \geometry{margin=1in}
@@ -204,6 +205,47 @@ Node2Vec (corrected) & 1.3374 & 0.4482 & 10,966 & 14.0466 & 0.4569 \\
 BGE-M3 Only & 1.9413 & 0.5172 & 10,905 & 13.8459 & 0.3713 \\
 \bottomrule
 \end{tabular}
+\end{table}
+
+\subsection{Per-Metric Rank Summary}
+
+To make the multi-metric comparison easier to scan, Table~\ref{tab:rank-summary}
+converts each raw metric into a per-column ranking. Rank 1 is best in each
+metric column. For Hit@K, MRR, NDCG, Recall, MAP, Aggregate Diversity, Novelty,
+and Intra-List Distance, higher values receive better ranks. For Popularity
+Lift and Gini, lower values receive better ranks. The \textbf{Total Rank}
+column reports the final ordering by the summed per-metric ranks, so lower is
+better overall.
+
+\begin{table}[H]
+\centering
+\caption{Per-metric rank summary across old and new evaluation metrics. Lower total rank is better overall.}
+\label{tab:rank-summary}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.28\textwidth}cccccccccccccc}
+\toprule
+\textbf{Model} &
+\rotatebox{45}{\textbf{Total Rank}} &
+\rotatebox{45}{\textbf{Hit@1}} &
+\rotatebox{45}{\textbf{Hit@10}} &
+\rotatebox{45}{\textbf{Hit@50}} &
+\rotatebox{45}{\textbf{Hit@100}} &
+\rotatebox{45}{\textbf{MRR}} &
+\rotatebox{45}{\textbf{NDCG}} &
+\rotatebox{45}{\textbf{Recall}} &
+\rotatebox{45}{\textbf{MAP}} &
+\rotatebox{45}{\textbf{Agg. Div.}} &
+\rotatebox{45}{\textbf{Novelty}} &
+\rotatebox{45}{\textbf{ILD}} &
+\rotatebox{45}{\textbf{Pop. Lift}} &
+\rotatebox{45}{\textbf{Gini}} \\
+\midrule
+\input{model_rankings_rows.tex}
+\bottomrule
+\end{tabular}
+}
 \end{table}
 
 \section{What Changed Under the New Setup}
