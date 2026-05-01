@@ -66,9 +66,12 @@ def main() -> None:
 
     row_cols = ["Total Rank"] + METRICS
     tex_lines = []
-    for _, row in rank_df.iterrows():
+    total_rows = len(rank_df)
+    for idx, (_, row) in enumerate(rank_df.iterrows(), start=1):
         values = [latex_escape(str(row["Model"]))] + [str(int(row[col])) for col in row_cols]
         tex_lines.append(" & ".join(values) + r" \\")
+        if idx < total_rows:
+            tex_lines.append(r"\hdashline")
 
     tex_body = "\n".join(tex_lines) + "\n"
     OUTPUT_TEX.write_text(tex_body, encoding="utf-8")
