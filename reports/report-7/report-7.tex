@@ -7,7 +7,6 @@
 \usepackage{float}
 \usepackage{array}
 \usepackage{amsmath}
-\usepackage{arydshln}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{xcolor}
@@ -157,41 +156,32 @@ added:
 \setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.12}
 \resizebox{\textwidth}{!}{
-\begin{tabular}{>{\raggedright\arraybackslash}p{0.28\textwidth}ccccccccccccc}
+\begin{tabular}{@{}l*{13}{c}@{}}
 \toprule
 \textbf{Model} &
-\rotatebox{45}{\textbf{H@1}} &
-\rotatebox{45}{\textbf{H@10}} &
-\rotatebox{45}{\textbf{H@50}} &
-\rotatebox{45}{\textbf{H@100}} &
-\rotatebox{45}{\textbf{MRR}} &
-\rotatebox{45}{\textbf{NDCG}} &
-\rotatebox{45}{\textbf{Recall}} &
-\rotatebox{45}{\textbf{MAP}} &
-\rotatebox{45}{\textbf{Pop. Lift}} &
-\rotatebox{45}{\textbf{Gini}} &
-\rotatebox{45}{\textbf{Agg. Div.}} &
-\rotatebox{45}{\textbf{Novelty}} &
-\rotatebox{45}{\textbf{ILD}} \\
+\textbf{H@1} &
+\textbf{H@10} &
+\textbf{H@50} &
+\textbf{H@100} &
+\textbf{MRR} &
+\textbf{NDCG} &
+\textbf{Recall} &
+\textbf{MAP} &
+\textbf{Pop. Lift} &
+\textbf{Gini} &
+\textbf{Agg. Div.} &
+\textbf{Novelty} &
+\textbf{ILD} \\
 \midrule
 BGE pooled + Node2Vec (corrected) & 1.03\% & 8.67\% & 31.46\% & 47.81\% & 0.0410 & 0.1160 & 0.4781 & 0.0392 & 1.3301 & 0.4110 & 11,326 & 14.2738 & 0.4372 \\
-\hdashline
 BGE-M3 + Node2Vec (corrected) & 1.07\% & 8.67\% & 32.41\% & 49.81\% & 0.0421 & 0.1202 & 0.4981 & 0.0403 & 1.3081 & 0.4127 & 11,268 & 14.2783 & 0.4316 \\
-\hdashline
 BGE pooled + Node2Vec (uncorrected) & 0.76\% & 7.83\% & 32.64\% & 50.74\% & 0.0376 & 0.1176 & 0.5074 & 0.0358 & 1.3397 & 0.4613 & 11,186 & 14.0351 & 0.4558 \\
-\hdashline
 BGE-M3 + Node2Vec (uncorrected) & 0.76\% & 7.83\% & 32.64\% & 50.74\% & 0.0376 & 0.1176 & 0.5074 & 0.0358 & 1.3400 & 0.4605 & 11,164 & 14.0340 & 0.4557 \\
-\hdashline
 Node2Vec (uncorrected) & 0.75\% & 7.81\% & 32.52\% & 50.60\% & 0.0375 & 0.1172 & 0.5060 & 0.0357 & 1.3374 & 0.4482 & 10,966 & 14.0466 & 0.4569 \\
-\hdashline
 Node2Vec (corrected) & 0.75\% & 7.81\% & 32.52\% & 50.60\% & 0.0375 & 0.1172 & 0.5060 & 0.0356 & 1.3374 & 0.4482 & 10,966 & 14.0466 & 0.4569 \\
-\hdashline
 GCN + BGE-M3 (rank fusion) & 0.85\% & 7.63\% & 23.14\% & 33.77\% & 0.0335 & 0.0862 & 0.3377 & 0.0317 & 1.6650 & 0.4228 & 11,655 & 13.9222 & 0.4366 \\
-\hdashline
 BGE-M3 Only & 1.35\% & 7.57\% & 19.69\% & 27.73\% & 0.0366 & 0.0788 & 0.2773 & 0.0351 & 1.9413 & 0.5172 & 10,905 & 13.8459 & 0.3713 \\
-\hdashline
 GCN Only & 0.38\% & 3.46\% & 14.12\% & 22.91\% & 0.0180 & 0.0530 & 0.2291 & 0.0163 & 1.1879 & 0.2607 & 11,685 & 14.3293 & 0.5135 \\
-\hdashline
 GraphSAGE Only & 0.17\% & 1.22\% & 4.96\% & 8.72\% & 0.0076 & 0.0199 & 0.0872 & 0.0061 & 1.3134 & 0.2517 & 11,628 & 14.2087 & 0.5313 \\
 \bottomrule
 \end{tabular}
@@ -215,25 +205,34 @@ better overall.
 \setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.15}
 \resizebox{\textwidth}{!}{
-\begin{tabular}{>{\raggedright\arraybackslash}p{0.28\textwidth}cccccccccccccc}
+\begin{tabular}{@{}l*{14}{c}@{}}
 \toprule
 \textbf{Model} &
-\rotatebox{45}{\textbf{Total Rank}} &
-\rotatebox{45}{\textbf{Hit@1}} &
-\rotatebox{45}{\textbf{Hit@10}} &
-\rotatebox{45}{\textbf{Hit@50}} &
-\rotatebox{45}{\textbf{Hit@100}} &
-\rotatebox{45}{\textbf{MRR}} &
-\rotatebox{45}{\textbf{NDCG}} &
-\rotatebox{45}{\textbf{Recall}} &
-\rotatebox{45}{\textbf{MAP}} &
-\rotatebox{45}{\textbf{Agg. Div.}} &
-\rotatebox{45}{\textbf{Novelty}} &
-\rotatebox{45}{\textbf{ILD}} &
-\rotatebox{45}{\textbf{Pop. Lift}} &
-\rotatebox{45}{\textbf{Gini}} \\
+\textbf{Total} &
+\textbf{H@1} &
+\textbf{H@10} &
+\textbf{H@50} &
+\textbf{H@100} &
+\textbf{MRR} &
+\textbf{NDCG} &
+\textbf{Recall} &
+\textbf{MAP} &
+\textbf{Agg. Div.} &
+\textbf{Novelty} &
+\textbf{ILD} &
+\textbf{Pop. Lift} &
+\textbf{Gini} \\
 \midrule
-\input{model_rankings_rows.tex}%
+BGE-M3 + Node2Vec (corrected) & 1 & 2 & 2 & 5 & 5 & 1 & 1 & 5 & 1 & 5 & 2 & 9 & 2 & 4 \\
+BGE pooled + Node2Vec (corrected) & 2 & 3 & 1 & 6 & 6 & 2 & 6 & 6 & 2 & 4 & 3 & 7 & 4 & 3 \\
+BGE pooled + Node2Vec (uncorrected) & 3 & 6 & 3 & 1 & 1 & 4 & 3 & 1 & 4 & 6 & 7 & 5 & 7 & 9 \\
+BGE-M3 + Node2Vec (uncorrected) & 4 & 5 & 4 & 2 & 2 & 3 & 2 & 2 & 3 & 7 & 8 & 6 & 8 & 8 \\
+Node2Vec (uncorrected) & 5 & 7 & 5 & 3 & 3 & 5 & 4 & 3 & 5 & 8 & 5 & 3 & 5 & 6 \\
+Node2Vec (corrected) & 6 & 8 & 6 & 3 & 3 & 6 & 5 & 3 & 6 & 8 & 5 & 3 & 5 & 6 \\
+GCN Only & 7 & 9 & 9 & 9 & 9 & 9 & 9 & 9 & 9 & 1 & 1 & 2 & 1 & 2 \\
+GCN + BGE-M3 (rank fusion) & 8 & 4 & 7 & 7 & 7 & 8 & 7 & 7 & 8 & 2 & 9 & 8 & 9 & 5 \\
+GraphSAGE Only & 9 & 10 & 10 & 10 & 10 & 10 & 10 & 10 & 10 & 3 & 4 & 1 & 3 & 1 \\
+BGE-M3 Only & 10 & 1 & 8 & 8 & 8 & 7 & 8 & 8 & 7 & 10 & 10 & 10 & 10 & 10 \\
 \bottomrule
 \end{tabular}
 }
