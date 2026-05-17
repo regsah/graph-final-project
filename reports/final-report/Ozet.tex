@@ -1,10 +1,208 @@
 \chapter{Özet}
 
-Bu proje, bilgisayar bilimi alanındaki Wikipedia makaleleri arasında makaleden makaleye öneri üreten \textit{graph} tabanlı bir sistemi incelemektedir. Amaç, kaynak makaleden hareketle anlamsal ve yapısal olarak ilişkili başka makaleleri bulmak ve istenirse bu sonuçları öğrenme yoluna çevirmektir. Çalışma, kullanıcı profiline değil sorguya dayalıdır ve Wikipedia verisi üzerinde çalışır.
+Bu proje, bilgisayar bilimi alanındaki Wikipedia makaleleri arasında makaleden
+makaleye öneri üreten \italic{graph} tabanlı bir sistemi incelemektedir. Çalışmanın
+temel konusu, belirli bir kaynak makaleden hareketle hangi başka makalelerin
+anlamlı biçimde önerilmesi gerektiğini araştırmaktır. Bu amaçla çalışma,
+kullanıcı profiline ya da geçmiş etkileşim verisine dayanan klasik öneri
+sistemlerinden ayrılarak tamamen sorgu tabanlı bir çerçeve benimsemektedir.
+Sistem, verilen bir kaynak makaleyi başlangıç noktası alır; onunla anlamsal ve
+yapısal olarak ilişkili, öğrenme açısından faydalı başka makaleleri sıralar.
+Gerekli görüldüğünde bu sıralı çıktı daha okunabilir bir öğrenme yolu düzenine
+de dönüştürülebilir.
 
-Çalışma, Wiki-CS yapısının gerçek makale metinleriyle zenginleştirilmiş sürümü olan Custom-WikiCS veri kümesine dayanmaktadır. Temizleme sonrasında grafik 11,367 etkin düğüm ve 291,039 yönlü kenardan oluşmaktadır. Metin tarafında BGE-M3, yapı tarafında Node2Vec kullanılmış; ayrıca GCN ve GraphSAGE tabanlı yapısal temel modeller de değerlendirilmiştir. Böylece yalnızca semantik, yalnızca yapısal, hibrit ve grafik sinir ağı tabanlı yaklaşımlar birlikte karşılaştırılmıştır.
+Çalışmanın çıkış noktası, Wikipedia gibi büyük bir ansiklopedik yapıda
+bilginin yalnızca bulunmasının değil, doğru sırayla keşfedilmesinin de önemli
+olmasıdır. Bir konu hakkında arama yapan kullanıcı çoğu zaman yalnızca
+kelimece benzer sayfaları değil, aynı zamanda önkoşul niteliği taşıyan, temel
+kavramları açıklayan, komşu kavramları gösteren ya da daha ileri düzeyde
+okumaya imkân veren makaleleri de görmek ister. Oysa klasik arama araçları ya
+da yalnızca metin benzerliğine dayalı yaklaşımlar, bu yapısal ilişkileri her
+zaman yeterince yakalayamaz. Wikipedia'nın hiperbağlantı yapısı ise editoryal
+ve kavramsal ilişkiler hakkında ek bir sinyal taşır. Bu nedenle proje, şu temel
+araştırma sorusuna odaklanmaktadır: yalnızca makale metninden gelen anlamsal
+bilgi ile yalnızca \italic{graph} yapısından gelen yapısal bilgi birlikte
+kullanıldığında, tek başlarına kullanıldıkları duruma göre daha güçlü ve daha
+dengeli makale önerileri üretilebilir mi? Bu ana soru, çalışma boyunca hem
+öneri doğruluğu hem de öneri kalitesi açısından değerlendirilmiştir.
 
-Daha sonraki aşamada değerlendirme düzeni yönsüz yapıya uygun biçimde yeniden kurulmuş ve modeller bu çerçevede tekrar karşılaştırılmıştır. Bu güncellenmiş değerlendirme altında ilk aşamada çok güçlü görünen düzeltilmemiş Node2Vec üstünlüğünü korumamış, en iyi genel öneri ailesi düzeltilmiş hibrit modeller olmuştur. Özellikle \textit{BGE pooled + Node2Vec (corrected)} ve \textit{BGE-M3 + Node2Vec (corrected)} modelleri üst sıra doğruluğu ile öneri kalitesi arasında en dengeli sonuçları vermiştir. Buna karşılık ROC-AUC ve PR-AUC gibi bağ ayırıcılığı ölçütlerinde saf yapısal modeller güçlü kalmıştır.
+Projenin kapsamı özellikle bilgisayar bilimi alanındaki Wikipedia makaleleriyle
+sınırlıdır. Çalışma, tüm Wikipedia üzerinde gerçek zamanlı üretim ölçekli bir
+sistem kurmayı hedeflememekte; bunun yerine yönetilebilir büyüklükte ama
+anlamlı yapısal özellikler taşıyan bir alt alanda yöntemlerin güçlü ve zayıf
+yönlerini açıkça göstermeyi amaçlamaktadır. Bu bakımdan proje bir üretim
+sistemi olmaktan çok, açık veri üzerinde yeniden üretilebilir ve
+yorumlanabilir bir deneysel çerçeve kuran araştırma ve prototipleme
+çalışmasıdır. Ayrıca sistem kişiselleştirilmiş öneri üretmemekte, kullanıcı
+takibi yapmamakta ve davranış verisi toplamamaktadır.
 
-Projenin kullanıcıya dönük tarafında yerel bir web arayüzü de geliştirilmiştir. Bu arayüz başlık arama, model seçimi, ilk 20 önerinin gösterimi, makale ön izleme paneli ve isteğe bağlı öğrenme yolu görünümü sunmaktadır. Nihai sürümde LLM katmanı öneri üretmemekte, yalnızca önceden hesaplanmış listeyi yapılandırılmış çıktı, uygulama tarafında doğrulama ve başarısızlık durumunda sezgisel geri dönüş ile yeniden düzenlemektedir. Sonuç olarak çalışma, Wikipedia makaleleri için grafik destekli öneri üretiminde hem metodolojik hem uygulamalı bir katkı sunmakta ve değerlendirme tasarımının sonuç yorumunu ne kadar değiştirebildiğini açıkça göstermektedir.
+Çalışmanın deneysel omurgasını, Wiki-CS yapısının gerçek Wikipedia makale
+metinleriyle zenginleştirilmiş sürümü olan Custom-WikiCS veri kümesi
+oluşturmaktadır. Projede ilk adım, bu \italic{graph} yapısını yeniden kullanırken
+düğümleri yalnızca soyut kimlikler olarak bırakmamak, her düğümü gerçek başlık,
+makale metni ve bağlantı bağlamıyla eşleştirmek olmuştur. Bu zenginleştirme
+sonrasında izole düğümler kaldırılmış; elde edilen temizlenmiş \italic{graph} 11,367
+etkin düğüm ve 291,039 yönlü kenardan oluşmuştur. Aynı yapının yönsüz
+karşılığı 216,123 kenar içermektedir. Bu veri alanı, hem metinsel hem de
+yapısal temsil üretmek için yeterli yoğunlukta, ama yerel donanım üzerinde
+yönetilebilecek büyüklüktedir. Böylece proje, açık ve paylaşılabilir bir temel
+üzerinde ilerlemiş; tekrar tekrar yeniden veri toplama zorunluluğu yerine,
+aynı veri alanı üzerinde farklı model ailelerini karşılaştırmaya imkân
+tanımıştır.
 
+Veri kümesinin yalnızca büyüklüğü değil, yapısal özellikleri de proje
+açısından önemlidir. \italic{Graph} analizleri, derece dağılımının ağır kuyruklu
+olduğunu, bağlı makale çiftlerinin rastgele çiftlere göre daha yüksek anlamsal
+benzerlik gösterdiğini ve Louvain ile Infomap gibi yöntemlerle anlamlı yerel
+topluluklar elde edilebildiğini ortaya koymuştur. Bu bulgular, veri alanının
+öneri problemi açısından elverişli olduğunu ve hem komşuluk hem topluluk
+sinyalinin kullanılabilirliğini göstermektedir.
+
+Yöntem tarafında çalışma üç ana temsil ailesine dayanmaktadır. Birincisi,
+metinsel anlamı yakalamaya çalışan semantik temsillerdir. Bu amaçla makale
+metinleri BGE-M3 kullanılarak yoğun vektör temsillere dönüştürülmüştür.
+Semantik yaklaşımın güçlü yanı, \italic{graph} yapısında doğrudan komşu olmayan ama
+içerik bakımından yakın olan makaleleri de bulabilmesidir. Zayıf yanı ise tek
+başına kullanıldığında daha genel, daha popüler veya fazla geniş komşuluklar
+önerebilmesidir. Buna rağmen metinsel gömüler, proje boyunca özellikle hibrit
+yaklaşımın temel ayaklarından biri olmuştur.
+
+İkinci temsil ailesi, \italic{graph} yapısından öğrenilen yapısal gömülerdir. Bu
+tarafta temel yöntem Node2Vec olmuştur. Node2Vec, rastgele yürüyüşler ve
+skip-gram benzeri bir öğrenme mantığı ile düğümlerin yerel ve orta ölçekli
+komşuluk düzenini temsil eden vektörler üretir. Projenin erken aşamalarında
+CPU üzerinde daha erişilebilir bir yaklaşık yaklaşım da denenmiş; daha sonraki
+aşamalarda ise düzeltilmiş değerlendirme düzeni ile uyumlu, ayrı bir Node2Vec
+önbellek yapısına geçilmiştir. Yapısal tarafta iki varyant korunmuştur:
+düzeltilmemiş Node2Vec ve dereceye duyarlı ceza ile düzeltilmiş Node2Vec.
+Buradaki temel fikir, çok yüksek dereceli merkez düğümlerin yapısal sinyali
+bazı durumlarda aşırı baskın hâle getirmesini kontrol altına almaktır. Ancak
+çalışmanın önemli sonuçlarından biri, bu düzeltmenin her model ailesinde aynı
+etkiyi göstermemiş olmasıdır. Başka bir deyişle, derece düzeltmesi kendi başına
+iyi ya da kötü değildir; hangi temsil birleşimi içinde kullanıldığına bağlı
+olarak farklı sonuçlar doğurur.
+
+Üçüncü temsil ailesi ise \italic{graph} sinir ağı tabanlı yapısal modellerdir.
+Projede bu amaçla GCN ve GraphSAGE temel karşılaştırma modelleri olarak
+kullanılmıştır. Bu modellerin seçilmesinin nedeni, literatürde güçlü temel
+yaklaşımlar olarak kabul edilmeleri ve \italic{graph} komşuluğu üzerinden doğrudan
+temsil öğrenmeleridir. Projenin ilk fikir aşamasında daha iddialı yönelimler
+de düşünülmüş olsa da, uygulamada en istikrarlı ve karşılaştırılabilir sonuçlar
+bu iki temel model ile elde edilmiştir.
+
+Bu üç temsil ailesi daha sonra farklı birleşim stratejileri ile karşılaştırma
+altına alınmıştır. Sadece semantik yaklaşım, sadece yapısal yaklaşım, semantik
+ve yapısal vektörlerin doğrudan birleştirilmesi, derece düzeltmeli hibrit
+yapılar, boyut dengelemesi için uygulanan pooling tabanlı hibritler ve GCN ile
+metin modelini sıra düzeyinde birleştiren füzyon yaklaşımı birlikte
+incelenmiştir. Bu çeşitlilik bilinçli bir tasarım tercihidir. Çünkü çalışma,
+tek bir model ilan etmekten çok, hangi birleşim mantığının ne tür avantaj
+ürettiğini anlamayı amaçlamaktadır. Özellikle hibrit modellerin amacı, metnin
+anlamsal açıklayıcılığı ile \italic{graph} yapısının topolojik gücünü aynı öneri
+uzayında bir araya getirmektir. Daha sonra elde edilen sonuçlar da bu
+birleşimin çoğu durumda tek kanallı yaklaşımlardan daha dengeli olduğunu
+göstermiştir.
+
+Projenin önemli yönlerinden biri, yöntem kadar değerlendirme tasarımına da
+odaklanmış olmasıdır. İlk değerlendirme düzeninde yönlü kenarlar üzerinden bir
+ayrım yapılırken, yapısal modellerin fiilen yönsüz yapı üzerinde çalıştığı daha
+sonra daha belirgin hâle gelmiştir. Bu durum, özellikle yapısal modellerin ne
+kadar güçlü göründüğünün yorumlanmasında sorun yaratabilecek bir uyumsuzluk
+oluşturmuştur. Bu nedenle daha sonraki aşamada yönsüz yapıya daha uyumlu yeni
+bir değerlendirme düzeni kurulmuş; 216,123 yönsüz kenar içinden 172,900 eğitim
+ve 43,223 test kenarı seçilmiştir. Ayrıca ayrım yapılırken yeni izole düğümler
+oluşmamasına dikkat edilmiştir. Bu güncellenmiş çerçeve altında ana yapısal ve
+hibrit modeller yeniden eğitilmiş ya da yeniden değerlendirilmiştir. Bu adımın
+önemi, yalnızca teknik bir temizlik yapmasında değil, sonuç yorumunu doğrudan
+değiştirmesinde yatmaktadır.
+
+Erken aşama sonuçlarında düzeltilmemiş Node2Vec oldukça güçlü görünmekteydi.
+Örneğin ilk geniş karşılaştırma hattında Hit@10 değeri \%16.06, MRR değeri ise
+0.0751 düzeyine kadar çıkmıştır. Bu tablo, ilk bakışta saf yapısal sinyalin
+metin sinyalinden ve bazı hibrit yapılardan açık biçimde üstün olduğu izlenimi
+vermiştir. Ancak güncellenmiş değerlendirme düzeni altında aynı üstünlük
+korunmamıştır. Düzeltilmiş karşılaştırmalarda en iyi genel öneri ailesi,
+düzeltilmiş hibrit modeller olmuştur. Özellikle \textit{BGE pooled + Node2Vec
+(corrected)} Hit@10 açısından, \textit{BGE-M3 + Node2Vec (corrected)} ise MRR,
+Recall, MAP ve başka bazı ikincil ölçütler açısından öne çıkmıştır. Bu sonuç,
+projenin ana çıkarımlarından birini oluşturur: bir model ailesinin üstünlüğü
+yalnızca kullanılan temsil türüne değil, değerlendirme düzeninin kendisine de
+duyarlıdır. Dolayısıyla bu çalışma, öneri araştırmalarında yöntem kadar
+değerlendirme tasarımının da belirleyici olduğunu göstermektedir.
+
+Çalışmanın bir başka önemli yönü, sonuçları yalnızca klasik sıralama
+doğruluğuna indirgememiş olmasıdır. Hit@10, Hit@50, Hit@100, MRR, NDCG, Recall
+ve MAP gibi ölçütler öneri başarısının üst sıralardaki performansını göstermiş;
+buna ek olarak popülerlik artışı, Gini katsayısı, toplu çeşitlilik, yenilik ve
+liste içi uzaklık gibi ölçütler öneri kalitesinin başka boyutlarını da açığa
+çıkarmıştır. Bu genişletilmiş değerlendirme, farklı modellerin aynı Hit@10
+çevresinde dahi çok farklı öneri davranışları sergileyebildiğini göstermiştir.
+Örneğin bazı modeller daha çeşitli ve daha az popülerlik yanlısı listeler
+üretirken, bazıları daha merkezi ve popüler düğümlere yığılma eğilimi
+göstermiştir. Bu bakımdan çalışma, öneri doğruluğu ile öneri kalitesinin aynı
+şey olmadığını açıkça ortaya koymuştur. Gerçek kullanım açısından yalnızca ilk
+sonucun doğru çıkması değil, ortaya çıkan listenin keşif değeri taşıması,
+aşırı tekrar üretmemesi ve kullanıcıyı tek tip içeriklere sıkıştırmaması da
+önemlidir.
+
+Daha sonraki metrik genişletmeleri, bu resmi daha da netleştirmiştir. Eval 3.1
+ve Eval 3.2 olarak adlandırılan genişletilmiş inceleme aşamalarında, daha kısa
+kesim noktalarındaki sıralama ölçütleri ile ROC-AUC ve PR-AUC gibi bağ
+ayırtediciliği ölçütleri de hesaba katılmıştır. Bu sonuçlar, kısa öneri
+listeleri söz konusu olduğunda düzeltilmiş hibritlerin en güçlü genel yönü
+temsil ettiğini; buna karşın çok sayıda pozitif ve negatif bağın ayrıştırılması
+gereken daha geniş ayrımcılık görevlerinde saf yapısal modellerin hâlâ çok
+güçlü kalabildiğini göstermiştir. Başka bir deyişle, “en iyi öneri modeli” ile
+“en iyi bağ tahmin modeli” aynı model olmak zorunda değildir. Bu ayrım, projenin
+asıl ürün hedefi açısından önemlidir. Çünkü burada hedef soyut bağ tahmini
+değil, kullanıcının üst sıralarda göreceği kısa öneri listesinin yararlı ve
+anlamlı olmasıdır.
+
+Çalışmanın yenilik ve özgünlük boyutu birkaç noktada toplanmaktadır.
+Birincisi, Wiki-CS gibi yerleşik bir \italic{graph} yapısını gerçek Wikipedia metinleri
+ile birleştirerek onu makaleden makaleye öneri problemi için daha zengin bir
+deney alanına dönüştürmesidir. İkincisi, semantik, yapısal, hibrit ve \italic{graph}
+sinir ağı tabanlı yöntemleri aynı deneysel çerçeve içinde karşılaştırmasıdır.
+Üçüncüsü, sonuçları yalnızca doğruluk üzerinden değil, çeşitlilik ve
+popülerlik yanlılığı gibi öneri kalitesi boyutları üzerinden de yorumlamasıdır.
+Dördüncüsü, LLM katmanını ana öneri motoru hâline getirmeden, onu kısıtlı ve
+doğrulanabilir bir sunum katmanı olarak konumlandırmasıdır. Bu son nokta
+özellikle önemlidir; çünkü proje LLM kullanımını abartılı bir “her şeyi yapan
+zekâ” anlayışıyla değil, belirli bir görevi olan ve başarısızlık durumunda
+kontrollü biçimde devreden çıkarılabilen bir araç olarak ele almaktadır.
+
+Projenin kullanıcıya dönük yönü, yerel bir web arayüzü ile
+somutlaştırılmıştır. Bu arayüz, başlık arama, model seçimi, ilk 20 önerinin
+görüntülenmesi, kısa içerik ön izlemesi ve isteğe bağlı öğrenme yolu görünümü
+sunmaktadır. Öğrenme yolu katmanı ilk aşamada küçük yerel modellerle denenmiş;
+ancak tek seferde tutarlı ve yapılandırılmış çıktı üretiminde kararsızlıklar
+görülmüştür. Nihai tasarımda LLM katmanı, öneri üretmek yerine önceden
+hesaplanmış top-20 listeyi belirli kısıtlar altında yeniden düzenleyen bir
+organizatör olarak konumlandırılmıştır. Bu katmanın çıktısı uygulama tarafında
+doğrulanmakta; geçersiz ya da eksik çıktı durumunda sistem sezgisel bir geri
+dönüş mekanizmasına başvurmaktadır.
+
+Çalışmanın yürütülmesinde kullanılan kaynaklar ve gerçekçi kısıtlar da
+özellikle dikkate alınmıştır. Deneyler, bulut altyapısı yerine yerel donanım
+üzerinde, RTX 4070 Laptop GPU, Ryzen 9 8945HS işlemci, 32 GB RAM ve NVMe SSD
+ile yürütülmüştür. Bu tercih hem ekonomik hem de yeniden üretilebilir bir
+araştırma pratiği sağlamış, ancak aynı zamanda daha büyük modelleri ya da tüm
+Wikipedia ölçeğinde deneyleri sınırlamıştır. Bu nedenle projede önbellekleme,
+önceden hesaplanmış gömüler ve tekrar kullanılabilir değerlendirme artifaktları
+benimsenmiştir.
+
+Genel sonuç olarak bu çalışma, Wikipedia makaleleri için \italic{graph} destekli
+öneri üretiminin hem teorik hem de pratik açıdan güçlü bir araştırma alanı
+olduğunu göstermektedir. \italic{Graph} yapısı tek başına çok kuvvetli sinyal
+taşıyabilmekte, metinsel semantik tek başına anlamlı yakınlıklar
+üretebilmekte; fakat en dengeli sonuçlar çoğu durumda bu iki kanalın dikkatli
+bir biçimde birleştirilmesiyle ortaya çıkmaktadır. Aynı zamanda çalışma,
+değerlendirme tasarımının araştırma sonuçlarını ne kadar değiştirebildiğini
+açıkça göstermiş; ilk bakışta baskın görünen bir yapısal modelin, daha uyumlu
+bir değerlendirme altında yerini hibrit modellere bırakabildiğini ortaya
+koymuştur. Yerel web arayüzü ve kontrollü LLM katmanı ile birlikte proje,
+yalnızca sonuç üreten bir deney dizisi değil, aynı zamanda bu sonuçların nasıl
+gösterilebileceğini de inceleyen bir prototip sunmaktadır. Bu yönleriyle
+çalışma, açık veri üzerinde yürütülen, yeniden üretilebilir, yöntemsel olarak
+dikkatli ve uygulamaya dönük bir makale öneri sistemi araştırması olarak
+değerlendirilebilir.
