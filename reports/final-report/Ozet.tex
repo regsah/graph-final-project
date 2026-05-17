@@ -1,83 +1,10 @@
 \chapter{Özet}
 
-Bu proje, bilgisayar bilimi alanındaki Wikipedia makaleleri arasında
-makaleden makaleye öneri üreten grafik tabanlı bir öneri sistemini
-incelemektedir. Çalışmanın temel amacı, bir kaynak makale verildiğinde onunla
-anlamsal ve yapısal olarak ilişkili makaleleri sıralayabilen, daha sonra
-istenirse bu sonuçları öğrenme yolu benzeri bir düzende sunabilen bir sistem
-oluşturmaktır. Çalışma, kullanıcı profillemesine dayalı klasik öneri
-sistemlerinden farklı olarak tamamen sorgu tabanlıdır ve açık Wikipedia verisi
-üzerinde çalışır.
+Bu proje, bilgisayar bilimi alanındaki Wikipedia makaleleri arasında makaleden makaleye öneri üreten \textit{graph} tabanlı bir sistemi incelemektedir. Amaç, kaynak makaleden hareketle anlamsal ve yapısal olarak ilişkili başka makaleleri bulmak ve istenirse bu sonuçları öğrenme yoluna çevirmektir. Çalışma, kullanıcı profiline değil sorguya dayalıdır ve Wikipedia verisi üzerinde çalışır.
 
-Projenin deneysel omurgasını Custom-WikiCS veri kümesi oluşturmaktadır. Bu veri
-kümesi, Wiki-CS grafik yapısının gerçek Wikipedia makale metinleri ile
-zenginleştirilmiş bir sürümüdür. İlk aşamada 11,701 düğümlü grafik
-hazırlanmış, izole düğümler çıkarıldıktan sonra 11,367 etkin düğüm ve 291,039
-yönlü kenardan oluşan temizlenmiş grafik elde edilmiştir. Yapısal analizler,
-ağın ağır kuyruklu derece dağılımına sahip olduğunu, bağlantılı makalelerin
-rastgele makale çiftlerine göre daha yüksek anlamsal benzerlik taşıdığını ve
-Louvain ile Infomap gibi yöntemlerin anlamlı topluluklar çıkarabildiğini
-göstermiştir. Bu sonuçlar, Wikipedia hiperbağlantı yapısının öneri üretimi için
-yararlı bir sinyal taşıdığını doğrulamıştır.
+Çalışma, Wiki-CS yapısının gerçek makale metinleriyle zenginleştirilmiş sürümü olan Custom-WikiCS veri kümesine dayanmaktadır. Temizleme sonrasında grafik 11,367 etkin düğüm ve 291,039 yönlü kenardan oluşmaktadır. Metin tarafında BGE-M3, yapı tarafında Node2Vec kullanılmış; ayrıca GCN ve GraphSAGE tabanlı yapısal temel modeller de değerlendirilmiştir. Böylece yalnızca semantik, yalnızca yapısal, hibrit ve grafik sinir ağı tabanlı yaklaşımlar birlikte karşılaştırılmıştır.
 
-Yöntem tarafında üç ana bileşen kullanılmıştır. İlk olarak, makale metinleri
-BAAI/bge-m3 ile sayısal gömülere dönüştürülmüştür. İkinci olarak, grafik
-yapısından Node2Vec tabanlı yapısal gömüler elde edilmiştir. Üçüncü olarak da
-GCN ve GraphSAGE gibi grafik sinir ağı tabanlı yapısal temel modeller
-eğitilmiştir. Çalışmanın erken aşamalarında anlamsal ve yapısal temsil
-vektörleri birleştirilerek öneri üretilmiş, daha sonra çoklu model
-karşılaştırmaları yapılmıştır. Böylece yalnızca semantik, yalnızca yapısal,
-hibrit, birleştirilmiş ve grafik sinir ağı tabanlı yaklaşımlar birlikte
-değerlendirilmiştir.
+Daha sonraki aşamada değerlendirme düzeni yönsüz yapıya uygun biçimde yeniden kurulmuş ve modeller bu çerçevede tekrar karşılaştırılmıştır. Bu güncellenmiş değerlendirme altında ilk aşamada çok güçlü görünen düzeltilmemiş Node2Vec üstünlüğünü korumamış, en iyi genel öneri ailesi düzeltilmiş hibrit modeller olmuştur. Özellikle \textit{BGE pooled + Node2Vec (corrected)} ve \textit{BGE-M3 + Node2Vec (corrected)} modelleri üst sıra doğruluğu ile öneri kalitesi arasında en dengeli sonuçları vermiştir. Buna karşılık ROC-AUC ve PR-AUC gibi bağ ayırıcılığı ölçütlerinde saf yapısal modeller güçlü kalmıştır.
 
-Projenin önemli katkılarından biri, değerlendirme protokolünün daha sonra
-yeniden tasarlanmış olmasıdır. İlk değerlendirme düzeninde yönlü bir kenar
-ayırma yaklaşımı kullanılırken, yapısal modeller fiilen yönsüz yapı üzerinde
-çalışıyordu. Bu durum özellikle Node2Vec sonuçlarının yorumunu etkileyebilecek
-metodolojik bir uyumsuzluk oluşturuyordu. Bu nedenle yönsüz yapıya uygun yeni
-bir değerlendirme protokolü kurulmuş, 216,123 yönsüz kenar 172,900 eğitim ve
-43,223 test kenarı olarak ayrılmış, ek izole düğüm oluşmaması sağlanmış ve
-bütün ana yapısal modeller bu düzeltilmiş düzen içinde tekrar
-değerlendirilmiştir.
+Projenin kullanıcıya dönük tarafında yerel bir web arayüzü de geliştirilmiştir. Bu arayüz başlık arama, model seçimi, ilk 20 önerinin gösterimi, makale ön izleme paneli ve isteğe bağlı öğrenme yolu görünümü sunmaktadır. Nihai sürümde LLM katmanı öneri üretmemekte, yalnızca önceden hesaplanmış listeyi yapılandırılmış çıktı, uygulama tarafında doğrulama ve başarısızlık durumunda sezgisel geri dönüş ile yeniden düzenlemektedir. Sonuç olarak çalışma, Wikipedia makaleleri için grafik destekli öneri üretiminde hem metodolojik hem uygulamalı bir katkı sunmakta ve değerlendirme tasarımının sonuç yorumunu ne kadar değiştirebildiğini açıkça göstermektedir.
 
-Sonuçlar iki farklı bakış açısını ortaya koymaktadır. İlk değerlendirme
-düzeninde düzeltilmemiş Node2Vec çok güçlü görünmekteydi; örneğin Report-6
-sonuçlarında Hit@10 değeri \%16.06'ya kadar çıkmıştır. Ancak düzeltilmiş
-değerlendirme protokolünde bu üstünlük kaybolmuş, en iyi genel öneri ailesi
-düzeltilmiş hibrit modeller olmuştur. Özellikle \textit{BGE pooled + Node2Vec (corrected)} modeli
-Hit@10 açısından en güçlü sonuçlardan birini verirken, \textit{BGE-M3 +
-Node2Vec (corrected)} modeli MRR, Recall ve MAP gibi ikincil sıralama
-ölçütlerinde çok rekabetçi kalmıştır. Buna karşılık ROC-AUC ve PR-AUC gibi bağ
-ayırımcılığı ölçütlerinde saf yapısal modellerin hâlâ çok güçlü olduğu
-görülmüştür. Bu durum, en iyi öneri modeli ile en iyi küresel bağ ayırma
-modelinin aynı şey olmadığını göstermektedir.
-
-Çalışmada sadece sıralama doğruluğu değil, öneri kalitesi de incelenmiştir.
-Popülerlik artışı, Gini katsayısı, toplu çeşitlilik, yenilik ve liste içi
-uzaklık gibi ölçütler; bazı modellerin doğruluk açısından yakın sonuçlar verse
-de çok farklı öneri davranışlarına sahip olabildiğini göstermiştir. Örneğin
-GCN Only modeli üst sıralarda zayıf olsa da çeşitlilik ve popülerlik yanlılığı
-açısından güçlü bir profil sergilemiştir. BGE-M3 Only ise daha yüksek
-popülerlik eğilimi göstermiştir. Düzeltilmiş hibrit modeller ise doğruluk ile
-öneri kalitesi arasında en dengeli aile olarak öne çıkmıştır.
-
-Projenin kullanıcıya dönük tarafında yerel bir web arayüzü de
-geliştirilmiştir. Bu arayüz başlık arama, model seçimi, ilk 20 önerinin
-listelenmesi, makale ön izleme paneli ve isteğe bağlı öğrenme yolu görünümü
-sunmaktadır. Öğrenme yolu katmanı başlangıçta küçük bir yerel model ve Ollama
-ile denenmiş, ancak tek seferde kararlı yapılandırılmış çıktı üretmekte
-yetersiz kaldığı görülmüştür. Bu nedenle mevcut uygulamada sıralama ve erişim
-yerel kalırken, öğrenme yolu organizasyonu Gemini tabanlı yapılandırılmış
-çıktı, uygulama tarafında katı doğrulama ve başarısızlık durumunda sezgisel
-geri dönüş mekanizması ile güncellenmiştir. Böylece LLM katmanı, asıl öneri
-mantığından ayrı, sonradan eklenen bir sunum katmanı olarak ele alınmıştır.
-
-Bu çalışma; açık veri, yerel önbellekleme ve tüketici sınıfı donanım ile
-yürütülmüş olması bakımından ekonomik ve tekrarlanabilir bir deneysel çerçeve
-sunmaktadır. Kişisel veri kullanılmaması, kullanıcı takibi yapılmaması ve
-önerilerin önceden hesaplanmış benzerlik uzayları üzerinden üretilmesi etik ve
-güvenlik açısından önemli avantajlar sağlamaktadır. Sonuç olarak proje,
-Wikipedia makaleleri için grafik destekli öneri üretimi konusunda hem
-metodolojik hem uygulamalı bir katkı ortaya koymakta; aynı zamanda
-değerlendirme tasarımının sonuç yorumunu nasıl değiştirebildiğini açık biçimde
-göstermektedir.
