@@ -1,4 +1,125 @@
 \chapter{REVUE DE LITTERATURE}
 \thispagestyle{empty}
 
-Bitirme projesinin konusu ve yöntemi ile ilgili olan tüm yazın taraması ayrı başlıklar halinde bu bölümde verilmelidir. Proje konusu ve yöntemi ile ilgili yazın taraması ve değerlendirilmesi yapılarak proje konusunun önemi ve ilgili alanlardaki boşlukların nasıl doldurulması beklendiği açıklanmalıdır. Yazın değerlendirmesi yapılırken ham bir yazın listesi değil, ilgili yazının özet halinde bir analizi sunulmalıdır.
+\section{Recommandation fondee sur les graphes dans Wikipedia}
+
+Wikipedia se modele naturellement comme un graphe dans lequel les noeuds sont
+des articles et les aretes sont des hyperliens. Cette structure en fait un bon
+terrain d'experimentation pour la recommandation fondee sur les graphes et
+l'apprentissage de representations. Wiki-CS~\cite{mernyei2020wikics} fournit
+l'un des sous-ensembles de reference les plus connus pour les experiences de
+reseaux de neurones sur graphes a partir de contenu derive de Wikipedia, mais
+il s'agit avant tout d'un benchmark de classification de noeuds plutot que
+d'un systeme de recommandation a proprement parler.
+
+La recommandation sur Wikipedia a egalement ete etudiee plus directement.
+WikiRecNet a propose un cadre de recommandation a grande echelle utilisant la
+structure de Wikipedia pour la recuperation d'articles~\cite{wikirecnet2020}.
+Une lecon importante de cette ligne de travaux est que la topologie du graphe
+contient un signal fort de proximite, mais que le probleme de recommandation ne
+se confond pas avec une prediction generique sur graphe. Ce point est
+particulierement important ici, puisque la tache cible est la recommandation
+d'article a article et non la classification de noeuds.
+
+\section{Plongements textuels semantiques}
+
+Les methodes de plongement textuel fournissent une seconde famille de signaux.
+Les modeles de langue fondes sur les Transformers, tels que
+BERT~\cite{devlin2019bert}, ont rendu pratique l'encodage de phrases et de
+documents sous forme de vecteurs denses preservant les relations semantiques.
+Des modeles plus recents, orientes vers la recuperation, ameliorent encore
+cette capacite pour la recherche par similarite. BGE-M3, en particulier, est
+concu comme un retriever dense multilingue et couvre plusieurs usages
+orientes recuperation~\cite{chen2025bgem3}. Cela en fait un candidat solide
+pour la recommandation d'articles a partir du texte brut de Wikipedia.
+
+Dans un cadre de recommandation, les embeddings semantiques ont deux avantages.
+Premierement, ils peuvent retrouver des sujets lies meme lorsque la structure
+de liens est peu dense. Deuxiemement, ils produisent souvent des voisinages
+facilement interpretables par un humain, car les elements recuperes sont relies
+par le sens textuel et non seulement par leur position dans le graphe. Leur
+limite principale est qu'ils peuvent devenir tres dependants de la popularite
+ou trop larges semantiquement lorsqu'ils sont utilises seuls, surtout sur de
+grandes collections d'articles.
+
+\section{Plongements structurels}
+
+Les embeddings structurels cherchent a capter la position dans le graphe, le
+contexte de voisinage local et la structure communautaire directement a partir
+des aretes. Node2Vec est l'un des exemples les plus influents de cette
+famille~\cite{grover2016node2vec}. En combinant des marches aleatoires avec un
+apprentissage de type skip-gram, il apprend des representations vectorielles
+dans lesquelles des noeuds ayant des contextes structurels semblables deviennent
+proches dans l'espace des embeddings.
+
+Pour la recommandation, les embeddings structurels sont attractifs parce qu'ils
+capturent des signaux que le texte peut manquer. Deux articles peuvent etre peu
+semblables dans leur formulation tout en occupant des positions presque
+identiques dans le graphe. Les methodes structurelles obtiennent ainsi souvent
+de tres bons resultats sur la recuperation de liens caches. Leur limite est
+qu'elles peuvent sur-accentuer les hubs, les effets de degre et certains
+artefacts propres au graphe si le protocole d'evaluation n'est pas
+suffisamment controle.
+
+\section{Reseaux de neurones sur graphes}
+
+Les reseaux de neurones sur graphes generalisent l'apprentissage de
+representations structurelles en propageant l'information a travers les aretes.
+GCN~\cite{kipf2017semi} est l'une des architectures les plus utilisees et reste
+une baseline transductive solide. GraphSAGE~\cite{hamilton2017inductive}
+etend cette idee par agregation de voisinage et est souvent utilise lorsque le
+comportement inductif importe. GAT introduit un mecanisme d'attention sur les
+voisinages du graphe~\cite{velickovic2018graph}, ce qui en fait un modele
+prometteur lorsque l'importance des aretes est susceptible de varier fortement
+selon les voisins.
+
+La litterature sur la recommandation comprend egalement des systemes hybrides
+qui combinent modeles textuels et modeles de graphe. Les etudes de synthese sur
+la recommandation multimodale~\cite{zhou2023multimodal} soulignent que les
+canaux d'information se comportent rarement de maniere identique et que la
+conception de la fusion importe beaucoup. De petits choix de ponderation, de
+normalisation ou d'alignement des ensembles candidats peuvent modifier
+significativement le classement final. Ce point est particulierement important
+dans ce projet, ou la concatenation naive, la concatenation corrigee, les
+hybrides avec pooling et la fusion par rang ne conduisent pas aux memes
+conclusions.
+
+\section{Les LLM comme couches de presentation}
+
+Les grands modeles de langue sont de plus en plus utilises dans les pipelines
+de recommandation, mais leur role peut varier fortement. Dans certains
+systemes, ils generent des explications; dans d'autres, ils raffinent le
+classement; ailleurs encore, ils reorganisent des elements deja recuperes dans
+des structures plus lisibles pour l'humain. Le projet actuel n'emploie les LLM
+que dans ce dernier sens. Le LLM ne recupere pas de nouveaux articles, ne
+produit pas de contenu factuel et ne definit pas le benchmark. Il reorganise
+au contraire une liste fixe de titres deja recuperes dans une presentation de
+type parcours d'apprentissage.
+
+Cette conception est importante pour la fiabilite. Elle contraint le LLM a
+travailler sur un ensemble ferme de candidats et rend plus simple la validation
+ou le rejet de sa sortie. Dans le cadre du projet, cette couche a evolue
+d'experiences initiales avec de petits modeles locaux vers un schema de sortie
+structuree plus controle, accompagne d'une validation cote application.
+
+\section{Positionnement du present travail}
+
+Ce projet se situe a l'intersection de l'exploration de graphes, de la
+recuperation semantique et de l'ingenierie de prototypes de recommandation. Par
+rapport aux travaux existants, ses traits distinctifs sont les suivants:
+\begin{itemize}
+    \item l'utilisation d'un graphe Wikipedia d'informatique enrichi avec le
+    texte reel des articles plutot qu'avec de simples identifiants de noeuds;
+    \item la comparaison de baselines semantiques, structurelles, hybrides et
+    fondees sur des GNN dans un meme cadre experimental;
+    \item un accent explicite mis sur la difference entre la recuperation de
+    liens et la qualite de recommandation au sommet de la liste classee;
+    \item la separation entre la couche de recuperation et la couche optionnelle
+    d'organisation par LLM.
+\end{itemize}
+
+La contribution finale mise en oeuvre n'est donc pas un modele unique et
+entierement nouveau, mais un pipeline experimental soigneusement documente qui
+montre comment la conception methodologique, la strategie de fusion et le point
+de vue adopte pour l'evaluation peuvent changer l'interpretation des resultats
+de recommandation sur Wikipedia.
