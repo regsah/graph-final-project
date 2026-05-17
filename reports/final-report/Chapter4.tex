@@ -1,6 +1,16 @@
 \chapter{METHODOLOGIES ET MODELES}
 \thispagestyle{empty}
 
+\nomenclature{LLM}{Large Language Model}
+\nomenclature{GNN}{Graph Neural Network}
+\nomenclature{GCN}{Graph Convolutional Network}
+\nomenclature{MRR}{Mean Reciprocal Rank}
+\nomenclature{NDCG}{Normalized Discounted Cumulative Gain}
+\nomenclature{MAP}{Mean Average Precision}
+\nomenclature{ROC-AUC}{Area Under the Receiver Operating Characteristic Curve}
+\nomenclature{PR-AUC}{Area Under the Precision-Recall Curve}
+\nomenclature{ILD}{Intra-List Diversity}
+
 \section{Pipeline general}
 
 Le projet suit une logique en trois couches. D'abord, le graphe Wiki-CS est
@@ -100,6 +110,32 @@ revelee tres sensible. La concatenation brute, la concatenation corrigee, les
 hybrides avec pooling et la fusion au niveau du rang ne se comportent pas de la
 meme maniere a l'evaluation.
 
+\subsection{Famille phare retenue}
+
+La famille de modeles finalement retenue comme direction principale est la
+famille hybride corrigee, en particulier \textit{BGE pooled + Node2Vec
+(corrected)} et \textit{BGE-M3 + Node2Vec (corrected)}. Son principe est de
+combiner un signal semantique issu du contenu textuel et un signal structurel
+issu du graphe. Pour un article source donne, le texte de l'article est encode
+par BGE-M3, tandis que la position dans le graphe est representee par un
+embedding Node2Vec corrige par une penalite de degre.
+
+Dans la variante \textit{pooled}, l'embedding BGE-M3 de dimension 1024 est
+aggrege par blocs afin d'obtenir une representation de dimension 128 avant
+concatenation avec le vecteur structurel. Ce choix vise a mieux equilibrer la
+contribution des deux canaux. Dans la variante non pooled, le vecteur BGE-M3
+complet est conserve. Dans les deux cas, la concatenation produit une
+representation hybride unique, ensuite normalisee avant le calcul des
+similarites cosinus avec les articles candidats.
+
+Cette famille est privilegiee parce qu'elle offre le meilleur compromis entre
+precision en tete de liste et qualite globale de recommandation. La variante
+\textit{BGE pooled + Node2Vec (corrected)} se distingue notamment sur Hit@10,
+tandis que \textit{BGE-M3 + Node2Vec (corrected)} reste tres competitive sur
+MRR, Recall et MAP. Le choix final ne repose donc pas sur une architecture
+entierement nouvelle, mais sur une combinaison controlee de signaux
+complementaires, dont le comportement est confirme par l'evaluation revisee.
+
 \section{Interface applicative}
 
 Le prototype local n'est plus seulement une maquette. Il expose une recherche
@@ -129,7 +165,12 @@ d'articles a partir des artefacts mis en cache du projet.
 
 L'interface remplit deux roles. D'une part, elle sert d'outil d'inspection
 qualitative pour la famille de modeles. D'autre part, elle rend le systeme de
-recommandation concret au-dela des seuls tableaux de notebooks.
+recommandation concret au-dela des seuls tableaux de notebooks. La
+Figure~\ref{fig:final-ui-ranked} montre la vue classee principale,
+la Figure~\ref{fig:final-ui-model-selection} illustre l'exposition simultanee
+de plusieurs modeles dans l'interface, et la Figure~\ref{fig:final-ui-path}
+montre la transformation facultative de ce classement en parcours
+d'apprentissage.
 
 \section{Evolution de la couche LLM}
 

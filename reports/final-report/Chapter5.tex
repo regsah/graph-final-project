@@ -32,7 +32,8 @@ une echelle experimentale locale.
 Avant de comparer les modeles de recommandation, la structure du graphe nettoye
 a ete analysee en detail. Le graphe presente une distribution de degre a queue
 lourde, ce qui confirme qu'un petit nombre d'articles hubs tres connectes
-coexistent avec de nombreux noeuds de faible degre.
+coexistent avec de nombreux noeuds de faible degre, comme on l'observe sur la
+Figure~\ref{fig:final-degree-loglog}.
 
 \begin{figure}[H]
 \centering
@@ -45,7 +46,7 @@ Le comportement ajuste par loi de puissance a motive les experiences de
 correction sensibles au degre, ensuite utilisees dans les modeles structurels
 et hybrides. Le graphe est egalement assortatif sur le plan semantique: les
 paires d'articles liees sont plus semblables que des paires aleatoires dans
-l'espace des embeddings.
+l'espace des embeddings, comme le montre la Figure~\ref{fig:final-cosine-assort}.
 
 \begin{figure}[H]
 \centering
@@ -57,7 +58,10 @@ l'espace des embeddings.
 Enfin, l'analyse de centralite et de communautes montre que le graphe n'est ni
 plat ni uniformement melange. Cela importe pour la recommandation, car les
 effets de popularite, la domination des hubs et les communautes locales
-influencent tous les articles qu'un modele a tendance a faire remonter.
+influencent tous les articles qu'un modele a tendance a faire remonter. La
+Figure~\ref{fig:final-centrality} resume la dispersion des mesures de
+centralite, tandis que la Figure~\ref{fig:final-louvain} montre la
+distribution des tailles de communautes obtenues par Louvain.
 
 \begin{figure}[H]
 \centering
@@ -83,12 +87,12 @@ aretes mises de cote. Cette premiere evaluation rapportait:
     \item MRR = 0.0548.
 \end{itemize}
 
-L'étape majeure suivante a consisté en la comparaison de huit modèles, résumée dans les comparaisons initiales. 
-Dans ce premier dispositif d'evaluation, Node2Vec non corrige
-semblait dominer la famille de modeles.
-Le Tableau~\ref{tab:final-report6-topline} reproduit les resultats les plus
-importants des comparaisons initiales, car ils fournissent le recit de reference qui a du etre
-reexamine par la suite.
+L'etape majeure suivante a consiste en la comparaison de huit modeles,
+resumee dans les comparaisons initiales. Dans ce premier dispositif
+d'evaluation, Node2Vec non corrige semblait dominer la famille de modeles. Le
+Tableau~\ref{tab:final-report6-topline} reproduit les resultats les plus
+importants de ces comparaisons initiales, car ils fournissent le recit de
+reference qui a du etre reexamine par la suite.
 
 \begin{table}[H]
 \centering

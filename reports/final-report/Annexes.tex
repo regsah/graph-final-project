@@ -87,3 +87,25 @@ Effet de la correction (hybride poolé) & 10.70 & 14.95 & 10.70 & 19.04 & -1.51 
 \end{tabular}
 }
 \end{table}
+
+\section{Contraintes de l'organisateur LLM}
+
+L'organisateur LLM n'est pas autorise a produire librement un nouveau contenu
+de recommandation. Dans l'application finale, il doit respecter un contrat de
+sortie strict, qui peut etre resume ainsi:
+\begin{itemize}
+    \item utiliser uniquement les 20 titres deja fournis par le moteur de
+    recommandation;
+    \item affecter chaque titre a une seule section parmi
+    \textit{Foundations}, \textit{Core Concepts}, \textit{Advanced Topics} et
+    \textit{Adjacent Topics};
+    \item conserver chaque rang exactement une fois et ne jamais dupliquer un
+    article;
+    \item fournir pour chaque affectation une justification courte compatible
+    avec la section choisie.
+\end{itemize}
+
+Si ce contrat n'est pas respecte, la sortie est rejetee et l'application
+emploie le repli heuristique decrit dans le corps du rapport. Ce choix permet
+de conserver un comportement reproductible et une presentation exploitable sans
+faire du LLM le coeur de la recommandation.
