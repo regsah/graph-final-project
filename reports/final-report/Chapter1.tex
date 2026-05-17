@@ -1,18 +1,111 @@
 \chapter{INTRODUCTION}
-\thispagestyle{empty} % pour effacer le numero de page
+\thispagestyle{empty}
 
-Galatasaray Üniversitesi Mühendislik ve Teknoloji Fakültesi Bilgisayar Mühendisliği Bölümü’nde bitirme projeleri, bu kılavuzda belirtilen içerik ve biçimsel özellikler dikkate alınarak hazırlanmalıdır. 
+\section{Portee du projet}
 
-Bitirme projeleri, beyaz karton kapak ciltli olarak (spiral cilt kabul edilmez), dönemin son günü mesai saati bitimine kadar Fakülte Öğrenci İşlerine teslim edilmelidir.
+Ce projet etudie la recommandation d'article a article sur un graphe Wikipedia
+personnalise consacre a l'informatique. L'objectif n'est pas une recommandation
+personnalisee fondee sur le comportement d'utilisateurs, mais une recuperation
+guidee par requete a partir d'un article source connu: etant donne un article
+Wikipedia du domaine de l'informatique, le systeme doit proposer une liste
+classee d'articles lies qui soient a la fois semantiquement pertinents et bien
+connectes structurellement dans le graphe.
 
-Genel olarak bir projede yer alması gereken başlıklar aşağıda sunulmuştur, belirlenen proje konusunun içeriğine göre bu başlıklar değişebilir:
+Le travail s'appuie sur le benchmark Wiki-CS~\cite{mernyei2020wikics}, mais
+l'etend de maniere importante. Au lieu de traiter les noeuds comme de simples
+objets de graphe, le projet les rehydrate avec le texte reel des articles
+Wikipedia, calcule des embeddings semantiques a partir de ce texte, apprend des
+representations structurelles a partir des hyperliens et evalue la maniere dont
+ces signaux peuvent etre combines pour la recommandation. Le projet comprend
+egalement un prototype web local qui expose les modeles de recuperation via une
+interface de recherche et de previsualisation.
 
-$-$ Introduction \\
-$-$ Revue de Littérature \\
-$-$ Définition de Problème \\
-$-$ Méthodologies et Modèles \\
-$-$ Application Numériques \\
-$-$ Analyse des Résultats Obtenue et Discussions \\
-$-$ Conclusions et Perspectives
+\section{Motivation}
 
-Projenin Introduction (Giriş) bölümü en az 2-3 sayfa olmalıdır. Türkçe özet bölümünde ifade edilen, bitirme projesinin amacı, özgün değeri, kullanılan yöntem(ler)in ana hatları, çalışmanın tasarım ve uygulaması ile elde edilen çıktıların bilimsel, teknolojik, etik ve sosyoekonomik ne tür katkılarda bulunabileceği hususları ayrı paragraflar halinde net cümlelerle verilmelidir. En son paragrafta ise çalışma planı detaylı olarak verilmelidir.
+Wikipedia contient une tres grande quantite de connaissances ouvertes, mais sa
+navigation reste souvent peu efficace pour l'apprentissage. Les moteurs de
+recherche peuvent trouver une page correspondant a un mot-cle, sans pour autant
+orienter l'utilisateur vers des prerequis proches, des explications
+alternatives ou des sujets relies structurellement. Dans un graphe tel que
+Wikipedia, les hyperliens encodent deja une grande quantite d'information
+editoriale et conceptuelle. En meme temps, le texte des articles porte une
+similarite semantique qui n'apparait pas toujours a travers la seule structure
+des liens.
+
+Le projet etudie donc si la combinaison de la structure du graphe et de la
+representation semantique du texte peut produire de meilleures recommandations
+d'articles que chacune de ces sources d'information prise isolement. La
+motivation pedagogique plus large est de passer d'une recuperation isolee
+d'articles a une exploration coherente d'un domaine de connaissances.
+
+\section{De l'idee initiale a la direction finale}
+
+L'orientation initiale du projet etait plus large que le systeme finalement
+mis en oeuvre. Elle comprenait l'idee d'un generateur complet de parcours
+d'apprentissage combinant reseaux de neurones sur graphes, recuperation
+semantique et construction hierarchique fondee sur un LLM. Au cours du
+developpement, le centre de gravite pratique s'est deplace. Le travail realise
+s'est revele le plus solide dans trois directions:
+\begin{itemize}
+    \item la construction d'un jeu de donnees de graphe enrichi et reutilisable;
+    \item la comparaison empirique de modeles de recommandation et de prediction
+    de liens;
+    \item le developpement d'une interface prototype locale pour la recuperation
+    d'articles.
+\end{itemize}
+
+En consequence, le rapport final presente avant tout le projet comme une etude
+empirique de recommandation sur graphe, accompagnee d'une couche optionnelle
+d'organisation en parcours d'apprentissage, plutot que comme une plateforme
+utilisateur completement aboutie.
+
+\section{Contributions principales}
+
+Le projet apporte les contributions concretes suivantes:
+\begin{itemize}
+    \item la creation de l'espace experimental Custom-WikiCS, qui etend Wiki-CS
+    avec le texte des articles, des caches d'embeddings et des artefacts
+    d'evaluation;
+    \item l'analyse du graphe nettoye d'articles d'informatique, incluant le
+    comportement des degres, l'assortativite, la centralite et la structure
+    communautaire;
+    \item la construction et l'evaluation de modeles de recommandation
+    semantiques, structurels, hybrides et fondes sur des GNN;
+    \item la creation d'un protocole en utilisant LLMs pour organiser les recommandations en parcours d'apprentissage.
+    \item l'implementation d'une application web locale pour la recherche par
+    titre, la selection de modele, les recommandations classees, la
+    previsualisation d'article et l'organisation optionnelle en parcours
+    d'apprentissage.
+\end{itemize}
+
+\section{Portee finale implementee}
+
+Dans sa forme finale, l'etude s'appuie sur un graphe nettoye comprenant 11,367
+noeuds actifs et 291,039 aretes orientees. Les principales familles de modeles
+sont:
+\begin{itemize}
+    \item les embeddings semantiques BGE-M3~\cite{chen2025bgem3};
+    \item les embeddings structurels de type Node2Vec~\cite{grover2016node2vec};
+    \item les baselines structurelles GCN et GraphSAGE~\cite{kipf2017semi,hamilton2017inductive};
+    \item les variantes hybrides de recuperation semantico-structurelle et de
+    fusion de rang.
+\end{itemize}
+
+Les Graph Attention Networks (GAT)~\cite{velickovic2018graph} restent
+conceptuellement pertinents, mais ne constituent pas la contribution mise en
+oeuvre principale de cette etude. Les resultats les plus solides et les plus
+stables proviennent du cadre revise.
+
+\section{Organisation du rapport}
+
+La suite du rapport est organisee comme suit. Le Chapitre 2 presente la
+litterature principale relative a la recuperation semantique, a
+l'apprentissage de representations sur graphe et a la recommandation sur
+Wikipedia. Le Chapitre 3 definit le probleme de recommandation et les
+contraintes du projet. Le Chapitre 4 presente la methodologie, l'architecture
+du systeme, les familles de modeles et la conception actuelle de l'application.
+Le Chapitre 5 resume le dispositif experimental et les principaux resultats
+quantitatifs. Le Chapitre 6 discute l'interpretation de ces resultats, y
+compris le passage du premier dispositif d'evaluation vers le protocole corrige
+et l'evolution de l'organisateur fonde sur LLM. Le Chapitre 7 conclut le
+rapport et ouvre sur les perspectives futures.
