@@ -24,9 +24,13 @@ d'article a article et non la classification de noeuds.
 \section{Plongements textuels semantiques}
 
 Les methodes de plongement textuel fournissent une seconde famille de signaux.
-Les modeles de langue fondes sur les Transformers, tels que
-BERT~\cite{devlin2019bert}, ont rendu pratique l'encodage de phrases et de
+Les modeles de langue fondes sur les Transformers~\cite{vaswani2017attention},
+tels que BERT~\cite{devlin2019bert}, ont rendu pratique l'encodage de phrases et de
 documents sous forme de vecteurs denses preservant les relations semantiques.
+Dans la litterature de recherche par similarite, des travaux tels que
+Sentence-BERT~\cite{reimers2019sentencebert} ont egalement joue un role
+important en montrant comment des architectures de type BERT peuvent etre
+adaptees a la comparaison efficace de segments textuels dans un espace dense.
 Des modeles plus recents, orientes vers la recuperation, ameliorent encore
 cette capacite pour la recherche par similarite. BGE-M3, en particulier, est
 concu comme un retriever dense multilingue et couvre plusieurs usages
@@ -75,14 +79,15 @@ selon les voisins.
 
 La litterature sur la recommandation comprend egalement des systemes hybrides
 qui combinent modeles textuels et modeles de graphe. Les etudes de synthese sur
-la recommandation multimodale~\cite{zhou2023multimodal} soulignent que les
-canaux d'information se comportent rarement de maniere identique et que la
-conception de la fusion importe beaucoup. De petits choix de ponderation, de
-normalisation ou d'alignement des ensembles candidats peuvent modifier
-significativement le classement final. Ce point est particulierement important
-dans ce projet, ou la concatenation naive, la concatenation corrigee, les
-hybrides avec pooling et la fusion par rang ne conduisent pas aux memes
-conclusions.
+la recommandation multimodale~\cite{zhou2023multimodal} et des exemples
+recents de systemes hybrides fondes sur BERT et GNN~\cite{anime_hybrid_gnn_bert}
+montrent que les canaux d'information se comportent rarement de maniere
+identique et que la conception de la fusion importe beaucoup. De petits choix
+de ponderation, de normalisation ou d'alignement des ensembles candidats
+peuvent modifier significativement le classement final. Ce point est
+particulierement important dans ce projet, ou la concatenation naive, la
+concatenation corrigee, les hybrides avec pooling et la fusion par rang ne
+conduisent pas aux memes conclusions.
 
 \section{Les LLM comme couches de presentation}
 
@@ -90,17 +95,24 @@ Les grands modeles de langue sont de plus en plus utilises dans les pipelines
 de recommandation, mais leur role peut varier fortement. Dans certains
 systemes, ils generent des explications; dans d'autres, ils raffinent le
 classement; ailleurs encore, ils reorganisent des elements deja recuperes dans
-des structures plus lisibles pour l'humain. Le projet actuel n'emploie les LLM
-que dans ce dernier sens. Le LLM ne recupere pas de nouveaux articles, ne
-produit pas de contenu factuel et ne definit pas le benchmark. Il reorganise
-au contraire une liste fixe de titres deja recuperes dans une presentation de
-type parcours d'apprentissage.
+des structures plus lisibles pour l'humain. Une partie recente de la
+litterature etudie les LLM comme recommandeurs ou rerankers a part entiere,
+par exemple en classement zero-shot~\cite{hou2023zeroshotrankers}, en
+instruction tuning pour le top-k~\cite{luo2023recranker} ou dans des cadres
+d'analyse plus larges sur l'usage des LLM en recommandation~\cite{xu2024tapping}.
+Le projet actuel n'emploie toutefois les LLM que dans un role plus etroit. Le
+LLM ne recupere pas de nouveaux articles, ne produit pas de contenu factuel et
+ne definit pas le benchmark. Il reorganise au contraire une liste fixe de
+titres deja recuperes dans une presentation de type parcours d'apprentissage.
 
 Cette conception est importante pour la fiabilite. Elle contraint le LLM a
 travailler sur un ensemble ferme de candidats et rend plus simple la validation
 ou le rejet de sa sortie. Dans le cadre du projet, cette couche a evolue
 d'experiences initiales avec de petits modeles locaux vers un schema de sortie
-structuree plus controle, accompagne d'une validation cote application.
+structuree plus controle, accompagne d'une validation cote application. Ce
+positionnement se rapproche davantage de la litterature recente sur la
+generation structuree et la conformite a des schemas que d'un usage du LLM
+comme moteur principal de recommandation~\cite{geng2025structured}.
 
 \section{Positionnement du present travail}
 
