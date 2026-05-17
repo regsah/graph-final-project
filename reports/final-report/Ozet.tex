@@ -1,7 +1,7 @@
 \chapter{Özet}
 
 Bu proje, bilgisayar bilimi alanındaki Wikipedia makaleleri arasında makaleden
-makaleye öneri üreten \italic{graph} tabanlı bir sistemi incelemektedir. Çalışmanın
+makaleye öneri üreten graf tabanlı bir sistemi incelemektedir. Çalışmanın
 temel konusu, belirli bir kaynak makaleden hareketle hangi başka makalelerin
 anlamlı biçimde önerilmesi gerektiğini araştırmaktır. Bu amaçla çalışma,
 kullanıcı profiline ya da geçmiş etkileşim verisine dayanan klasik öneri
@@ -21,7 +21,7 @@ da yalnızca metin benzerliğine dayalı yaklaşımlar, bu yapısal ilişkileri 
 zaman yeterince yakalayamaz. Wikipedia'nın hiperbağlantı yapısı ise editoryal
 ve kavramsal ilişkiler hakkında ek bir sinyal taşır. Bu nedenle proje, şu temel
 araştırma sorusuna odaklanmaktadır: yalnızca makale metninden gelen anlamsal
-bilgi ile yalnızca \italic{graph} yapısından gelen yapısal bilgi birlikte
+bilgi ile yalnızca graf yapısından gelen yapısal bilgi birlikte
 kullanıldığında, tek başlarına kullanıldıkları duruma göre daha güçlü ve daha
 dengeli makale önerileri üretilebilir mi? Bu ana soru, çalışma boyunca hem
 öneri doğruluğu hem de öneri kalitesi açısından değerlendirilmiştir.
@@ -38,10 +38,10 @@ takibi yapmamakta ve davranış verisi toplamamaktadır.
 
 Çalışmanın deneysel omurgasını, Wiki-CS yapısının gerçek Wikipedia makale
 metinleriyle zenginleştirilmiş sürümü olan Custom-WikiCS veri kümesi
-oluşturmaktadır. Projede ilk adım, bu \italic{graph} yapısını yeniden kullanırken
+oluşturmaktadır. Projede ilk adım, bu graf yapısını yeniden kullanırken
 düğümleri yalnızca soyut kimlikler olarak bırakmamak, her düğümü gerçek başlık,
 makale metni ve bağlantı bağlamıyla eşleştirmek olmuştur. Bu zenginleştirme
-sonrasında izole düğümler kaldırılmış; elde edilen temizlenmiş \italic{graph} 11,367
+sonrasında izole düğümler kaldırılmış; elde edilen temizlenmiş graf 11,367
 etkin düğüm ve 291,039 yönlü kenardan oluşmuştur. Aynı yapının yönsüz
 karşılığı 216,123 kenar içermektedir. Bu veri alanı, hem metinsel hem de
 yapısal temsil üretmek için yeterli yoğunlukta, ama yerel donanım üzerinde
@@ -51,7 +51,7 @@ aynı veri alanı üzerinde farklı model ailelerini karşılaştırmaya imkân
 tanımıştır.
 
 Veri kümesinin yalnızca büyüklüğü değil, yapısal özellikleri de proje
-açısından önemlidir. \italic{Graph} analizleri, derece dağılımının ağır kuyruklu
+açısından önemlidir. Graf analizleri, derece dağılımının ağır kuyruklu
 olduğunu, bağlı makale çiftlerinin rastgele çiftlere göre daha yüksek anlamsal
 benzerlik gösterdiğini ve Louvain ile Infomap gibi yöntemlerle anlamlı yerel
 topluluklar elde edilebildiğini ortaya koymuştur. Bu bulgular, veri alanının
@@ -61,13 +61,13 @@ sinyalinin kullanılabilirliğini göstermektedir.
 Yöntem tarafında çalışma üç ana temsil ailesine dayanmaktadır. Birincisi,
 metinsel anlamı yakalamaya çalışan semantik temsillerdir. Bu amaçla makale
 metinleri BGE-M3 kullanılarak yoğun vektör temsillere dönüştürülmüştür.
-Semantik yaklaşımın güçlü yanı, \italic{graph} yapısında doğrudan komşu olmayan ama
+Semantik yaklaşımın güçlü yanı, graf yapısında doğrudan komşu olmayan ama
 içerik bakımından yakın olan makaleleri de bulabilmesidir. Zayıf yanı ise tek
 başına kullanıldığında daha genel, daha popüler veya fazla geniş komşuluklar
 önerebilmesidir. Buna rağmen metinsel gömüler, proje boyunca özellikle hibrit
 yaklaşımın temel ayaklarından biri olmuştur.
 
-İkinci temsil ailesi, \italic{graph} yapısından öğrenilen yapısal gömülerdir. Bu
+İkinci temsil ailesi, graf yapısından öğrenilen yapısal gömülerdir. Bu
 tarafta temel yöntem Node2Vec olmuştur. Node2Vec, rastgele yürüyüşler ve
 skip-gram benzeri bir öğrenme mantığı ile düğümlerin yerel ve orta ölçekli
 komşuluk düzenini temsil eden vektörler üretir. Projenin erken aşamalarında
@@ -82,10 +82,10 @@ etkiyi göstermemiş olmasıdır. Başka bir deyişle, derece düzeltmesi kendi 
 iyi ya da kötü değildir; hangi temsil birleşimi içinde kullanıldığına bağlı
 olarak farklı sonuçlar doğurur.
 
-Üçüncü temsil ailesi ise \italic{graph} sinir ağı tabanlı yapısal modellerdir.
+Üçüncü temsil ailesi ise graf sinir ağı tabanlı yapısal modellerdir.
 Projede bu amaçla GCN ve GraphSAGE temel karşılaştırma modelleri olarak
 kullanılmıştır. Bu modellerin seçilmesinin nedeni, literatürde güçlü temel
-yaklaşımlar olarak kabul edilmeleri ve \italic{graph} komşuluğu üzerinden doğrudan
+yaklaşımlar olarak kabul edilmeleri ve graf komşuluğu üzerinden doğrudan
 temsil öğrenmeleridir. Projenin ilk fikir aşamasında daha iddialı yönelimler
 de düşünülmüş olsa da, uygulamada en istikrarlı ve karşılaştırılabilir sonuçlar
 bu iki temel model ile elde edilmiştir.
@@ -98,7 +98,7 @@ metin modelini sıra düzeyinde birleştiren füzyon yaklaşımı birlikte
 incelenmiştir. Bu çeşitlilik bilinçli bir tasarım tercihidir. Çünkü çalışma,
 tek bir model ilan etmekten çok, hangi birleşim mantığının ne tür avantaj
 ürettiğini anlamayı amaçlamaktadır. Özellikle hibrit modellerin amacı, metnin
-anlamsal açıklayıcılığı ile \italic{graph} yapısının topolojik gücünü aynı öneri
+anlamsal açıklayıcılığı ile graf yapısının topolojik gücünü aynı öneri
 uzayında bir araya getirmektir. Daha sonra elde edilen sonuçlar da bu
 birleşimin çoğu durumda tek kanallı yaklaşımlardan daha dengeli olduğunu
 göstermiştir.
@@ -159,9 +159,9 @@ değil, kullanıcının üst sıralarda göreceği kısa öneri listesinin yarar
 anlamlı olmasıdır.
 
 Çalışmanın yenilik ve özgünlük boyutu birkaç noktada toplanmaktadır.
-Birincisi, Wiki-CS gibi yerleşik bir \italic{graph} yapısını gerçek Wikipedia metinleri
+Birincisi, Wiki-CS gibi yerleşik bir graf yapısını gerçek Wikipedia metinleri
 ile birleştirerek onu makaleden makaleye öneri problemi için daha zengin bir
-deney alanına dönüştürmesidir. İkincisi, semantik, yapısal, hibrit ve \italic{graph}
+deney alanına dönüştürmesidir. İkincisi, semantik, yapısal, hibrit ve graf
 sinir ağı tabanlı yöntemleri aynı deneysel çerçeve içinde karşılaştırmasıdır.
 Üçüncüsü, sonuçları yalnızca doğruluk üzerinden değil, çeşitlilik ve
 popülerlik yanlılığı gibi öneri kalitesi boyutları üzerinden de yorumlamasıdır.
@@ -191,9 +191,9 @@ Wikipedia ölçeğinde deneyleri sınırlamıştır. Bu nedenle projede önbelle
 önceden hesaplanmış gömüler ve tekrar kullanılabilir değerlendirme artifaktları
 benimsenmiştir.
 
-Genel sonuç olarak bu çalışma, Wikipedia makaleleri için \italic{graph} destekli
+Genel sonuç olarak bu çalışma, Wikipedia makaleleri için graf destekli
 öneri üretiminin hem teorik hem de pratik açıdan güçlü bir araştırma alanı
-olduğunu göstermektedir. \italic{Graph} yapısı tek başına çok kuvvetli sinyal
+olduğunu göstermektedir. Graf yapısı tek başına çok kuvvetli sinyal
 taşıyabilmekte, metinsel semantik tek başına anlamlı yakınlıklar
 üretebilmekte; fakat en dengeli sonuçlar çoğu durumda bu iki kanalın dikkatli
 bir biçimde birleştirilmesiyle ortaya çıkmaktadır. Aynı zamanda çalışma,
