@@ -1,7 +1,118 @@
 \chapter{DEFINITION DU PROBLEME}
 \thispagestyle{empty}
 
-Bu bir şablondur, başlıklar duruma göre değişebilir.
+\section{Definition du probleme}
 
+Le projet traite le probleme suivant: etant donne un article source de
+Wikipedia dans le domaine de l'informatique, retrouver une liste classee
+d'articles lies issus du meme domaine. La sortie doit etre utile comme
+recommandation et non seulement comme prediction generique de liens. En
+pratique, cela signifie que le systeme doit retrouver des articles proches sur
+le plan semantique, relies structurellement et pertinents a faire apparaitre en
+tete d'une liste courte de recommandations.
 
-\lipsum[1-5]
+Le pipeline de recommandation est donc une approche d'article a article, fondee
+sur une requete. Il ne repose ni sur un historique d'utilisateurs, ni sur du
+filtrage collaboratif, ni sur des profils personnalises. L'article source joue
+le role d'ancre de requete et l'espace candidat correspond a la collection
+Custom-WikiCS.
+
+\section{Entrees, sorties et limites}
+
+Les entrees du systeme sont les suivantes:
+\begin{itemize}
+    \item un graphe derive de Wiki-CS;
+    \item le texte rehydrate des articles Wikipedia;
+    \item des embeddings semantiques et structurels precalcules;
+    \item un titre d'article selectionne comme source de requete.
+\end{itemize}
+
+La sortie principale est une liste top-$k$ classee, typiquement un top-20 dans
+l'application web locale et un top-$K$ dans plusieurs metriques d'evaluation
+hors ligne. Une sortie secondaire optionnelle consiste en une presentation
+structuree de type parcours d'apprentissage, qui reordonne les titres deja
+recuperes dans des categories telles que fondements, concepts centraux, sujets
+avances et sujets adjacents.
+
+Les limites du projet sont egalement claires:
+\begin{itemize}
+    \item il est restreint aux articles d'informatique de Wikipedia en anglais;
+    \item il ne constitue pas un service web de production;
+    \item il ne s'agit pas d'un systeme de recommandation personnalise;
+    \item la couche LLM n'intervient qu'en post-traitement et n'est pas
+    consideree comme le moteur central de recuperation.
+\end{itemize}
+
+\section{Contraintes realistes}
+
+\subsection{Calcul et economie}
+
+Toutes les experiences ont ete menees dans un cadre academique local plutot que
+sur une infrastructure cloud. Cette contrainte a fortement influence la
+conception:
+\begin{itemize}
+    \item l'entrainement et l'evaluation ont ete realises sur un ordinateur
+    portable grand public equipe d'un RTX 4070 Laptop GPU et de 8GB de VRAM;
+    \item les artefacts d'embeddings ont ete mis en cache afin d'eviter des
+    calculs couteux repetes;
+    \item l'organisation du travail privilegie les notebooks et
+    l'experimentation locale plutot qu'un entrainement distribue.
+\end{itemize}
+
+Cette conception orientee local a rendu le projet economique et reproductible,
+mais elle a egalement limite l'echelle et la complexite des experiences.
+
+\subsection{Passage a l'echelle}
+
+Le graphe experimental nettoye contient 11,367 noeuds actifs et 291,039 aretes
+orientees. Cette taille est suffisante pour faire apparaitre une structure de
+graphe significative tout en restant gerable sur du materiel local. Un
+entrainement a l'echelle complete de Wikipedia exigerait d'autres choix
+d'ingenierie, tels que l'echantillonnage sur graphe, une infrastructure plus
+importante ou un traitement distribue. Le projet privilegie donc la correction,
+la clarte et la reproductibilite locale plutot qu'un deploiement a l'echelle
+du web.
+
+\subsection{Ethique, confidentialite et securite}
+
+Le projet ne traite aucune donnee personnelle d'utilisateur. La recommandation
+est fondee sur la requete, sans suivi comportemental ni profilage. Cela rend le
+systeme plus facile a auditer et reduit le risque pour la vie privee. La
+logique centrale de classement reste egalement transparente: elle repose sur
+des embeddings fixes en cache et sur des calculs explicites de similarite.
+
+La couche LLM introduit un autre type de risque: l'inconsistance de sortie.
+Pour la reduire, l'organisateur est contraint d'operer uniquement sur des
+titres deja recuperes et sa sortie est validee avant presentation. Si la
+reponse structuree est inutilisable, le systeme revient a un parcours
+heuristique deterministe.
+
+\subsection{Validite scientifique}
+
+L'une des contraintes les plus importantes de ce projet concerne la validite
+methodologique. Comme les modeles structurels peuvent exploiter l'information du
+graphe de facon subtile, la definition des decoupages apprentissage/test est
+determinante. Les premieres experiences combinaient une retenue orientee avec
+une modelisation structurelle qui consommait en pratique un graphe non oriente.
+Cette incoherence a motive un protocole d'evaluation revise, devenu central
+dans le rapport final.
+
+\section{Criteres de succes}
+
+Le projet s'appuie sur plusieurs niveaux de criteres de succes:
+\begin{itemize}
+    \item la structure du graphe doit rester significative apres enrichissement
+    et nettoyage;
+    \item les embeddings semantiques et structurels doivent tous deux apporter
+    un signal exploitable pour la recommandation;
+    \item le protocole d'evaluation doit eviter toute incoherence
+    methodologique;
+    \item la qualite finale du classement doit etre mesuree a la fois par des
+    metriques de recuperation et par des metriques de qualite de recommandation;
+    \item le prototype web doit exposer la famille de modeles dans une
+    interface locale utilisable.
+\end{itemize}
+
+Ce cadrage multicritere est important, car le meilleur modele selon une famille
+de metriques n'est pas automatiquement le meilleur pour l'objectif reel du
+produit, a savoir une recommandation d'articles en liste courte et classee.
