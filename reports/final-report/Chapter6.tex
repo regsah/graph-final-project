@@ -1,7 +1,139 @@
 \chapter{ANALYSE DES RESULTATS OBTENUS ET DISCUSSIONS}
 \thispagestyle{empty}
 
-Bu bir şablondur, başlıklar duruma göre değişebilir.
+\section{Pourquoi la revision du protocole importe}
 
+L'enjeu interpretatif central du projet est que le protocole d'evaluation
+corrige modifie le recit issu de la premiere ligne d'evaluation. Dans le
+dispositif initial, Node2Vec non corrige semblait dominer tous les
+concurrents, avec 16.06\% de Hit@10 et 0.0751 de MRR. Apres correction
+methodologique, la famille la plus solide n'est plus la recuperation purement
+structurelle, mais la famille hybride corrigee.
 
-\lipsum[1-5]
+Ce basculement n'est pas une fluctuation mineure. Il montre que la conception
+de l'evaluation peut modifier la conclusion d'une etude de recommandation sur
+graphe. Le protocole corrige represente donc non seulement un nouveau cadre de
+mesure, mais aussi une correction d'interpretation.
+
+\section{Les signaux semantiques et structurels sont complementaires}
+
+Les tableaux complets de resultats suggerent un schema coherent:
+\begin{itemize}
+    \item la recuperation semantique seule est utile et place souvent de bons
+    candidats en tete de liste;
+    \item la recuperation structurelle seule est elle aussi tres puissante,
+    surtout pour la discrimination globale sur graphe;
+    \item le comportement de recommandation le plus fort apparait lorsque les
+    deux signaux sont combines avec soin.
+\end{itemize}
+
+C'est pourquoi la meilleure famille globale de recommandation dans le protocole
+corrige n'est ni BGE-M3 pur ni Node2Vec pur, mais les hybrides
+semantico-structurels corriges.
+
+\section{L'evaluation corrigee}
+
+\subsection{Qualite de recommandation en tete de liste}
+
+Si l'objectif est d'optimiser ce qui apparait au sommet d'une liste classee
+courte, les hybrides corriges sont les modeles les plus convaincants. Le duo
+le plus solide en pratique est:
+\begin{itemize}
+    \item \textit{BGE pooled + Node2Vec (corrected)} comme meilleur modele sur
+    Hit@10;
+    \item \textit{BGE-M3 + Node2Vec (corrected)} comme modele legerement plus
+    fort sur plusieurs metriques secondaires de classement.
+\end{itemize}
+
+Cette lecture est bien alignee avec l'objectif reel de l'application, car les
+utilisateurs n'inspectent que la partie superieure de la sortie classee.
+
+\subsection{Discrimination globale des liens}
+
+Si l'objectif devient au contraire de separer les aretes positives et
+negatives sur un grand nombre de paires scorees, le constat change. Sous
+ROC-AUC et PR-AUC, les modeles purement structurels et leurs voisins legerement
+fusionnes non corriges restent extremement forts. Node2Vec reste meme en tete
+de la couche AUC.
+
+Cela ne contredit pas l'analyse du sommet de liste. Cela signifie simplement
+que la discrimination globale des liens et la qualite de recommandation ne sont
+pas des objectifs identiques.
+
+\section{Qualite de recommandation au-dela de la precision}
+
+L'un des ajouts les plus utiles du cadre corrige est la nouvelle famille de
+metriques de qualite de recommandation. Les rapports precedents insistaient
+surtout sur la precision du classement, mais les analyses ulterieures montrent
+que des modeles proches en Hit@10 peuvent tout de meme se comporter de maniere
+tres differente:
+\begin{itemize}
+    \item GCN Only est faible du point de vue du classement, mais fort en
+    diversite et en faible biais de popularite;
+    \item BGE-M3 Only est plus fortement tire par la popularite et plus
+    concentre;
+    \item les hybrides corriges occupent le meilleur compromis entre precision
+    et qualite de recommandation.
+\end{itemize}
+
+Cette perspective elargie est essentielle pour le projet. Un systeme de
+recommandation qui renvoie sans cesse les noeuds les plus evidents ou les plus
+populaires peut paraitre satisfaisant selon certaines metriques de classement,
+mais il est moins utile comme outil d'exploration pour l'apprentissage.
+
+\section{Pooling et correction de degre}
+
+L'extension des methodes initales clarifie deux questions de conception supplementaires.
+
+\subsection{Pooling}
+
+La reduction de BGE-M3 a 128 dimensions avant concatenation a ete introduite
+pour equilibrer la contribution dimensionnelle des vecteurs semantiques et
+structurels. L'effet est reel mais limite. Le pooling aide legerement sur
+Hit@10, sans pour autant dominer toutes les autres metriques secondaires.
+L'interpretation correcte est donc que le pooling est utile, mais non
+transformant.
+
+\subsection{Correction de degre}
+
+La correction de degre se comporte de facon tres differente selon la famille de
+modeles. Dans le protocole corrige, elle n'a presque aucun effet sur Node2Vec
+pur, mais elle compte de maniere significative pour les hybrides. C'est l'une
+des lecons les plus claires de la phase tardive d'evaluation: une strategie de
+normalisation ne doit pas etre jugee isolément, car son effet depend du contexte
+de fusion dans lequel elle est utilisee.
+
+\section{Evolution de la couche de parcours d'apprentissage}
+
+La couche LLM a egalement change de facon notable apres l'etape des rapports
+intermediaires. L'idee initiale etait d'utiliser un petit modele local via
+Ollama pour une generation hierarchique de parcours entierement locale. En
+pratique, cette approche s'est revelee trop fragile pour produire des sorties
+structurees stables sur l'ensemble complet des recommandations top-20. Le
+probleme ne concernait pas seulement la qualite factuelle, mais aussi la forme
+de la sortie: JSON mal formes, affectations incompletes et classifications
+semantiquement faibles etaient frequents.
+
+La refonte ulterieure de l'application a conserve un moteur de recuperation
+local, fonde sur les artefacts du projet mis en cache, mais a remplace
+l'organisateur par un flux de travail a sortie structuree plus robuste utilisant
+Gemini. Cela n'a pas transforme le LLM en modele central de classement. Au
+contraire, l'organisateur a ete ramene a une couche de post-traitement
+contrainte, dont la sortie est verifiee par des regles strictes cote
+application. Il s'agit d'un usage plus realiste et plus defendable d'un LLM
+dans ce projet.
+
+\section{Interpretation pratique}
+
+D'un point de vue pratique, le projet conduit a une conclusion en deux volets:
+\begin{itemize}
+    \item si l'objectif est une discrimination large des aretes du graphe, les
+    methodes purement structurelles restent extremement fortes;
+    \item si l'objectif est la qualite de recommandation d'articles au sommet
+    de la liste, les modeles hybrides semantico-structurels corriges
+    constituent la meilleure direction globale.
+\end{itemize}
+
+Comme l'objectif reel du produit est la recommandation et non la seule
+recuperation abstraite de liens, c'est la seconde interpretation qui doit
+guider le choix final du systeme.
