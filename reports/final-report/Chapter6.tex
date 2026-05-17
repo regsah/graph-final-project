@@ -121,7 +121,10 @@ Gemini. Cela n'a pas transforme le LLM en modele central de classement. Au
 contraire, l'organisateur a ete ramene a une couche de post-traitement
 contrainte, dont la sortie est verifiee par des regles strictes cote
 application. Il s'agit d'un usage plus realiste et plus defendable d'un LLM
-dans ce projet.
+dans ce projet. Dans cette architecture, le repli heuristique n'est pas
+accessoire: il fait partie de la fiabilite du systeme, car il permet de
+conserver une sortie presentable et ordonnee lorsque la generation structuree
+ne respecte pas les contraintes imposees.
 
 \section{Interpretation pratique}
 

@@ -115,6 +115,13 @@ d'articles a partir des artefacts mis en cache du projet.
 
 \begin{figure}[H]
 \centering
+\includegraphics[width=\textwidth]{figures/model-selection.png}
+\caption{Panneau de selection de modele du prototype implemente. L'interface expose plusieurs familles de recommandation plutot qu'un unique recommandeur fixe.}
+\label{fig:final-ui-model-selection}
+\end{figure}
+
+\begin{figure}[H]
+\centering
 \includegraphics[width=\textwidth]{figures/path-result.png}
 \caption{Vue de type parcours d'apprentissage du prototype actuel. L'ensemble classe des resultats est reorganise en sections pour la presentation.}
 \label{fig:final-ui-path}
@@ -148,7 +155,16 @@ sortie structuree sur les titres deja recuperes. Le backend verifie que:
 Si la sortie structuree echoue a la validation, l'application revient a un
 parcours heuristique. Cette refonte est importante: le LLM est desormais traite
 comme un organisateur contraint et non comme un generateur de candidats de
-recommandation.
+recommandation. Le repli heuristique joue ici un role essentiel de robustesse:
+il garantit qu'une presentation complete et exploitable reste disponible meme
+en cas d'echec du module LLM. Plus precisement, ce repli heuristique ne tente
+pas d'inferer une nouvelle structure semantique complexe: il prend les 20
+recommandations deja produites, trie d'abord les articles par degre total pour
+identifier cinq \textit{Foundations} interpretees comme prerequis plus larges,
+puis conserve l'ordre de recommandation initial pour repartir le reste entre
+\textit{Core Concepts}, \textit{Advanced Topics} et \textit{Adjacent Topics}.
+Il s'agit donc d'un mecanisme deterministe de presentation de secours, fonde
+sur la connectivite du graphe et sur le classement deja calcule.
 
 \section{Protocole d'evaluation}
 
