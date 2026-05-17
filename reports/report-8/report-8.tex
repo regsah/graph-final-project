@@ -1,0 +1,355 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\geometry{margin=1in}
+
+\title{Custom-WikiCS Graph Analysis -- Part 8\\[4pt]
+\large Metric Expansion on the Revised Undirected Structural Branch}
+\author{Sahin Uregil}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+This report extends the revised undirected structural branch introduced in
+Report 7. The underlying experimental branch does not change: the same
+undirected train/test split, the same ten-model family, and the same
+retrained Node2Vec, GCN, and GraphSAGE artifacts are reused. What changes here
+is the \emph{measurement layer}.
+
+Two follow-up evaluation passes were added:
+
+\begin{itemize}
+    \item \textbf{Eval 3.1}: ranking metrics at a smaller cutoff together with
+          link-discrimination metrics
+    \item \textbf{Eval 3.2}: relative-improvement analysis across the key model
+          families
+\end{itemize}
+
+The goal of this report is therefore not to replace Report 7, but to refine
+its conclusions. In particular, it asks three questions:
+
+\begin{itemize}
+    \item What changes when ranking quality is measured at \textbf{@10} rather
+          than through larger-cutoff metrics?
+    \item How do the models compare under \textbf{ROC-AUC} and \textbf{PR-AUC}
+          when viewed as link-discrimination systems?
+    \item How large are the improvements from hybridization, pooling, and
+          power-law correction when expressed as \textbf{percentage gains}?
+\end{itemize}
+
+\section{Evaluation Additions}
+
+\subsection{Smaller-Cutoff Ranking Metrics}
+Report 7 already used Hit@10, but several other ranking metrics were still
+reported only at the larger effective cutoff inherited from the original
+evaluation family. Eval 3.1 therefore adds:
+
+\begin{itemize}
+    \item NDCG@10
+    \item Recall@10
+    \item MAP@10
+\end{itemize}
+
+The project still keeps plain MRR unchanged rather than introducing a truncated
+``MRR@10'', because standard MRR is already well-defined and easier to compare
+against the earlier report line.
+
+One structural note is important here: the current benchmark still uses one
+positive target per query. Because of that, \textbf{Recall@10 is numerically
+equivalent to Hit@10}. It is retained for completeness because it belongs to
+the requested metric family, but its interpretation is the same in this
+single-positive setting.
+
+\subsection{ROC-AUC and PR-AUC}
+Eval 3.1 also adds two link-discrimination metrics for the full model family:
+
+\begin{itemize}
+    \item ROC-AUC
+    \item PR-AUC
+\end{itemize}
+
+The procedure is:
+
+\begin{itemize}
+    \item use the revised-branch undirected test edges as positives
+    \item sample the same number of undirected non-edges as negatives
+    \item score each edge using the same similarity layer used by the ranking
+          evaluation
+\end{itemize}
+
+For the reciprocal-rank-fusion model, the underlying score is directional, so
+an undirected edge score is defined as the mean of the $u \rightarrow v$ and
+$v \rightarrow u$ fusion scores.
+
+\section{Cutoff-10 and AUC Results}
+
+\begin{table}[H]
+\centering
+\caption{Eval 3.1 extension metrics on the revised branch. Ranking metrics use 86,446 expanded evaluation pairs. ROC-AUC and PR-AUC use 43,223 positive and 43,223 sampled negative undirected edges.}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{@{}l*{6}{c}@{}}
+\toprule
+\textbf{Model} &
+\textbf{H@10} &
+\textbf{NDCG@10} &
+\textbf{Recall@10} &
+\textbf{MAP@10} &
+\textbf{ROC-AUC} &
+\textbf{PR-AUC} \\
+\midrule
+BGE pooled + Node2Vec (corrected) & 8.67\% & 0.0409 & 8.67\% & 0.0273 & 0.9563 & 0.9559 \\
+BGE-M3 + Node2Vec (corrected) & 8.67\% & 0.0413 & 8.67\% & 0.0278 & 0.9582 & 0.9579 \\
+BGE pooled + Node2Vec (uncorrected) & 7.83\% & 0.0356 & 7.83\% & 0.0229 & 0.9710 & 0.9716 \\
+BGE-M3 + Node2Vec (uncorrected) & 7.83\% & 0.0356 & 7.83\% & 0.0229 & 0.9710 & 0.9716 \\
+Node2Vec (uncorrected) & 7.81\% & 0.0355 & 7.81\% & 0.0229 & 0.9717 & 0.9714 \\
+Node2Vec (corrected) & 7.81\% & 0.0355 & 7.81\% & 0.0228 & 0.9717 & 0.9714 \\
+BGE-M3 Only & 7.64\% & 0.0406 & 7.64\% & 0.0298 & 0.8851 & 0.8886 \\
+GCN + BGE-M3 (rank fusion) & 7.63\% & 0.0355 & 7.63\% & 0.0234 & 0.9356 & 0.9363 \\
+GCN Only & 3.46\% & 0.0161 & 3.46\% & 0.0107 & 0.8954 & 0.8946 \\
+GraphSAGE Only & 1.22\% & 0.0060 & 1.22\% & 0.0041 & 0.8691 & 0.8561 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\section{What the New Metrics Change}
+
+\subsection{The Top-of-List Story Still Favors Corrected Hybrids}
+The smaller-cutoff results preserve the main ranking conclusion from Report 7:
+the strongest models for recommendation-oriented top-list behavior are still
+the \textbf{corrected hybrid variants}.
+
+The top line is:
+
+\begin{itemize}
+    \item \textbf{BGE pooled + Node2Vec (corrected)} remains best on Hit@10
+          with $8.6736\%$
+    \item \textbf{BGE-M3 + Node2Vec (corrected)} is essentially tied on Hit@10
+          and is slightly stronger on NDCG@10 and MAP@10
+\end{itemize}
+
+So the previous interpretation survives:
+
+\begin{itemize}
+    \item pooled corrected hybrid is the best top-line Hit@10 model
+    \item non-pooled corrected hybrid remains the strongest corrected model on
+          several secondary ranking metrics
+\end{itemize}
+
+\subsection{AUC and PR-AUC Tell a Different Story}
+The AUC layer produces a more nuanced result. Under ROC-AUC and PR-AUC, the
+best models are no longer the corrected hybrids. Instead, the strongest
+link-discrimination scores come from:
+
+\begin{itemize}
+    \item \textbf{Node2Vec (uncorrected)}: ROC-AUC $= 0.971666$, PR-AUC $= 0.971390$
+    \item \textbf{Node2Vec (corrected)}: ROC-AUC $= 0.971666$, PR-AUC $= 0.971376$
+    \item the uncorrected hybrid variants, which sit very close behind
+\end{itemize}
+
+This creates an important distinction:
+
+\begin{itemize}
+    \item \textbf{corrected hybrids are best for recommendation-oriented
+          top-ranked output}
+    \item \textbf{pure structural or lightly fused uncorrected models are best
+          for global edge discrimination}
+\end{itemize}
+
+This is not a contradiction. AUC and PR-AUC measure broad separation quality
+across many scored pairs, while Hit@10, NDCG@10, and MAP@10 care much more
+about what appears near the top of the list.
+
+\subsection{BGE-M3 Alone Has an Interesting Mixed Profile}
+BGE-M3 Only remains relatively weak on raw edge-recovery breadth, but it is not
+poor at every smaller-cutoff metric. In particular:
+
+\begin{itemize}
+    \item its Hit@10 is below the top corrected hybrids
+    \item but its NDCG@10 and MAP@10 are noticeably stronger than its broad
+          ranking profile would suggest
+\end{itemize}
+
+This indicates that semantic-only retrieval still puts a meaningful amount of
+useful signal near the top of the list, even though it remains more popularity
+driven than the stronger hybrids.
+
+\section{Relative Improvement Analysis}
+
+\subsection{Method}
+Eval 3.2 converts the metric tables into percentage-gain comparisons. For
+higher-is-better metrics, improvement is defined as:
+
+\[
+100 \cdot \frac{\text{candidate} - \text{baseline}}{\text{baseline}}
+\]
+
+For lower-is-better metrics such as Popularity Lift and Gini Index, the sign is
+reversed so that lower bias still appears as a positive improvement:
+
+\[
+100 \cdot \frac{\text{baseline} - \text{candidate}}{\text{baseline}}
+\]
+
+\subsection{Focused Comparison Table}
+
+\begin{table}[H]
+\centering
+\caption{Relative improvements (\%) from Eval 3.2. Positive values indicate improvement under the appropriate metric direction.}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{@{}l*{11}{c}@{}}
+\toprule
+\textbf{Comparison} &
+\textbf{H@10} &
+\textbf{NDCG@10} &
+\textbf{Recall@10} &
+\textbf{MAP@10} &
+\textbf{ROC-AUC} &
+\textbf{PR-AUC} &
+\textbf{Pop. Lift} &
+\textbf{Gini} &
+\textbf{Agg. Div.} &
+\textbf{Novelty} &
+\textbf{ILD} \\
+\midrule
+Flagship hybrid vs text-only & 14.60 & 0.77 & 13.55 & -8.46 & 8.04 & 7.58 & 31.48 & 20.53 & 3.86 & 3.09 & 17.75 \\
+Flagship hybrid vs graph-only & 11.03 & 15.22 & 11.02 & 19.26 & -1.58 & -1.60 & 0.54 & 8.29 & 3.28 & 1.62 & -4.30 \\
+Pooling effect (corrected) & 0.05 & -0.95 & 0.05 & -1.81 & -0.19 & -0.22 & -1.68 & 0.41 & 0.51 & -0.03 & 1.31 \\
+Pooling effect (uncorrected) & 0.01 & -0.04 & 0.01 & -0.09 & -0.00 & -0.00 & 0.02 & -0.17 & 0.20 & 0.01 & 0.03 \\
+Correction effect (Node2Vec) & -0.04 & -0.12 & -0.04 & -0.21 & -0.00 & -0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+Correction effect (hybrid) & 10.66 & 16.00 & 10.66 & 21.12 & -1.32 & -1.40 & 2.38 & 10.38 & 0.93 & 1.74 & -5.30 \\
+Correction effect (pooled hybrid) & 10.70 & 14.95 & 10.70 & 19.04 & -1.51 & -1.61 & 0.71 & 10.90 & 1.25 & 1.70 & -4.08 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\section{Interpretation of the Relative Gains}
+
+\subsection{Hybridization Clearly Beats Text-Only}
+Using the pooled corrected hybrid as the flagship model, the gain over pure
+BGE-M3 is clear:
+
+\begin{itemize}
+    \item Hit@10 improves by about \textbf{14.6\%}
+    \item Recall@10 improves by about \textbf{13.6\%}
+    \item ROC-AUC improves by about \textbf{8.0\%}
+    \item PR-AUC improves by about \textbf{7.6\%}
+    \item Popularity Lift improves by about \textbf{31.5\%}
+    \item Gini improves by about \textbf{20.5\%}
+    \item Intra-List Distance improves by about \textbf{17.8\%}
+\end{itemize}
+
+There is one counterpoint: MAP@10 becomes worse by about $8.5\%$. So the best
+hybrid is not uniformly better in every precision-sensitive small-cutoff
+measure. Still, the total balance of gains strongly favors the hybrid.
+
+\subsection{Hybridization Beats Graph-Only at the Top of the List, but Not on AUC}
+Against Node2Vec (uncorrected), the flagship hybrid gains:
+
+\begin{itemize}
+    \item about \textbf{11.0\%} on Hit@10
+    \item about \textbf{15.2\%} on NDCG@10
+    \item about \textbf{19.3\%} on MAP@10
+\end{itemize}
+
+But it loses:
+
+\begin{itemize}
+    \item about \textbf{1.58\%} on ROC-AUC
+    \item about \textbf{1.60\%} on PR-AUC
+\end{itemize}
+
+This is one of the most important findings in the report. It shows that the
+strongest recommendation-style model is not the same as the strongest
+global-discrimination model.
+
+\subsection{Pooling Helps Only a Little}
+The pooling comparison is intentionally small, and the results confirm that.
+For the corrected branch, pooling produces:
+
+\begin{itemize}
+    \item a tiny positive Hit@10 effect
+    \item a tiny positive Recall@10 effect
+    \item a small Aggregate Diversity gain
+    \item but slightly worse NDCG@10, MAP@10, ROC-AUC, and PR-AUC
+\end{itemize}
+
+The uncorrected pooling comparison is even smaller and is effectively
+negligible. So the correct interpretation is:
+
+\begin{itemize}
+    \item pooling is not useless
+    \item but its effect is subtle rather than transformative
+\end{itemize}
+
+\subsection{Correction Matters for Hybrids, Not for Pure Node2Vec}
+The Node2Vec-only correction comparison is almost perfectly flat. In practical
+terms, the revised branch suggests that correction changes almost nothing for
+pure Node2Vec.
+
+The hybrid families are different. For both the non-pooled and pooled hybrid
+branches, correction yields:
+
+\begin{itemize}
+    \item about \textbf{10--11\%} gain on Hit@10 / Recall@10
+    \item about \textbf{15--16\%} gain on NDCG@10
+    \item about \textbf{19--21\%} gain on MAP@10
+\end{itemize}
+
+At the same time, correction hurts:
+
+\begin{itemize}
+    \item ROC-AUC
+    \item PR-AUC
+    \item Intra-List Distance
+\end{itemize}
+
+So again the pattern is consistent: correction sharpens top-of-list
+recommendation behavior for hybrids, but weakens broad edge-discrimination
+behavior.
+
+\section{Updated Conclusions}
+After the metric expansion, the revised branch story becomes sharper rather
+than weaker.
+
+\begin{itemize}
+    \item \textbf{The corrected hybrid family is still the best direction for
+          recommendation-oriented top-ranked output.}
+    \item \textbf{Pure structural models remain strongest under ROC-AUC and
+          PR-AUC.}
+    \item \textbf{Pooling helps a little, but its effect is subtle.}
+    \item \textbf{Power-law correction matters much more for hybrids than for
+          pure Node2Vec.}
+\end{itemize}
+
+The most defensible final interpretation is therefore:
+
+\begin{quote}
+The revised branch supports a two-lens conclusion. If the objective is global
+link discrimination, pure structural methods remain strongest. If the objective
+is recommendation quality near the top of the ranked list, corrected hybrid
+semantic-structural models are the best overall choice.
+\end{quote}
+
+That distinction is important for the project because the actual product goal is
+not abstract link recovery in isolation. It is article recommendation and,
+eventually, learning-path generation. Under that objective, the corrected
+hybrid family remains the most convincing final system direction.
+
+\end{document}
