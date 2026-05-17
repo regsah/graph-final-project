@@ -1,7 +1,92 @@
 \chapter{CONCLUSIONS ET PERSPECTIVES}
 \thispagestyle{empty}
 
-Bu bir şablondur, başlıklar duruma göre değişebilir.
+\section{Conclusions}
 
+Ce projet a developpe et analyse un systeme de recommandation d'articles
+Wikipedia fonde sur les graphes et centre sur l'espace Custom-WikiCS. A partir
+de la topologie Wiki-CS, le travail a enrichi les noeuds avec le texte reel de
+Wikipedia, genere des embeddings semantiques et structurels, compare plusieurs
+familles de recommandation et expose les resultats a travers une application
+prototype locale.
 
-\lipsum[1-5]
+Plusieurs conclusions peuvent maintenant etre formulees clairement.
+
+Premiere conclusion, le graphe nettoye d'articles contient un signal structurel
+et semantique significatif. Le comportement en degre a queue lourde,
+l'assortativite semantique et une structure communautaire non triviale
+justifient tous l'usage de methodes de recommandation sensibles au graphe.
+
+Deuxieme conclusion, le texte et la structure sont tous deux utiles, mais ne se
+comportent pas de maniere identique. La recuperation semantique seule reste
+forte et interpretable. La recuperation structurelle seule demeure puissante,
+en particulier sous des metriques larges de discrimination des aretes.
+Cependant, la famille de recommandation la plus forte dans le protocole
+d'evaluation corrige est la famille hybride corrigee.
+
+Troisieme conclusion, la correction methodologique ulterieure constitue l'une
+des contributions les plus importantes du travail. Le protocole revise
+d'evaluation structurelle non orientee a modifie l'interpretation de la
+comparaison initiale a huit modeles et a montre que le recit anterieur de
+domination de Node2Vec n'etait pas assez robuste pour rester la conclusion
+finale.
+
+Quatrieme conclusion, le projet a clarifie la difference entre force de
+classement et qualite de recommandation. La famille metrique additionnelle ont montre qu'un modele peut etre bon pour
+la discrimination de liens tout en se comportant differemment comme
+recommandeur en liste courte.
+
+Enfin, l'application locale a montre que les resultats experimentaux peuvent
+etre transformes en une interface exploitable pour la recherche, la selection
+de modele, l'inspection des recommandations et une presentation optionnelle en
+parcours d'apprentissage.
+
+\section{Direction finale recommandee pour le modele}
+
+Si l'objectif est la cible applicative reelle d'une recommandation d'articles
+en tete de classement, la famille la plus defendable comme choix principal est
+la famille hybride corrigee. Au sein de cette famille:
+\begin{itemize}
+    \item \textit{BGE pooled + Node2Vec (corrected)} constitue un choix fort
+    lorsque Hit@10 est prioritaire;
+    \item \textit{BGE-M3 + Node2Vec (corrected)} constitue un choix fort
+    lorsque MRR, Recall, MAP et plusieurs metriques secondaires de classement
+    sont prioritaires.
+\end{itemize}
+
+Cette recommandation reflete le cadre final d'evaluation corrigé.
+
+\section{Limites}
+
+Le projet presente egalement des limites claires:
+\begin{itemize}
+    \item les experiences restent restreintes au sous-domaine informatique de
+    Wikipedia;
+    \item la base de code demeure fortement centree sur les notebooks et n'a
+    pas ete completement refactorisee en modules reutilisables;
+    \item l'organisateur par LLM reste une couche de presentation plutot qu'un
+    moteur de recommandation valide;
+    \item les contraintes de materiel local limitent l'echelle de
+    l'entrainement et l'etendue de l'exploration de modeles.
+\end{itemize}
+
+\section{Travaux futurs}
+
+Les directions futures les plus utiles sont:
+\begin{itemize}
+    \item etendre le cadre de recommandation au-dela du sous-domaine actuel tout
+    en preservant la proprete de l'evaluation;
+    \item tester des strategies de fusion plus avancees que la concatenation
+    brute ou le pooling fixe;
+    \item ameliorer la couche applicative avec une analyse qualitative plus
+    riche et une presentation plus stable des parcours d'apprentissage;
+    \item etudier si les metriques de qualite de recommandation peuvent etre
+    integrees directement dans la selection de modele plutot que seulement dans
+    une analyse a posteriori.
+\end{itemize}
+
+Dans l'ensemble, le projet aboutit a un resultat empirique coherent: pour cette
+tache de recommandation d'articles Wikipedia, la meilleure direction finale
+n'est ni un modele purement semantique ni un modele purement structurel, mais
+un systeme hybride soigneusement controle, evalue sous un protocole oriente
+recommandation et exempt de fuite.
