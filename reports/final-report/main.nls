@@ -1,10 +1,15 @@
-\begin{thenomenclature} 
+\begin{thenomenclature}
 
  \nomgroup{A}
 
-  \item [{OWL}]\begingroup Web Ontology Language\nomeqref {3}
-		\nompageref{12}
-  \item [{RDF}]\begingroup Resource Description Framework\nomeqref {3}
-		\nompageref{12}
+  \item [{GCN}]\begingroup Graph Convolutional Network\endgroup
+  \item [{GNN}]\begingroup Graph Neural Network\endgroup
+  \item [{ILD}]\begingroup Intra-List Diversity\endgroup
+  \item [{LLM}]\begingroup Large Language Model\endgroup
+  \item [{MAP}]\begingroup Mean Average Precision\endgroup
+  \item [{MRR}]\begingroup Mean Reciprocal Rank\endgroup
+  \item [{NDCG}]\begingroup Normalized Discounted Cumulative Gain\endgroup
+  \item [{PR-AUC}]\begingroup Area Under the Precision-Recall Curve\endgroup
+  \item [{ROC-AUC}]\begingroup Area Under the Receiver Operating Characteristic Curve\endgroup
 
 \end{thenomenclature}
