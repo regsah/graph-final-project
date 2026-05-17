@@ -21,6 +21,24 @@ APP_DIR = Path(__file__).resolve().parent
 REPO_ROOT = APP_DIR.parent
 CUSTOM_WIKI_DIR = REPO_ROOT / "WikiCS" / "custom-wiki"
 
+
+def load_dotenv_file(dotenv_path: Path) -> None:
+    if not dotenv_path.exists():
+        return
+
+    for raw_line in dotenv_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+load_dotenv_file(REPO_ROOT / ".env")
+
 sys.path.insert(0, str(CUSTOM_WIKI_DIR))
 
 from utils.graph_utils import fuzzy_search, load_graph_data, resolve_title  # noqa: E402
@@ -32,8 +50,12 @@ N2V_UNCORRECTED_PATH = CUSTOM_WIKI_DIR / "cache" / "node2vec-2" / "node2vec_undi
 N2V_CORRECTED_PATH = CUSTOM_WIKI_DIR / "cache" / "node2vec-2" / "node2vec_undirected_corrected.parquet"
 GCN_PATH = CUSTOM_WIKI_DIR / "cache" / "eval-3" / "gcn_only_results_eval3.pkl"
 SAGE_PATH = CUSTOM_WIKI_DIR / "cache" / "eval-3" / "graphsage_results_eval3.pkl"
-OLLAMA_BASE_URL = os.environ.get("WIKIPATH_OLLAMA_URL", "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.environ.get("WIKIPATH_OLLAMA_MODEL", "llama3.2:3b")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or os.environ.get("WIKIPATH_GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("WIKIPATH_GEMINI_MODEL", "gemini-2.5-flash-lite")
+GEMINI_API_BASE = os.environ.get(
+    "WIKIPATH_GEMINI_API_BASE",
+    "https://generativelanguage.googleapis.com/v1beta/models",
+)
 MAX_ORGANIZER_ATTEMPTS = 4
 
 
@@ -483,7 +505,7 @@ class RepoRecommender:
         recommendation_payload = self.recommend(title, model_id, top_k=top_k)
         organization = build_learning_path(
             recommendation_payload,
-            organizer_model=organizer_model or OLLAMA_MODEL,
+            organizer_model=organizer_model or GEMINI_MODEL,
         )
         return {
             **organization,
@@ -768,6 +790,176 @@ def build_sectioned_learning_path(
     }
 
 
+def build_learning_path_schema() -> dict[str, object]:
+    return {
+        "type": "object",
+        "properties": {
+            "placements": {
+                "type": "array",
+                "minItems": 20,
+                "maxItems": 20,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "title": {
+                            "type": "string",
+                            "description": "Canonical article title copied exactly from the provided candidate list.",
+                        },
+                        "rank": {
+                            "type": "integer",
+                            "description": "Original retrieval rank copied exactly from the provided candidate list.",
+                        },
+                        "section": {
+                            "type": "string",
+                            "enum": SECTION_IDS,
+                            "description": "Learning-path bucket for this article.",
+                        },
+                        "why": {
+                            "type": "string",
+                            "description": "One short sentence explaining why the article belongs in this section.",
+                        },
+                    },
+                    "required": ["title", "rank", "section", "why"],
+                    "additionalProperties": False,
+                },
+            }
+        },
+        "required": ["placements"],
+        "additionalProperties": False,
+    }
+
+
+def make_learning_path_messages(
+    source: dict[str, object],
+    candidates: list[dict[str, object]],
+) -> list[dict[str, str]]:
+    candidate_payload = [
+        {
+            "title": candidate["title"],
+            "display_title": candidate["display_title"],
+            "rank": int(candidate["rank"]),
+            "label": candidate["label"],
+            "score": round(float(candidate["score"]), 4),
+            "link_pattern": linked_pattern_text(candidate),
+            "excerpt": shorten_text(str(candidate.get("excerpt", "")), limit=180),
+        }
+        for candidate in candidates
+    ]
+    instructions = (
+        "You are organizing a fixed ranked list of 20 Wikipedia article recommendations into a learning path. "
+        "Use only the provided 20 articles. Do not invent, omit, rename, or duplicate any article. "
+        "Every provided article must appear exactly once. "
+        "Keep each article's original rank exactly as given. "
+        "Sections mean: foundations = broad background to learn first; "
+        "core = central concepts inside the topic; "
+        "advanced = deeper follow-up topics; "
+        "adjacent = useful neighboring topics that are not core next steps. "
+        "Return JSON only."
+    )
+    user_payload = {
+        "target": {
+            "canonical_title": source["title"],
+            "display_title": prettify_title(str(source["title"])),
+            "label": source["label"],
+            "excerpt": shorten_text(str(source.get("excerpt", "")), limit=220),
+        },
+        "task": (
+            "Group the 20 ranked recommendation results into the four learning-path sections. "
+            "Preserve all 20 articles exactly once and keep their original ranks."
+        ),
+        "sections": LEARNING_PATH_SECTIONS,
+        "candidates": candidate_payload,
+    }
+    return [
+        {"role": "user", "content": f"{instructions}\n\n{json.dumps(user_payload, ensure_ascii=True)}"}
+    ]
+
+
+def make_learning_path_repair_messages(
+    base_messages: list[dict[str, str]],
+    previous_output: str,
+    error_message: str,
+) -> list[dict[str, str]]:
+    return list(base_messages) + [
+        {"role": "model", "content": previous_output},
+        {
+            "role": "user",
+            "content": (
+                "Your previous JSON was invalid for this task. "
+                f"Problem: {error_message}. "
+                "Return corrected JSON only. Keep all 20 provided articles exactly once and keep their exact ranks."
+            ),
+        },
+    ]
+
+
+def extract_gemini_text(payload: dict[str, object]) -> str:
+    candidates = payload.get("candidates")
+    if not isinstance(candidates, list) or not candidates:
+        raise RuntimeError("Gemini returned no candidates.")
+    first = candidates[0]
+    if not isinstance(first, dict):
+        raise RuntimeError("Gemini returned an invalid candidate payload.")
+    content = first.get("content", {})
+    if not isinstance(content, dict):
+        raise RuntimeError("Gemini returned no content.")
+    parts = content.get("parts")
+    if not isinstance(parts, list) or not parts:
+        raise RuntimeError("Gemini returned no content parts.")
+    texts: list[str] = []
+    for part in parts:
+        if isinstance(part, dict) and isinstance(part.get("text"), str):
+            texts.append(part["text"])
+    text = "".join(texts).strip()
+    if not text:
+        raise RuntimeError("Gemini returned an empty text response.")
+    return text
+
+
+def call_gemini_structured(messages: list[dict[str, str]], model: str, schema: dict[str, object]) -> tuple[str, dict[str, object]]:
+    if not GEMINI_API_KEY:
+        raise RuntimeError("Gemini API key is missing. Set GEMINI_API_KEY or WIKIPATH_GEMINI_API_KEY.")
+
+    contents = []
+    for message in messages:
+        role = "model" if message["role"] == "model" else "user"
+        contents.append({"role": role, "parts": [{"text": message["content"]}]})
+
+    payload = {
+        "contents": contents,
+        "generationConfig": {
+            "temperature": 0.2,
+            "topP": 0.9,
+            "responseMimeType": "application/json",
+            "responseJsonSchema": schema,
+        },
+    }
+    data = json.dumps(payload).encode("utf-8")
+    request = Request(
+        f"{GEMINI_API_BASE}/{model}:generateContent",
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "x-goog-api-key": GEMINI_API_KEY,
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=140) as response:
+            raw = response.read().decode("utf-8")
+    except HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace") if exc.fp else ""
+        raise RuntimeError(f"Gemini HTTP error: {exc.code} {exc.reason}. {body}") from exc
+    except URLError as exc:
+        raise RuntimeError(f"Gemini connection error: {exc.reason}") from exc
+    except Exception as exc:
+        raise RuntimeError(str(exc)) from exc
+
+    response_payload = json.loads(raw)
+    text = extract_gemini_text(response_payload)
+    return text, response_payload
+
+
 def validate_learning_path(raw_obj: object, candidate_map: dict[str, dict[str, object]], target_title: str) -> tuple[dict[str, object], list[str]]:
     errors: list[str] = []
     if not isinstance(raw_obj, dict):
@@ -897,129 +1089,86 @@ def heuristic_learning_path(recommendation_payload: dict[str, object]) -> dict[s
         ],
         "organizer_model": None,
         "mode": "heuristic_fallback",
-        "warning": "The local LLM organizer was unavailable or returned invalid output, so a heuristic learning path was used instead.",
+        "warning": "The Gemini learning-path organizer was unavailable or returned invalid output, so a heuristic learning path was used instead.",
         "attempts": 0,
     }
 
 
-def build_learning_path(recommendation_payload: dict[str, object], organizer_model: str) -> dict[str, object]:
+def build_learning_path(
+    recommendation_payload: dict[str, object],
+    organizer_model: str,
+    progress_callback=None,
+) -> dict[str, object]:
     source = recommendation_payload["source"]
-    placements: list[dict[str, object]] = []
+    candidates = recommendation_payload["results"]
+    candidate_map = {
+        canonicalize_title_for_match(str(candidate["title"])): candidate
+        for candidate in candidates
+    }
+    schema = build_learning_path_schema()
+    base_messages = make_learning_path_messages(source, candidates)
+    messages = list(base_messages)
     raw_outputs: list[str] = []
     last_error = "unknown error"
     attempts_used = 0
-    current_counts = {section_id: 0 for section_id in SECTION_IDS}
 
-    total_candidates = len(recommendation_payload["results"])
-    for item_index, candidate in enumerate(recommendation_payload["results"], start=1):
-        base_messages = make_path_group_messages(
-            source,
-            candidate,
-            current_counts=current_counts.copy(),
-            items_remaining=total_candidates - item_index + 1,
-        )
-        messages = list(base_messages)
-        success = False
-
-        for attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
-            attempts_used = max(attempts_used, attempt)
-            try:
-                content, _ = call_ollama_json(messages, organizer_model)
-                raw_outputs.append(
-                    f'Question for "{candidate["display_title"]}" (attempt {attempt}):\n{content}'
-                )
-            except RuntimeError as exc:
-                last_error = str(exc)
-                break
-
-            try:
-                raw_obj = json.loads(content)
-            except json.JSONDecodeError as exc:
-                last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
-                messages = make_item_repair_messages(base_messages, content, last_error)
-                continue
-
-            normalized, validation_errors = validate_path_group_decision(raw_obj)
-            if validation_errors:
-                last_error = "; ".join(validation_errors)
-                messages = make_item_repair_messages(base_messages, content, last_error)
-                continue
-
-            refinement_messages = make_group_refinement_messages(
-                source,
-                candidate,
-                current_counts=current_counts.copy(),
-                items_remaining=total_candidates - item_index + 1,
-                chosen_group=normalized["group"],
+    for attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
+        attempts_used = attempt
+        if progress_callback:
+            progress_callback(
+                f"Attempt {attempt}/{MAX_ORGANIZER_ATTEMPTS}: submitting {len(candidates)} ranked articles to Gemini."
             )
-            refinement_prompt = list(refinement_messages)
-            refinement_success = False
-            final_section = "core" if normalized["group"] == "inside_or_before" else "adjacent"
-            final_why = normalized["why"]
-            allowed_sections = (
-                {"foundations", "core"}
-                if normalized["group"] == "inside_or_before"
-                else {"advanced", "adjacent"}
-            )
-
-            for refinement_attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
-                attempts_used = max(attempts_used, refinement_attempt)
-                try:
-                    refinement_content, _ = call_ollama_json(refinement_prompt, organizer_model)
-                    raw_outputs.append(
-                        f'Refinement question for "{candidate["display_title"]}" (attempt {refinement_attempt}):\n{refinement_content}'
-                    )
-                except RuntimeError as exc:
-                    last_error = str(exc)
-                    break
-
-                try:
-                    refinement_obj = json.loads(refinement_content)
-                except json.JSONDecodeError as exc:
-                    last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
-                    refinement_prompt = make_item_repair_messages(refinement_messages, refinement_content, last_error)
-                    continue
-
-                refinement_normalized, refinement_errors = validate_group_refinement_decision(
-                    refinement_obj,
-                    allowed_sections=allowed_sections,
-                )
-                if refinement_errors:
-                    last_error = "; ".join(refinement_errors)
-                    refinement_prompt = make_item_repair_messages(refinement_messages, refinement_content, last_error)
-                    continue
-
-                final_section = refinement_normalized["section"]
-                final_why = refinement_normalized["why"]
-                refinement_success = True
-                break
-
-            if not refinement_success:
-                fallback = heuristic_learning_path(recommendation_payload)
-                fallback["warning"] = f"{fallback['warning']} Last error: {last_error}"
-                fallback["raw_llm_output"] = "\n\n".join(raw_outputs)
-                return fallback
-
-            placements.append({**candidate, "section": final_section, "why": final_why})
-            current_counts[final_section] += 1
-            success = True
+        try:
+            content, _ = call_gemini_structured(messages, organizer_model, schema)
+            raw_outputs.append(f"Gemini organizer attempt {attempt}:\n{content}")
+        except RuntimeError as exc:
+            last_error = str(exc)
+            if progress_callback:
+                progress_callback(f"Attempt {attempt}: request failed. {last_error}")
             break
 
-        if not success:
-            fallback = heuristic_learning_path(recommendation_payload)
-            fallback["warning"] = f"{fallback['warning']} Last error: {last_error}"
-            fallback["raw_llm_output"] = "\n\n".join(raw_outputs)
-            return fallback
+        try:
+            raw_obj = json.loads(content)
+        except json.JSONDecodeError as exc:
+            last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
+            if progress_callback:
+                progress_callback(f"Attempt {attempt}: structured output could not be parsed. Retrying.")
+            messages = make_learning_path_repair_messages(base_messages, content, last_error)
+            continue
 
-    normalized = build_sectioned_learning_path(source, placements)
-    return {
-        **normalized,
-        "organizer_model": organizer_model,
-        "mode": "llm",
-        "warning": None,
-        "attempts": attempts_used,
-        "raw_llm_output": "\n\n".join(raw_outputs),
-    }
+        if progress_callback:
+            progress_callback(f"Attempt {attempt}: checking that all 20 titles and ranks are preserved.")
+        normalized, validation_errors = validate_learning_path(raw_obj, candidate_map, str(source["title"]))
+        if validation_errors:
+            last_error = "; ".join(validation_errors)
+            if progress_callback:
+                progress_callback(f"Attempt {attempt}: validation failed. Retrying with a repair prompt.")
+            messages = make_learning_path_repair_messages(base_messages, content, last_error)
+            continue
+
+        if progress_callback:
+            progress_callback("Structured learning path validated successfully.")
+
+        return {
+            **normalized,
+            "organizer_model": organizer_model,
+            "mode": "llm",
+            "warning": None,
+            "attempts": attempts_used,
+            "raw_llm_output": "\n\n".join(raw_outputs),
+        }
+
+    fallback = heuristic_learning_path(recommendation_payload)
+    fallback["warning"] = (
+        "The Gemini learning-path organizer returned invalid structured output, so a heuristic learning path was used instead. "
+        f"Last error: {last_error}"
+    )
+    if progress_callback:
+        progress_callback("Gemini did not return a usable structured path. Falling back to the heuristic organizer.")
+    fallback["raw_llm_output"] = "\n\n".join(raw_outputs)
+    fallback["organizer_model"] = organizer_model
+    fallback["attempts"] = attempts_used
+    return fallback
 
 
 class AppHandler(BaseHTTPRequestHandler):
@@ -1090,7 +1239,7 @@ class AppHandler(BaseHTTPRequestHandler):
             title = str(body.get("title", "")).strip()
             model_id = str(body.get("model_id", "pooled-hybrid-corrected"))
             top_k = int(body.get("top_k", 20))
-            organizer_model = str(body.get("organizer_model", OLLAMA_MODEL))
+            organizer_model = str(body.get("organizer_model", GEMINI_MODEL))
 
             if not title:
                 self._send_json({"error": "Missing title in request body."}, status=HTTPStatus.BAD_REQUEST)
@@ -1117,7 +1266,7 @@ class AppHandler(BaseHTTPRequestHandler):
         title = unquote(params.get("title", [""])[0]).strip()
         model_id = params.get("model_id", ["pooled-hybrid-corrected"])[0]
         top_k = int(params.get("top_k", ["20"])[0])
-        organizer_model = params.get("organizer_model", [OLLAMA_MODEL])[0]
+        organizer_model = params.get("organizer_model", [GEMINI_MODEL])[0]
 
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "text/event-stream; charset=utf-8")
@@ -1133,176 +1282,25 @@ class AppHandler(BaseHTTPRequestHandler):
 
         try:
             recommendation_payload = RECOMMENDER.recommend(title, model_id, top_k=top_k)
-            payload = None
-            last_error = "unknown error"
-            raw_outputs: list[str] = []
-            placements: list[dict[str, object]] = []
-            attempts_used = 0
-            source = recommendation_payload["source"]
-            current_counts = {section_id: 0 for section_id in SECTION_IDS}
-
-            for item_index, candidate in enumerate(recommendation_payload["results"], start=1):
-                send_event(
-                    "token",
-                    {
-                        "chunk": (
-                            f"\n\n========== Question {item_index}/{len(recommendation_payload['results'])} ==========\n"
-                            f'Target: "{prettify_title(str(source["title"]))}"\n'
-                            f'Candidate: "{candidate["display_title"]}"\n'
-                            f"Current counts: foundations={current_counts['foundations']}, "
-                            f"core={current_counts['core']}, advanced={current_counts['advanced']}, "
-                            f"adjacent={current_counts['adjacent']}\n"
-                            "Step 1: choose one group: inside_or_before OR after_or_side\n\n"
-                        ),
-                    },
-                )
-                base_messages = make_path_group_messages(
-                    source,
-                    candidate,
-                    current_counts=current_counts.copy(),
-                    items_remaining=len(recommendation_payload["results"]) - item_index + 1,
-                )
-                messages = list(base_messages)
-                success = False
-
-                for attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
-                    attempts_used = max(attempts_used, attempt)
-                    if attempt > 1:
-                        send_event(
-                            "token",
-                            {
-                                "chunk": f"\n[Retry {attempt}/{MAX_ORGANIZER_ATTEMPTS} for this candidate]\n",
-                            },
-                        )
-
-                    raw_output = stream_ollama_content(
-                        messages,
-                        organizer_model,
-                        lambda chunk: send_event("token", {"chunk": chunk}),
+            send_event(
+                "token",
+                {
+                    "chunk": (
+                        "Starting one-shot Gemini learning-path organization.\n"
+                        f"Model: {organizer_model}\n"
+                        f'Target: "{prettify_title(str(recommendation_payload["source"]["title"]))}"\n'
+                        f"Candidates: {len(recommendation_payload['results'])}\n"
+                        "Constraint: use the provided 20 ranked articles exactly once."
                     )
-                    raw_outputs.append(
-                        f'Question for "{candidate["display_title"]}" (attempt {attempt}):\n{raw_output}'
-                    )
-
-                    try:
-                        raw_obj = json.loads(raw_output)
-                    except json.JSONDecodeError as exc:
-                        last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
-                        messages = make_item_repair_messages(base_messages, raw_output, last_error)
-                        continue
-
-                    normalized, validation_errors = validate_path_group_decision(raw_obj)
-                    if validation_errors:
-                        last_error = "; ".join(validation_errors)
-                        messages = make_item_repair_messages(base_messages, raw_output, last_error)
-                        continue
-
-                    send_event(
-                        "token",
-                        {
-                            "chunk": (
-                                f"\nStep 2: refine the chosen lane ({normalized['group']}) into the final section\n"
-                            ),
-                        },
-                    )
-                    refinement_messages = make_group_refinement_messages(
-                        source,
-                        candidate,
-                        current_counts=current_counts.copy(),
-                        items_remaining=len(recommendation_payload["results"]) - item_index + 1,
-                        chosen_group=normalized["group"],
-                    )
-                    refinement_prompt = list(refinement_messages)
-                    refinement_success = False
-                    final_section = "core" if normalized["group"] == "inside_or_before" else "adjacent"
-                    final_why = normalized["why"]
-                    allowed_sections = (
-                        {"foundations", "core"}
-                        if normalized["group"] == "inside_or_before"
-                        else {"advanced", "adjacent"}
-                    )
-
-                    for refinement_attempt in range(1, MAX_ORGANIZER_ATTEMPTS + 1):
-                        attempts_used = max(attempts_used, refinement_attempt)
-                        if refinement_attempt > 1:
-                            send_event(
-                                "token",
-                                {
-                                    "chunk": f"\n[Refinement retry {refinement_attempt}/{MAX_ORGANIZER_ATTEMPTS}]\n",
-                                },
-                            )
-
-                        refinement_output = stream_ollama_content(
-                            refinement_prompt,
-                            organizer_model,
-                            lambda chunk: send_event("token", {"chunk": chunk}),
-                        )
-                        raw_outputs.append(
-                            f'Refinement question for "{candidate["display_title"]}" (attempt {refinement_attempt}):\n{refinement_output}'
-                        )
-
-                        try:
-                            refinement_obj = json.loads(refinement_output)
-                        except json.JSONDecodeError as exc:
-                            last_error = f"JSON parse error: {exc.msg} at line {exc.lineno} column {exc.colno}"
-                            refinement_prompt = make_item_repair_messages(refinement_messages, refinement_output, last_error)
-                            continue
-
-                        refinement_normalized, refinement_errors = validate_group_refinement_decision(
-                            refinement_obj,
-                            allowed_sections=allowed_sections,
-                        )
-                        if refinement_errors:
-                            last_error = "; ".join(refinement_errors)
-                            refinement_prompt = make_item_repair_messages(refinement_messages, refinement_output, last_error)
-                            continue
-
-                        final_section = refinement_normalized["section"]
-                        final_why = refinement_normalized["why"]
-                        refinement_success = True
-                        break
-
-                    if not refinement_success:
-                        last_error = last_error or "Unknown refinement classification failure"
-                        break
-
-                    placements.append({**candidate, "section": final_section, "why": final_why})
-                    current_counts[final_section] += 1
-                    send_event(
-                        "token",
-                        {
-                            "chunk": (
-                                f'\n[Accepted as {final_section}] '
-                                f"(counts now: foundations={current_counts['foundations']}, "
-                                f"core={current_counts['core']}, advanced={current_counts['advanced']}, "
-                                f"adjacent={current_counts['adjacent']})\n"
-                            ),
-                        },
-                    )
-                    success = True
-                    break
-
-                if not success:
-                    last_error = last_error or "Unknown classification failure"
-                    break
-
-            if len(placements) == len(recommendation_payload["results"]):
-                normalized_path = build_sectioned_learning_path(source, placements)
-                payload = {
-                    **normalized_path,
-                    "organizer_model": organizer_model,
-                    "mode": "llm",
-                    "warning": None,
-                    "attempts": attempts_used,
-                    "raw_llm_output": "\n\n".join(raw_outputs),
-                }
-            else:
-                payload = heuristic_learning_path(recommendation_payload)
-                payload["warning"] = (
-                    "The local LLM organizer returned invalid structured output and a heuristic path was used instead. "
-                    f"Last error: {last_error}"
-                )
-                payload["raw_llm_output"] = "\n\n".join(raw_outputs)
+                },
+            )
+            payload = build_learning_path(
+                recommendation_payload,
+                organizer_model,
+                progress_callback=lambda message: send_event("token", {"chunk": message}),
+            )
+            if payload.get("warning"):
+                send_event("token", {"chunk": f"Warning: {payload['warning']}"})
 
             payload.update(
                 {
@@ -1317,7 +1315,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 recommendation_payload = RECOMMENDER.recommend(title, model_id, top_k=top_k)
                 payload = heuristic_learning_path(recommendation_payload)
                 payload["warning"] = (
-                    "The local LLM organizer was unavailable or timed out, so a heuristic path was used instead. "
+                    "The Gemini learning-path organizer was unavailable or returned invalid output, so a heuristic path was used instead. "
                     f"Last error: {exc}"
                 )
                 payload["raw_llm_output"] = ""

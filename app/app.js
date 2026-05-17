@@ -43,7 +43,7 @@ const state = {
   highlightedSuggestionIndex: -1,
   results: [],
   learningPath: null,
-  rawStreamingOutput: "",
+  organizeProgressLog: "",
   organizeStream: null,
   isLoadingSearch: false,
   isLoadingResults: false,
@@ -454,21 +454,21 @@ async function loadLearningPath() {
   }
 
   state.isLoadingPath = true;
-  state.rawStreamingOutput = "";
+  state.organizeProgressLog = "";
   renderCurrentView();
   ui.learningPathPanel.innerHTML = `
     <div class="ai-output-card">
       <div class="ai-output-header">
         <div>
-          <p class="section-label">Temporary Debug</p>
-          <h3>AI Organizer Output</h3>
+          <p class="section-label">Progress</p>
+          <h3>Organizing Learning Path</h3>
         </div>
-        <span class="ai-output-badge">Streaming</span>
+        <span class="ai-output-badge">Working</span>
       </div>
       <p class="muted-copy">
-        This temporary box shows the organizer text as it is being generated. It will disappear once the structured learning path is ready.
+        The app is sending the current top 20 to Gemini, checking the returned structure, and retrying if the response breaks the learning-path rules.
       </p>
-      <pre id="streaming-ai-output" class="ai-output-pre">Waiting for local model output...</pre>
+      <pre id="streaming-ai-output" class="ai-output-pre">Waiting to start...</pre>
     </div>
   `;
 
@@ -479,10 +479,13 @@ async function loadLearningPath() {
 
     stream.addEventListener("token", (event) => {
       const payload = JSON.parse(event.data);
-      state.rawStreamingOutput += payload.chunk || "";
+      const chunk = payload.chunk || "";
+      state.organizeProgressLog = state.organizeProgressLog
+        ? `${state.organizeProgressLog}\n${chunk}`
+        : chunk;
       const outputEl = document.getElementById("streaming-ai-output");
       if (outputEl) {
-        outputEl.textContent = state.rawStreamingOutput || "Waiting for local model output...";
+        outputEl.textContent = state.organizeProgressLog || "Waiting to start...";
       }
     });
 
@@ -666,7 +669,7 @@ function resetSelection() {
   state.highlightedSuggestionIndex = -1;
   state.results = [];
   state.learningPath = null;
-  state.rawStreamingOutput = "";
+  state.organizeProgressLog = "";
   state.isLoadingPath = false;
   if (state.organizeStream) {
     state.organizeStream.close();
