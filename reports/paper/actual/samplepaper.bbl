@@ -1,0 +1,105 @@
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\providecommand{\doi}[1]{https://doi.org/#1}
+
+\bibitem{chen2025bgem3}
+Chen, J., Xiao, S., Zhang, P., Luo, K., Lian, D., Liu, Z.: M3-embedding:
+  Multi-linguality, multi-functionality, multi-granularity text embeddings
+  through self-knowledge distillation (2024),
+  \url{https://arxiv.org/abs/2402.03216}
+
+\bibitem{devlin2019bert}
+Devlin, J., Chang, M.W., Lee, K., Toutanova, K.: Bert: Pre-training of deep
+  bidirectional transformers for language understanding. In: Proceedings of the
+  2019 Conference of the North American Chapter of the Association for
+  Computational Linguistics: Human Language Technologies, Volume 1 (Long and
+  Short Papers). pp. 4171--4186 (2019). \doi{10.18653/v1/N19-1423},
+  \url{https://aclanthology.org/N19-1423/}
+
+\bibitem{grover2016node2vec}
+Grover, A., Leskovec, J.: node2vec: Scalable feature learning for networks. In:
+  Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge
+  Discovery and Data Mining. pp. 855--864 (2016),
+  \url{https://arxiv.org/abs/1607.00653}
+
+\bibitem{hamilton2017inductive}
+Hamilton, W.L., Ying, R., Leskovec, J.: Inductive representation learning on
+  large graphs. In: Advances in Neural Information Processing Systems 30
+  (2017), \url{https://arxiv.org/abs/1706.02216}
+
+\bibitem{anime_hybrid_gnn_bert}
+Javaji, S.R., Sarode, K.: Hybrid recommendation system using graph neural
+  network and bert embeddings (2023), \url{https://arxiv.org/abs/2310.04878}
+
+\bibitem{kipf2017semi}
+Kipf, T.N., Welling, M.: Semi-supervised classification with graph
+  convolutional networks. In: International Conference on Learning
+  Representations (2017), \url{https://openreview.net/forum?id=SJU4ayYgl}
+
+\bibitem{kowald2023popularity}
+Kowald, D., Mayr, G., Schedl, M., Lex, E.: A study on accuracy, miscalibration,
+  and popularity bias in recommendations (2023),
+  \url{https://arxiv.org/abs/2303.00400}
+
+\bibitem{zhou2023multimodal}
+Liu, Q., Hu, J., Xiao, Y., Zhao, X., Gao, J., Wang, W., Li, Q., Tang, J.:
+  Multimodal recommender systems: A survey (2023),
+  \url{https://arxiv.org/abs/2302.03883}
+
+\bibitem{manning2008ir}
+Manning, C.D., Raghavan, P., Sch{\"u}tze, H.: Introduction to Information
+  Retrieval. Cambridge University Press, Cambridge (2008),
+  \url{https://nlp.stanford.edu/IR-book/}
+
+\bibitem{mansoury2020fairmatch}
+Mansoury, M., Abdollahpouri, H., Pechenizkiy, M., Mobasher, B., Burke, R.:
+  Fairmatch: A graph-based approach for improving aggregate diversity in
+  recommender systems (2020), \url{https://arxiv.org/abs/2005.01148}
+
+\bibitem{mernyei2020wikics}
+Mernyei, P., Cangea, C.: Wiki-cs: A wikipedia-based benchmark for graph neural
+  networks (2020). \doi{10.48550/arXiv.2007.02901},
+  \url{https://arxiv.org/abs/2007.02901}
+
+\bibitem{wikirecnet2020}
+Moskalenko, O., Parra, D., S{\'a}ez-Trumper, D.: Scalable recommendation of
+  wikipedia articles to editors using representation learning (2020),
+  \url{https://arxiv.org/abs/2009.11771}
+
+\bibitem{reimers2019sentencebert}
+Reimers, N., Gurevych, I.: Sentence-bert: Sentence embeddings using siamese
+  bert-networks. In: Proceedings of the 2019 Conference on Empirical Methods in
+  Natural Language Processing and the 9th International Joint Conference on
+  Natural Language Processing. pp. 3982--3992 (2019).
+  \doi{10.18653/v1/D19-1410}, \url{https://aclanthology.org/D19-1410/}
+
+\bibitem{saito2015pr}
+Saito, T., Rehmsmeier, M.: The precision-recall plot is more informative than
+  the roc plot when evaluating binary classifiers on imbalanced datasets. PLOS
+  ONE  \textbf{10}(3),  e0118432 (2015). \doi{10.1371/journal.pone.0118432},
+  \url{https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118432}
+
+\bibitem{vaswani2017attention}
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.N.,
+  Kaiser, L., Polosukhin, I.: Attention is all you need. In: Advances in Neural
+  Information Processing Systems (2017),
+  \url{https://papers.neurips.cc/paper/7181-attention-is-all-you-need}
+
+\bibitem{voorhees1999trec8qa}
+Voorhees, E.M.: The trec-8 question answering track report. In: The Eighth Text
+  REtrieval Conference (TREC-8). NIST Special Publication, vol. 500-246, pp.
+  77--82 (1999), \url{https://trec.nist.gov/pubs/trec8/papers/qa_report.pdf}
+
+\bibitem{li2022graph}
+Wang, K., Ding, Y., Han, S.C.: Graph neural networks for text classification: A
+  survey. Artificial Intelligence Review  \textbf{57}(8) (2024).
+  \doi{10.1007/s10462-024-10808-0},
+  \url{https://link.springer.com/article/10.1007/s10462-024-10808-0}
+
+\bibitem{zhao2023fairnessdiversity}
+Zhao, Y., Wang, Y., Liu, Y., Cheng, X., Aggarwal, C., Derr, T.: Fairness and
+  diversity in recommender systems: A survey (2023),
+  \url{https://arxiv.org/abs/2307.04644}
+
+\end{thebibliography}
