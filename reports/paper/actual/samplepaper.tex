@@ -306,8 +306,7 @@ The second is a corrected variant that applies a power-law degree penalty during
 scoring in order to reduce the tendency of high-degree hubs to dominate
 retrieval.
 
-Following the project reports, the correction factor for a node $v$ with
-undirected degree $d_v$ is defined as
+The correction factor for a node $v$ with undirected degree $d_v$ is defined as
 \begin{equation}
 p_v = \log(d_v + 1)^{\alpha},
 \end{equation}
@@ -372,9 +371,9 @@ article-to-article retrieval, each undirected test edge $\{u,v\}$ is expanded
 into two directed queries, $u\rightarrow v$ and $v\rightarrow u$, yielding
 86,446 evaluation pairs over 9,022 evaluation nodes.
 
-This revised protocol plays an important methodological role. Earlier project
-stages also reported results on held-out directed edges, but the later
-comparison in this paper is intentionally centered on the undirected structural
+This revised protocol plays an important methodological role. Alternative
+evaluations based on held-out directed edges are possible, but the comparison
+in this paper is intentionally centered on the undirected structural
 graph because Node2Vec neighborhoods, community analysis, and the degree
 correction heuristic are all defined over that structural view. The revised
 protocol therefore preserves the article-to-article ranking task while aligning
