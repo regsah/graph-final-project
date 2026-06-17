@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  18 JUN 2026 00:46
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  18 JUN 2026 00:51
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -370,23 +370,32 @@ Overfull \hbox (8.43097pt too wide) in paragraph at lines 28--29
 [1
 
 {C:/Users/sahin/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}]
-Underfull \vbox (badness 1102) has occurred while \output is active []
+Overfull \hbox (3.21124pt too wide) in paragraph at lines 62--76
+[]\T1/cmr/m/n/10 This is also what makes the Wikipedia set-ting sci-en-tif-i-ca
+lly in-ter-est-ing. Openly
+ []
+
+
+Overfull \hbox (16.982pt too wide) in paragraph at lines 62--76
+\T1/cmr/m/n/10 avail-able graph ex-trac-tions make struc-tural ex-per-i-men-ta-
+tion fea-si-ble, and Wikipedia-
+ []
+
+
+Underfull \vbox (badness 2158) has occurred while \output is active []
 
  [2]
-[3]
-Underfull \vbox (badness 6047) has occurred while \output is active []
-
- [4]
+[3] [4]
 <figs/degree-log-log.png, id=27, 564.6696pt x 418.6842pt>
 File: figs/degree-log-log.png Graphic file (type png)
 <use figs/degree-log-log.png>
-Package pdftex.def Info: figs/degree-log-log.png  used on input line 228.
+Package pdftex.def Info: figs/degree-log-log.png  used on input line 236.
 (pdftex.def)             Requested size: 163.14848pt x 120.96811pt.
 <figs/cosine-similarity-assortativity.png, id=29, 709.6914pt x 418.6842pt>
 File: figs/cosine-similarity-assortativity.png Graphic file (type png)
 <use figs/cosine-similarity-assortativity.png>
 Package pdftex.def Info: figs/cosine-similarity-assortativity.png  used on inpu
-t line 233.
+t line 241.
 (pdftex.def)             Requested size: 170.09244pt x 100.3457pt.
 
 Underfull \vbox (badness 2012) has occurred while \output is active []
@@ -396,20 +405,20 @@ Underfull \vbox (badness 2012) has occurred while \output is active []
 File: figs/community-size-distribution-louvain.png Graphic file (type png)
 <use figs/community-size-distribution-louvain.png>
 Package pdftex.def Info: figs/community-size-distribution-louvain.png  used on 
-input line 258.
+input line 266.
 (pdftex.def)             Requested size: 142.32191pt x 69.46661pt.
 <figs/similarity-distributions.png, id=36, 1000.2168pt x 424.9476pt>
 File: figs/similarity-distributions.png Graphic file (type png)
 <use figs/similarity-distributions.png>
 Package pdftex.def Info: figs/similarity-distributions.png  used on input line 
-263.
+271.
 (pdftex.def)             Requested size: 190.91899pt x 81.11047pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [6 <./figs/community-size-distribution-louvain.png> <./figs/similarity-distrib
 utions.png>] [7] [8] [9] [10] [11] [12]
-Overfull \hbox (40.58879pt too wide) in paragraph at lines 685--687
+Overfull \hbox (40.58879pt too wide) in paragraph at lines 693--695
 \T1/cmr/m/n/9 used in this study are cur-rently avail-able at $\T1/cmtt/m/n/9 h
 ttps : / / github . com / regsah / graph-[]final-[]project$\T1/cmr/m/n/9 . 
  []
@@ -477,9 +486,9 @@ ta/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/sah
 in/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/U
 sers/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/ms
 bm10.pfb>
-Output written on samplepaper.pdf (15 pages, 501867 bytes).
+Output written on samplepaper.pdf (15 pages, 502522 bytes).
 PDF statistics:
- 512 PDF objects out of 1000 (max. 8388607)
+ 513 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 

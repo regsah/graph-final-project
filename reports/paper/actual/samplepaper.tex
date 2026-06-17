@@ -34,58 +34,66 @@ To support this setting, we introduce a reconstructed and up-to-date version of 
 
 \section{Introduction}
 
-Wikipedia is more than a collection of isolated articles; it is a large,
-widely used, openly accessible knowledge environment in which rich page
-content coexists with explicit hyperlink relations and broad topical coverage.
-These properties have made Wikipedia a recurring resource for benchmark
-construction, retrieval, graph-learning, and graph-text modeling
-research~\cite{mernyei2020wikics,wikirecnet2020,wikigraphs2021}.
-From a modeling perspective, this is appealing because the same article space
-exposes both semantic content and relational context.
+Wikipedia is a globally used, openly accessible knowledge environment whose
+articles can be read both as natural-language documents and as vertices in an
+explicit hyperlink network. Its pages are publicly reachable as text, its links
+encode relations among topics, and its coverage spans a broad range of domains.
+For these reasons, Wikipedia has repeatedly been used in benchmark
+construction, retrieval studies, graph learning, and graph-text
+modeling~\cite{mernyei2020wikics,wikirecnet2020,wikigraphs2021,devlin2019bert,reimers2019sentencebert}.
+From an analytical perspective, this dual availability of content and
+relational structure makes the same article collection suitable for semantic
+modeling, structural modeling, and experiments that combine both views.
 
-Within this environment, article-to-article recommendation is a natural and
-useful problem. Given a page currently being examined, the goal is to recommend
-other pages worth reading next. The hyperlink graph provides a strong starting
-point because direct links often encode editorial, conceptual, or historical
-relatedness~\cite{wikirecnet2020,grover2016node2vec}. However, graph structure
-alone may not be sufficient. For instance, a recommendation process driven only
-by hyperlink topology around an operating-systems article may emphasize
-directly linked hub pages such as Linus Torvalds, while semantically close but
-less directly connected pages on kernel design, Unix-like systems, or
-file-system concepts can remain under-ranked. This suggests that page content
-is not an auxiliary signal but a second source of evidence for recommendation.
+Within such an environment, article-to-article recommendation is a natural and
+practically useful problem. Given a page currently being examined, the task is
+to recommend other pages worth reading next, ideally preserving topical
+relevance while still broadening navigation. Wikipedia's hyperlink graph offers
+a strong starting point because direct links often encode editorial,
+conceptual, or historical relatedness~\cite{wikirecnet2020,grover2016node2vec}.
+At the same time, relying only on graph structure may be too restrictive. For
+example, a graph-driven recommender around an operating-systems article may
+prioritize directly linked hub pages such as Linus Torvalds, while
+semantically close but less directly connected pages on kernel design,
+Unix-like systems, or file-system concepts remain under-ranked. This motivates
+article content as a second source of evidence rather than a mere auxiliary
+feature.
 
-This observation creates a practical gap in open Wikipedia benchmarks. On the
-one hand, Wikipedia-derived graph resources such as Wiki-CS provide a
-convenient and widely reused structural benchmark~\cite{mernyei2020wikics}. On
-the other hand, Wiki-CS was introduced for node classification rather than
-article recommendation, and it does not directly provide a text-complete,
-up-to-date benchmark for regenerating article representations with modern text
-encoders. Graph-text paired resources exist for other objectives as
-well~\cite{wikigraphs2021}, but they do not by themselves resolve the need for
-a recommendation-oriented, text-recoverable version of Wiki-CS. As a result,
-there remains a gap between the availability of open Wikipedia graphs and the
-availability of an open benchmark that supports joint structural and semantic
-recommendation experiments on the same article set.
+This is also what makes the Wikipedia setting scientifically interesting.
+Openly available graph extractions make structural experimentation feasible, and
+Wikipedia-derived resources such as Wiki-CS provide a convenient and widely
+reused benchmark substrate~\cite{mernyei2020wikics}. However, the open
+resources are uneven across structure and content. Wiki-CS was introduced for
+node classification rather than article recommendation, and it does not
+directly expose the recovered, up-to-date raw article text needed to
+regenerate semantic representations with modern encoders. Graph-text paired
+datasets such as WikiGraphs are valuable for related objectives~\cite{wikigraphs2021},
+yet they do not by themselves provide a recommendation-oriented, text-complete
+version of the same Wiki-CS article set. As a result, there remains a gap
+between the availability of open Wikipedia graphs and the availability of an
+open benchmark that supports joint structural and semantic recommendation
+experiments on the same articles.
 
 The first goal of this study is to close that gap at the dataset level. We
 focus on Wiki-CS because its computer-science article subset provides a
-controlled topical setting in which recommendation consistency can be examined
+topic-bounded setting in which recommendation consistency can be examined
 within a coherent domain. Starting from this benchmark, we reconstruct the
 article layer by cleaning titles, recovering raw text from open sources, and
 attaching modern dense embeddings, thereby producing an updated benchmark that
 supports contemporary semantic retrieval.
 
 The second goal is methodological. We study recommendation models that use
-graph topology, article content, or both. In particular, we investigate a
+graph topology, article content, or both, and we treat these signals as
+complementary rather than interchangeable. In particular, we investigate a
 hybrid recommendation framework that combines BERT-style semantic embeddings,
 instantiated with BGE-M3~\cite{chen2024m3embedding}, and Node2Vec-based structural
-representations~\cite{grover2016node2vec}, alongside GCN and GraphSAGE
-baselines~\cite{kipf2017semi,hamilton2017inductive}. We also examine corrected
-structural variants and pooled semantic representations in order to better
-balance structural and textual evidence. To assess whether the proposed hybrid
-strategy is useful beyond a narrow baseline comparison, we evaluate it against
-a broad spectrum of semantic, structural, hybrid, and GNN-based alternatives.
+representations~\cite{grover2016node2vec}, alongside semantic-only,
+structural-only, GCN, and GraphSAGE baselines~\cite{kipf2017semi,hamilton2017inductive}.
+We also examine corrected structural variants and pooled semantic
+representations in order to better balance structural and textual evidence. To
+assess the proposed approach in a broader experimental setting, we compare it
+against a spectrum of semantic, structural, hybrid, and GNN-based
+alternatives.
 
 The contributions of this paper are threefold:
 \begin{itemize}
