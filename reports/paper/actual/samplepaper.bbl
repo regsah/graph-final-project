@@ -3,7 +3,7 @@
 \providecommand{\urlprefix}{URL }
 \providecommand{\doi}[1]{https://doi.org/#1}
 
-\bibitem{chen2025bgem3}
+\bibitem{chen2024m3embedding}
 Chen, J., Xiao, S., Zhang, P., Luo, K., Lian, D., Liu, Z.: M3-embedding:
   Multi-linguality, multi-functionality, multi-granularity text embeddings
   through self-knowledge distillation (2024),
@@ -27,10 +27,6 @@ Grover, A., Leskovec, J.: node2vec: Scalable feature learning for networks. In:
 Hamilton, W.L., Ying, R., Leskovec, J.: Inductive representation learning on
   large graphs. In: Advances in Neural Information Processing Systems 30
   (2017), \url{https://arxiv.org/abs/1706.02216}
-
-\bibitem{anime_hybrid_gnn_bert}
-Javaji, S.R., Sarode, K.: Hybrid recommendation system using graph neural
-  network and bert embeddings (2023), \url{https://arxiv.org/abs/2310.04878}
 
 \bibitem{kipf2017semi}
 Kipf, T.N., Welling, M.: Semi-supervised classification with graph
@@ -91,11 +87,16 @@ Voorhees, E.M.: The trec-8 question answering track report. In: The Eighth Text
   REtrieval Conference (TREC-8). NIST Special Publication, vol. 500-246, pp.
   77--82 (1999), \url{https://trec.nist.gov/pubs/trec8/papers/qa_report.pdf}
 
-\bibitem{li2022graph}
+\bibitem{wang2024gnntextsurvey}
 Wang, K., Ding, Y., Han, S.C.: Graph neural networks for text classification: A
   survey. Artificial Intelligence Review  \textbf{57}(8) (2024).
   \doi{10.1007/s10462-024-10808-0},
   \url{https://link.springer.com/article/10.1007/s10462-024-10808-0}
+
+\bibitem{wikigraphs2021}
+Wang, L., Li, Y., Aslan, O., Vinyals, O.: Wikigraphs: A wikipedia
+  text--knowledge graph paired dataset (2021),
+  \url{https://arxiv.org/abs/2107.09556}
 
 \bibitem{zhao2023fairnessdiversity}
 Zhao, Y., Wang, Y., Liu, Y., Cheng, X., Aggarwal, C., Derr, T.: Fairness and

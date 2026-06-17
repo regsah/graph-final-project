@@ -1,80 +1,85 @@
 \relax 
+\citation{mernyei2020wikics,wikirecnet2020,wikigraphs2021}
 \@writefile{toc}{\contentsline {title}{Bridging Text and Graph Topology for Wikipedia Article Recommendation}{1}{}\protected@file@percent }
 \@writefile{toc}{\authcount {2}}
 \@writefile{toc}{\contentsline {author}{Sahin Uregil\unskip {} \and G\"unce Keziban Orman}{1}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{}\protected@file@percent }
+\citation{wikirecnet2020,grover2016node2vec}
 \citation{mernyei2020wikics}
+\citation{wikigraphs2021}
+\citation{chen2024m3embedding}
+\citation{grover2016node2vec}
+\citation{kipf2017semi,hamilton2017inductive}
 \citation{mernyei2020wikics}
 \citation{wikirecnet2020}
-\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{2}{}\protected@file@percent }
 \citation{vaswani2017attention}
 \citation{devlin2019bert}
 \citation{reimers2019sentencebert}
-\citation{chen2025bgem3}
+\citation{chen2024m3embedding}
 \citation{grover2016node2vec}
 \citation{kipf2017semi}
 \citation{hamilton2017inductive}
-\citation{li2022graph}
+\citation{wang2024gnntextsurvey}
 \citation{zhou2023multimodal}
-\citation{anime_hybrid_gnn_bert}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Method}{3}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Custom-WikiCS Reconstruction}{3}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{Motivation and Reconstruction Pipeline}{3}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Custom-WikiCS graph statistics after reconstruction and cleaning}}{4}{}\protected@file@percent }
-\newlabel{tab:dataset-stats}{{1}{4}{}{table.1}{}}
-\@writefile{toc}{\contentsline {subsubsection}{Graph Characteristics}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Method}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Custom-WikiCS Reconstruction}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Motivation and Reconstruction Pipeline}{4}{}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Structural and semantic diagnostics of Custom-WikiCS. The degree profile is heavy-tailed, while linked article pairs are semantically closer than random pairs in the BGE-M3 embedding space}}{5}{}\protected@file@percent }
 \newlabel{fig:dataset-struct-sem}{{1}{5}{}{figure.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Recommendation Framework}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{Task Definition}{5}{}\protected@file@percent }
-\citation{chen2025bgem3}
-\citation{grover2016node2vec}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Custom-WikiCS graph statistics after reconstruction and cleaning}}{5}{}\protected@file@percent }
+\newlabel{tab:dataset-stats}{{1}{5}{}{table.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{Graph Characteristics}{5}{}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Community diagnostics for Custom-WikiCS. The cleaned graph contains non-trivial communities, and those communities remain semantically coherent}}{6}{}\protected@file@percent }
 \newlabel{fig:community-diagnostics}{{2}{6}{}{figure.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Flagship hybrid recommendation pipeline used in the paper}}{6}{}\protected@file@percent }
-\newlabel{fig:paper-pipeline}{{3}{6}{}{figure.3}{}}
-\@writefile{toc}{\contentsline {subsubsection}{Semantic Retrieval}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Recommendation Framework}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Task Definition}{6}{}\protected@file@percent }
+\citation{chen2024m3embedding}
+\citation{grover2016node2vec}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Flagship hybrid recommendation pipeline used in the paper}}{7}{}\protected@file@percent }
+\newlabel{fig:paper-pipeline}{{3}{7}{}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{Semantic Retrieval}{7}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{Structural Retrieval}{7}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{Hybrid and GNN-Based Models}{7}{}\protected@file@percent }
-\citation{manning2008ir,voorhees1999trec8qa}
+\@writefile{toc}{\contentsline {subsubsection}{Hybrid and GNN-Based Models}{8}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {4}Experiments and Results}{8}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Evaluation Metrics}{8}{}\protected@file@percent }
+\citation{manning2008ir,voorhees1999trec8qa}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Evaluation Metrics}{9}{}\protected@file@percent }
 \citation{saito2015pr}
 \citation{kowald2023popularity}
 \citation{mansoury2020fairmatch,zhao2023fairnessdiversity}
 \citation{zhao2023fairnessdiversity}
 \citation{zhao2023fairnessdiversity}
 \citation{zhao2023fairnessdiversity}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Results}{10}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{Combined Metrics on the Revised Protocol}{10}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Combined ranking and recommendation-quality metrics under the revised evaluation protocol}}{10}{}\protected@file@percent }
-\newlabel{tab:combined-metrics}{{2}{10}{}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Results}{11}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Combined Metrics on the Revised Protocol}{11}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Combined ranking and recommendation-quality metrics under the revised evaluation protocol}}{11}{}\protected@file@percent }
+\newlabel{tab:combined-metrics}{{2}{11}{}{table.2}{}}
 \@writefile{toc}{\contentsline {subsubsection}{Cutoff-10 and Link-Discrimination Metrics}{11}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Cutoff-10 ranking metrics and link-discrimination metrics on the revised protocol}}{11}{}\protected@file@percent }
-\newlabel{tab:extension-metrics}{{3}{11}{}{table.3}{}}
-\@writefile{toc}{\contentsline {subsubsection}{Discussion}{11}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Cutoff-10 ranking metrics and link-discrimination metrics on the revised protocol}}{12}{}\protected@file@percent }
+\newlabel{tab:extension-metrics}{{3}{12}{}{table.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{Discussion}{12}{}\protected@file@percent }
 \bibstyle{splncs04}
 \bibdata{paper_refs}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusion}{12}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{Availability of Data and Code}{12}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{Disclosure of Interests.}{12}{}\protected@file@percent }
-\bibcite{chen2025bgem3}{1}
+\bibcite{chen2024m3embedding}{1}
 \bibcite{devlin2019bert}{2}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusion}{13}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Availability of Data and Code}{13}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Disclosure of Interests.}{13}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Acknowledgments.}{13}{}\protected@file@percent }
 \bibcite{grover2016node2vec}{3}
 \bibcite{hamilton2017inductive}{4}
-\bibcite{anime_hybrid_gnn_bert}{5}
-\bibcite{kipf2017semi}{6}
-\bibcite{kowald2023popularity}{7}
-\bibcite{zhou2023multimodal}{8}
-\bibcite{manning2008ir}{9}
-\bibcite{mansoury2020fairmatch}{10}
-\bibcite{mernyei2020wikics}{11}
-\bibcite{wikirecnet2020}{12}
-\bibcite{reimers2019sentencebert}{13}
-\bibcite{saito2015pr}{14}
-\@writefile{toc}{\contentsline {subsubsection}{Acknowledgments.}{13}{}\protected@file@percent }
-\bibcite{vaswani2017attention}{15}
-\bibcite{voorhees1999trec8qa}{16}
-\bibcite{li2022graph}{17}
+\bibcite{kipf2017semi}{5}
+\bibcite{kowald2023popularity}{6}
+\bibcite{zhou2023multimodal}{7}
+\bibcite{manning2008ir}{8}
+\bibcite{mansoury2020fairmatch}{9}
+\bibcite{mernyei2020wikics}{10}
+\bibcite{wikirecnet2020}{11}
+\bibcite{reimers2019sentencebert}{12}
+\bibcite{saito2015pr}{13}
+\bibcite{vaswani2017attention}{14}
+\bibcite{voorhees1999trec8qa}{15}
+\bibcite{wang2024gnntextsurvey}{16}
+\bibcite{wikigraphs2021}{17}
 \bibcite{zhao2023fairnessdiversity}{18}
-\gdef \@abspage@last{14}
+\gdef \@abspage@last{15}

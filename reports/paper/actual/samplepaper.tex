@@ -34,55 +34,76 @@ To support this setting, we introduce a reconstructed and up-to-date version of 
 
 \section{Introduction}
 
-Article recommendation can be studied under several settings. Many widely used
-systems rely on user behavior, collaborative signals, or historical interaction
-patterns. The setting considered in this paper is different: given a source
-Wikipedia article, the objective is to retrieve a ranked list of related
-articles that are both semantically relevant and structurally meaningful in the
- hyperlink graph. This article-to-article formulation is useful when explicit
-user histories are unavailable, when interpretability matters, or when the goal
-is guided exploration of a knowledge domain rather than personalized
-consumption.
+Wikipedia is more than a collection of isolated articles; it is a large,
+widely used, openly accessible knowledge environment in which rich page
+content coexists with explicit hyperlink relations and broad topical coverage.
+These properties have made Wikipedia a recurring resource for benchmark
+construction, retrieval, graph-learning, and graph-text modeling
+research~\cite{mernyei2020wikics,wikirecnet2020,wikigraphs2021}.
+From a modeling perspective, this is appealing because the same article space
+exposes both semantic content and relational context.
 
-Wikipedia is a natural graph environment for this task. Its hyperlink structure
-encodes editorial and conceptual relations, while article text provides a dense
-semantic signal that can reveal topical proximity even when direct links are
-missing. These two sources of information are complementary, but they are not
-always easy to combine in a way that preserves both topological context and
-textual meaning. This makes Wikipedia article recommendation a suitable testbed
-for hybrid semantic-structural retrieval.
+Within this environment, article-to-article recommendation is a natural and
+useful problem. Given a page currently being examined, the goal is to recommend
+other pages worth reading next. The hyperlink graph provides a strong starting
+point because direct links often encode editorial, conceptual, or historical
+relatedness~\cite{wikirecnet2020,grover2016node2vec}. However, graph structure
+alone may not be sufficient. For instance, a recommendation process driven only
+by hyperlink topology around an operating-systems article may emphasize
+directly linked hub pages such as Linus Torvalds, while semantically close but
+less directly connected pages on kernel design, Unix-like systems, or
+file-system concepts can remain under-ranked. This suggests that page content
+is not an auxiliary signal but a second source of evidence for recommendation.
 
-The starting point of this work is Wiki-CS, a widely used benchmark derived
-from Wikipedia and originally designed for node classification
-experiments~\cite{mernyei2020wikics}. Although Wiki-CS offers a graph-ready
-representation and broad accessibility, it does not directly provide a
-text-complete, up-to-date benchmark for article recommendation with modern text
-encoders. This creates two related needs: an updated dataset layer with
-recoverable article text, and a recommendation framework able to compare
-semantic, structural, hybrid, and GNN-based approaches under a shared
-evaluation setting.
+This observation creates a practical gap in open Wikipedia benchmarks. On the
+one hand, Wikipedia-derived graph resources such as Wiki-CS provide a
+convenient and widely reused structural benchmark~\cite{mernyei2020wikics}. On
+the other hand, Wiki-CS was introduced for node classification rather than
+article recommendation, and it does not directly provide a text-complete,
+up-to-date benchmark for regenerating article representations with modern text
+encoders. Graph-text paired resources exist for other objectives as
+well~\cite{wikigraphs2021}, but they do not by themselves resolve the need for
+a recommendation-oriented, text-recoverable version of Wiki-CS. As a result,
+there remains a gap between the availability of open Wikipedia graphs and the
+availability of an open benchmark that supports joint structural and semantic
+recommendation experiments on the same article set.
 
-This paper addresses both needs. First, we reconstruct Wiki-CS into a
-text-enriched benchmark, Custom-WikiCS, by aligning titles, recovering article
-text, and attaching modern embedding representations. Second, we introduce a
-graph-based article recommendation framework built around semantic retrieval,
-Node2Vec-based structural retrieval, corrected structural variants, pooled
-semantic-structural hybrids, and graph-neural baselines. Third, we evaluate
-these model families under a revised undirected protocol that is better aligned
-with the structural view of the task.
+The first goal of this study is to close that gap at the dataset level. We
+focus on Wiki-CS because its computer-science article subset provides a
+controlled topical setting in which recommendation consistency can be examined
+within a coherent domain. Starting from this benchmark, we reconstruct the
+article layer by cleaning titles, recovering raw text from open sources, and
+attaching modern dense embeddings, thereby producing an updated benchmark that
+supports contemporary semantic retrieval.
 
-The main contributions of the paper are:
+The second goal is methodological. We study recommendation models that use
+graph topology, article content, or both. In particular, we investigate a
+hybrid recommendation framework that combines BERT-style semantic embeddings,
+instantiated with BGE-M3~\cite{chen2024m3embedding}, and Node2Vec-based structural
+representations~\cite{grover2016node2vec}, alongside GCN and GraphSAGE
+baselines~\cite{kipf2017semi,hamilton2017inductive}. We also examine corrected
+structural variants and pooled semantic representations in order to better
+balance structural and textual evidence. To assess whether the proposed hybrid
+strategy is useful beyond a narrow baseline comparison, we evaluate it against
+a broad spectrum of semantic, structural, hybrid, and GNN-based alternatives.
+
+The contributions of this paper are threefold:
 \begin{itemize}
-\item a reconstructed version of Wiki-CS, denoted Custom-WikiCS, with complete
-      raw text for every active node and support for modern text embedding
-      pipelines;
-\item a hybrid recommendation framework that combines sentence embeddings with
-      Node2Vec-derived structural signals, including corrected structural
-      variants and pooled semantic fusion;
-\item a comparative benchmark across semantic, structural, hybrid, and GNN
-      baselines under a revised evaluation protocol for article-to-article
-      recommendation.
+\item We introduce Custom-WikiCS, a reconstructed and text-complete version of
+      Wiki-CS with recovered raw text for every active node and support for
+      modern embedding pipelines.
+\item We propose a hybrid article recommendation framework that combines
+      BGE-M3 semantic representations with Node2Vec-based structural signals,
+      including corrected structural scoring and pooled fusion variants.
+\item We provide a comparative evaluation across recommendation-accuracy and
+      recommendation-quality metrics under a revised undirected protocol,
+      covering semantic, structural, hybrid, and GNN-based baselines.
 \end{itemize}
+
+The remainder of the paper is organized as follows. Section~2 reviews related
+work. Section~3 presents the methodology, including the Custom-WikiCS
+reconstruction and the recommendation framework. Section~4 describes the
+experimental setting and results. Section~5 concludes the paper.
 
 \section{Related Work}
 
@@ -102,7 +123,7 @@ encoders~\cite{vaswani2017attention} and BERT-style models~\cite{devlin2019bert}
 have made dense semantic retrieval practical at sentence and document level.
 Sentence-BERT~\cite{reimers2019sentencebert} further showed how BERT-like
 architectures can be adapted for efficient similarity search. More recent
-retrieval-oriented models, such as BGE-M3~\cite{chen2025bgem3}, are explicitly
+retrieval-oriented models, such as BGE-M3~\cite{chen2024m3embedding}, are explicitly
 designed for strong dense retrieval across multilingual settings and thus fit
 the recommendation scenario considered here.
 
@@ -119,11 +140,9 @@ standard transductive baseline~\cite{kipf2017semi}, while
 GraphSAGE~\cite{hamilton2017inductive} introduces neighborhood aggregation with
 an inductive flavor. Survey work on GNNs for text-related settings suggests
 that these models remain central at the interface of graph structure and
-linguistic representation~\cite{li2022graph}. In parallel, multimodal and
+linguistic representation~\cite{wang2024gnntextsurvey}. In parallel, multimodal and
 hybrid recommender systems increasingly combine text and graph signals rather
-than relying on either source alone~\cite{zhou2023multimodal}. Practical hybrid
-examples based on BERT and GNN components also show that fusion design can
-change retrieval behavior substantially~\cite{anime_hybrid_gnn_bert}.
+than relying on either source alone~\cite{zhou2023multimodal}.
 
 The present work is positioned at the intersection of these directions. It uses
 Wikipedia as a graph recommendation environment, updates a widely used benchmark
@@ -281,7 +300,7 @@ $\downarrow$ & $\downarrow$ \\[0.4em]
 
 \subsubsection{Semantic Retrieval}
 
-The semantic component uses BGE-M3 text embeddings~\cite{chen2025bgem3}. Each
+The semantic component uses BGE-M3 text embeddings~\cite{chen2024m3embedding}. Each
 article is represented by a 1024-dimensional dense vector derived from its
 reconstructed text. Recommendation scores in the semantic-only setting are
 computed by cosine similarity between source and candidate embeddings:

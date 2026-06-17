@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  18 JUN 2026 00:24
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  18 JUN 2026 00:46
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -370,85 +370,75 @@ Overfull \hbox (8.43097pt too wide) in paragraph at lines 28--29
 [1
 
 {C:/Users/sahin/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}]
-Overfull \hbox (15.03802pt too wide) in paragraph at lines 65--73
-\T1/cmr/m/n/10 based ar-ti-cle rec-om-men-da-tion frame-work built around se-ma
-n-tic re-trieval, Node2Vec-
- []
+Underfull \vbox (badness 1102) has occurred while \output is active []
 
+ [2]
+[3]
+Underfull \vbox (badness 6047) has occurred while \output is active []
 
-Overfull \hbox (7.87311pt too wide) in paragraph at lines 65--73
-\T1/cmr/m/n/10 based struc-tural re-trieval, cor-rected struc-tural vari-ants, 
-pooled semantic-structural
- []
-
-
-Overfull \hbox (0.51794pt too wide) in paragraph at lines 79--82
-\T1/cmr/m/n/10 with Node2Vec-derived struc-tural sig-nals, in-clud-ing cor-rect
-ed struc-tural vari-
- []
-
-[2] [3] [4]
+ [4]
 <figs/degree-log-log.png, id=27, 564.6696pt x 418.6842pt>
 File: figs/degree-log-log.png Graphic file (type png)
 <use figs/degree-log-log.png>
-Package pdftex.def Info: figs/degree-log-log.png  used on input line 209.
+Package pdftex.def Info: figs/degree-log-log.png  used on input line 228.
 (pdftex.def)             Requested size: 163.14848pt x 120.96811pt.
 <figs/cosine-similarity-assortativity.png, id=29, 709.6914pt x 418.6842pt>
 File: figs/cosine-similarity-assortativity.png Graphic file (type png)
 <use figs/cosine-similarity-assortativity.png>
 Package pdftex.def Info: figs/cosine-similarity-assortativity.png  used on inpu
-t line 214.
+t line 233.
 (pdftex.def)             Requested size: 170.09244pt x 100.3457pt.
-<figs/community-size-distribution-louvain.png, id=30, 709.6914pt x 346.4142pt>
+
+Underfull \vbox (badness 2012) has occurred while \output is active []
+
+ [5 <./figs/degree-log-log.png> <./figs/cosine-similarity-assortativity.png>]
+<figs/community-size-distribution-louvain.png, id=35, 709.6914pt x 346.4142pt>
 File: figs/community-size-distribution-louvain.png Graphic file (type png)
 <use figs/community-size-distribution-louvain.png>
 Package pdftex.def Info: figs/community-size-distribution-louvain.png  used on 
-input line 239.
+input line 258.
 (pdftex.def)             Requested size: 142.32191pt x 69.46661pt.
-<figs/similarity-distributions.png, id=31, 1000.2168pt x 424.9476pt>
+<figs/similarity-distributions.png, id=36, 1000.2168pt x 424.9476pt>
 File: figs/similarity-distributions.png Graphic file (type png)
 <use figs/similarity-distributions.png>
 Package pdftex.def Info: figs/similarity-distributions.png  used on input line 
-244.
+263.
 (pdftex.def)             Requested size: 190.91899pt x 81.11047pt.
 
-Underfull \vbox (badness 2735) has occurred while \output is active []
-
- [5 <./figs/degree-log-log.png> <./figs/cosine-similarity-assortativity.png>]
-Underfull \vbox (badness 1097) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [6 <./figs/community-size-distribution-louvain.png> <./figs/similarity-distrib
-utions.png>] [7] [8] [9] [10] [11]
-Overfull \hbox (40.58879pt too wide) in paragraph at lines 666--668
+utions.png>] [7] [8] [9] [10] [11] [12]
+Overfull \hbox (40.58879pt too wide) in paragraph at lines 685--687
 \T1/cmr/m/n/9 used in this study are cur-rently avail-able at $\T1/cmtt/m/n/9 h
 ttps : / / github . com / regsah / graph-[]final-[]project$\T1/cmr/m/n/9 . 
  []
 
-(samplepaper.bbl [12]
-Underfull \hbox (badness 1189) in paragraph at lines 66--69
+(samplepaper.bbl [13]
+Underfull \hbox (badness 1189) in paragraph at lines 62--65
 []\T1/cmr/m/n/9 Moskalenko, O., Parra, D., Sáez-Trumper, D.: Scal-able rec-om-m
 en-da-tion of
  []
 
-[13]
-Underfull \hbox (badness 10000) in paragraph at lines 95--99
+
+Underfull \hbox (badness 10000) in paragraph at lines 91--95
 []\T1/cmr/m/n/9 Wang, K., Ding, Y., Han, S.C.: Graph neu-ral net-works for text
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 95--99
+Underfull \hbox (badness 10000) in paragraph at lines 91--95
 \T1/cmr/m/n/9 clas-si-fi-ca-tion: A sur-vey. Ar-ti-fi-cial In-tel-li-gence Re-v
 iew \T1/cmr/bx/n/9 57\T1/cmr/m/n/9 (8) (2024).
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 95--99
+Underfull \hbox (badness 10000) in paragraph at lines 91--95
 \T1/cmr/m/n/9 https://doi.org/10.1007/s10462-024-10808-0, $\T1/cmtt/m/n/9 https
  : / / link . springer . com /
  []
 
-) [14] (samplepaper.aux)
+[14]) [15] (samplepaper.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
@@ -456,12 +446,12 @@ L3 programming layer <2025-12-24>
  ) 
 Here is how much of TeX's memory you used:
  3728 strings out of 467871
- 54152 string characters out of 5418376
- 475966 words of memory out of 5000000
+ 54161 string characters out of 5418376
+ 477966 words of memory out of 5000000
  32560 multiletter control sequences out of 15000+600000
  643182 words of font info for 78 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 57i,14n,65p,768b,337s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,14n,65p,768b,336s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm
 0600.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi60
 0\ecrm0700.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec
@@ -487,9 +477,9 @@ ta/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/sah
 in/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/U
 sers/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/ms
 bm10.pfb>
-Output written on samplepaper.pdf (14 pages, 500275 bytes).
+Output written on samplepaper.pdf (15 pages, 501867 bytes).
 PDF statistics:
- 509 PDF objects out of 1000 (max. 8388607)
+ 512 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 
