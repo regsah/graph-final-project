@@ -9,6 +9,11 @@ Chen, J., Xiao, S., Zhang, P., Luo, K., Lian, D., Liu, Z.: M3-embedding:
   through self-knowledge distillation (2024),
   \url{https://arxiv.org/abs/2402.03216}
 
+\bibitem{consonni2019wikilinkgraphs}
+Consonni, C., Laniado, D., Montresor, A.: Wikilinkgraphs: A complete,
+  longitudinal and multi-language dataset of the wikipedia link networks
+  (2019), \url{https://arxiv.org/abs/1902.04298}
+
 \bibitem{devlin2019bert}
 Devlin, J., Chang, M.W., Lee, K., Toutanova, K.: Bert: Pre-training of deep
   bidirectional transformers for language understanding. In: Proceedings of the
@@ -63,6 +68,12 @@ Moskalenko, O., Parra, D., S{\'a}ez-Trumper, D.: Scalable recommendation of
   wikipedia articles to editors using representation learning (2020),
   \url{https://arxiv.org/abs/2009.11771}
 
+\bibitem{petroni2020kilt}
+Petroni, F., Piktus, A., Fan, A., Lewis, P., Yazdani, M., De~Cao, N., Thorne,
+  J., Jernite, Y., Karpukhin, V., Maillard, J., Plachouras, V.,
+  Rockt{\"a}schel, T., Riedel, S.: Kilt: a benchmark for knowledge intensive
+  language tasks (2020), \url{https://arxiv.org/abs/2009.02252}
+
 \bibitem{reimers2019sentencebert}
 Reimers, N., Gurevych, I.: Sentence-bert: Sentence embeddings using siamese
   bert-networks. In: Proceedings of the 2019 Conference on Empirical Methods in
@@ -97,6 +108,11 @@ Wang, K., Ding, Y., Han, S.C.: Graph neural networks for text classification: A
 Wang, L., Li, Y., Aslan, O., Vinyals, O.: Wikigraphs: A wikipedia
   text--knowledge graph paired dataset (2021),
   \url{https://arxiv.org/abs/2107.09556}
+
+\bibitem{wong2021wikireliability}
+Wong, K., Redi, M., S{\'a}ez-Trumper, D.: Wiki-reliability: A large scale
+  dataset for content reliability on wikipedia (2021),
+  \url{https://arxiv.org/abs/2105.04117}
 
 \bibitem{zhao2023fairnessdiversity}
 Zhao, Y., Wang, Y., Liu, Y., Cheng, X., Aggarwal, C., Derr, T.: Fairness and

@@ -39,8 +39,8 @@ articles can be read both as natural-language documents and as vertices in an
 explicit hyperlink network. Its pages are publicly reachable as text, its links
 encode relations among topics, and its coverage spans a broad range of domains.
 For these reasons, Wikipedia has repeatedly been used in benchmark
-construction, retrieval studies, graph learning, and graph-text
-modeling~\cite{mernyei2020wikics,wikirecnet2020,wikigraphs2021,devlin2019bert,reimers2019sentencebert}.
+construction, retrieval studies, graph learning, knowledge-intensive NLP, and
+content-oriented analysis~\cite{mernyei2020wikics,wikirecnet2020,wikigraphs2021,petroni2020kilt,wong2021wikireliability}.
 From an analytical perspective, this dual availability of content and
 relational structure makes the same article collection suitable for semantic
 modeling, structural modeling, and experiments that combine both views.
@@ -61,8 +61,8 @@ feature.
 
 This is also what makes the Wikipedia setting scientifically interesting.
 Openly available graph extractions make structural experimentation feasible, and
-Wikipedia-derived resources such as Wiki-CS provide a convenient and widely
-reused benchmark substrate~\cite{mernyei2020wikics}. However, the open
+resources such as WikiLinkGraphs and Wiki-CS provide convenient benchmark
+substrates for studying Wikipedia connectivity at scale~\cite{consonni2019wikilinkgraphs,mernyei2020wikics}. However, the open
 resources are uneven across structure and content. Wiki-CS was introduced for
 node classification rather than article recommendation, and it does not
 directly expose the recovered, up-to-date raw article text needed to
@@ -85,7 +85,7 @@ supports contemporary semantic retrieval.
 The second goal is methodological. We study recommendation models that use
 graph topology, article content, or both, and we treat these signals as
 complementary rather than interchangeable. In particular, we investigate a
-hybrid recommendation framework that combines BERT-style semantic embeddings,
+hybrid recommendation framework that combines BERT-based semantic embeddings,
 instantiated with BGE-M3~\cite{chen2024m3embedding}, and Node2Vec-based structural
 representations~\cite{grover2016node2vec}, alongside semantic-only,
 structural-only, GCN, and GraphSAGE baselines~\cite{kipf2017semi,hamilton2017inductive}.
