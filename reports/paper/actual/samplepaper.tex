@@ -397,36 +397,35 @@ exactly one held-out target in the ranking protocol, several metrics simplify.
 The basic top-list metrics are
 
 \begin{equation}
-Hit@K = \frac{1}{|Q|}\sum_{q \in Q} \mathbf{1}[r_q \le K]
+\text{Hit@}K = \frac{1}{|Q|}\sum_{q \in Q} \mathbf{1}[r_q \le K]
 \end{equation}
 
 
 
-\[
-\text{Hit@}K = \frac{1}{|Q|}\sum_{q \in Q} \mathbf{1}[r_q \le K],
-\qquad
-\text{MRR} = \frac{1}{|Q|}\sum_{q \in Q} \frac{1}{r_q}.
-\]
+\begin{equation}
+\text{MRR} = \frac{1}{|Q|}\sum_{q \in Q} \frac{1}{r_q}
+\end{equation}
 For the same single-target setting, normalized discounted cumulative gain
 reduces to
-\[
+\begin{equation}
 \text{NDCG@}K = \frac{1}{|Q|}\sum_{q \in Q}
-\frac{\mathbf{1}[r_q \le K]}{\log_2(r_q + 1)},
-\]
+\frac{\mathbf{1}[r_q \le K]}{\log_2(r_q + 1)}
+\end{equation}
 since the ideal DCG of one relevant item equals \(1\). Likewise,
-\[
+\begin{equation}
 \text{Recall@}K = \text{Hit@}K
-\]
+\end{equation}
 and average precision becomes
-\[
+\begin{equation}
 \text{AP@}K(q) =
 \begin{cases}
 1/r_q, & r_q \le K,\\
 0, & r_q > K,
 \end{cases}
-\qquad
-\text{MAP@}K = \frac{1}{|Q|}\sum_{q \in Q} \text{AP@}K(q).
-\]
+\end{equation}
+\begin{equation}
+\text{MAP@}K = \frac{1}{|Q|}\sum_{q \in Q} \text{AP@}K(q)
+\end{equation}
 In the main results table, the unlabeled NDCG, Recall, and MAP columns
 correspond to \(NDCG@100\), \(Recall@100\), and \(MAP@100\). Therefore Recall
 is numerically identical to Hit@100 in our setup.
@@ -437,23 +436,23 @@ edges. ROC-AUC measures the area traced by true-positive rate and false-positive
 rate across thresholds, while PR-AUC measures the area under the
 precision-recall curve and is especially informative under class
 imbalance~\cite{saito2015pr}:
-\[
+\begin{equation}
 \begin{aligned}
 \text{TPR}(\tau) &= \frac{TP(\tau)}{TP(\tau)+FN(\tau)}, \\
 \text{FPR}(\tau) &= \frac{FP(\tau)}{FP(\tau)+TN(\tau)}, \\
 \text{Precision}(\tau) &= \frac{TP(\tau)}{TP(\tau)+FP(\tau)}.
 \end{aligned}
-\]
+\end{equation}
 
 We also report recommendation-quality metrics that characterize broader system
 behavior beyond target ranking. Let \(C\) denote the candidate article set,
 let \(d(v)\) be the undirected degree of article \(v\), and let
 \(M = \sum_{v \in C}(d(v)+1)\). Popularity Lift is computed as
-\[
+\begin{equation}
 \text{Popularity Lift} =
 \frac{\frac{1}{|Q|}\sum_{q \in Q}\frac{1}{|L_q|}\sum_{v \in L_q} d(v)}
-{\frac{1}{|C|}\sum_{v \in C} d(v)}.
-\]
+{\frac{1}{|C|}\sum_{v \in C} d(v)}
+\end{equation}
 This is a graph-degree adaptation of popularity lift in recommendation-bias
 evaluation~\cite{kowald2023popularity}. Values above \(1\) indicate that a
 model tends to recommend higher-degree articles than the candidate-pool
@@ -461,36 +460,36 @@ baseline.
 
 Aggregate Diversity counts how many distinct articles appear at least once
 across all recommendation lists~\cite{mansoury2020fairmatch,zhao2023fairnessdiversity}:
-\[
-\text{Aggregate Diversity} = \left| \bigcup_{q \in Q} L_q \right|.
-\]
+\begin{equation}
+\text{Aggregate Diversity} = \left| \bigcup_{q \in Q} L_q \right|
+\end{equation}
 Novelty is measured with a graph-degree-based self-information score,
-\[
+\begin{equation}
 \text{Novelty} =
 \frac{1}{|Q|}\sum_{q \in Q}\frac{1}{|L_q|}\sum_{v \in L_q}
--\log_2\left(\frac{d(v)+1}{M}\right),
-\]
+-\log_2\left(\frac{d(v)+1}{M}\right)
+\end{equation}
 which is the graph-adapted form used in our implementation rather than an
 interaction-frequency definition~\cite{zhao2023fairnessdiversity}. For
 Intra-List Diversity (ILD), we average pairwise cosine distances within each
 recommendation list in semantic embedding space:
-\[
+\begin{equation}
 \text{ILD} =
 \frac{1}{|Q|}\sum_{q \in Q}
 \frac{2}{|L_q|(|L_q|-1)}
 \sum_{i<j,\ v_i,v_j \in L_q}
-\left(1-\cos(e(v_i), e(v_j))\right),
-\]
+\left(1-\cos(e(v_i), e(v_j))\right)
+\end{equation}
 where \(e(v)\) denotes the BGE-M3 embedding of article \(v\) and the formula is
 applied to lists with at least two items~\cite{zhao2023fairnessdiversity}.
 Finally, let \(c_{(1)} \le \cdots \le c_{(n)}\) denote the sorted recommendation
 counts of the distinct articles that appear in at least one list. The Gini
 Index is
-\[
+\begin{equation}
 \text{Gini} =
 \frac{\sum_{i=1}^{n}(2i-n-1)c_{(i)}}
-{n\sum_{i=1}^{n} c_{(i)}},
-\]
+{n\sum_{i=1}^{n} c_{(i)}}
+\end{equation}
 which summarizes how unevenly recommendation exposure is distributed over the
 catalog~\cite{zhao2023fairnessdiversity}. Higher values are better for Hit-based
 metrics, MRR, NDCG, MAP, Aggregate Diversity, Novelty, ILD, ROC-AUC, and
@@ -663,22 +662,25 @@ Wikipedia domains, alternative structural correction schemes, and richer hybrid
 fusion strategies that preserve interpretability while improving recommendation
 quality.
 
-\section*{Availability of Data and Code}
-
+\begin{credits}
+\subsubsection{Availability of Data and Code}
 The codebase and dataset reconstruction artifacts used in this study are
 currently available at \url{https://github.com/regsah/graph-final-project}.
 
-\section*{Disclosure of Interests}
-
+\subsubsection{\discintname}
 The authors have no competing interests to declare.
 
-\section*{Acknowledgment}
-This work is supported by the Galatasaray University Research Fund (BAP) within the scope of project number FBA-2026-1345, titled \textit{Çok Modlu Öneri Sistemlerinde Doğruluk, Çeşitlilik, Adalet ve}.
-
-
+\subsubsection{\ackname}
+This work is supported by the Galatasaray University Research Fund (BAP) within
+the scope of project number FBA-2026-1345.
+\end{credits}
 
 \bibliographystyle{splncs04}
 \bibliography{paper_refs}
 
 \end{document}
+
+
+
+
 

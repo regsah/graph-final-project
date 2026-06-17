@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  17 JUN 2026 17:02
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  18 JUN 2026 00:14
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -292,42 +292,54 @@ Package: float 2001/11/08 v1.3d Float enhancements (AL)
 \Urlmuskip=\muskip18
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
+(C:\Users\sahin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\rotating.sty
+Package: rotating 2025/01/14 v2.16e rotated objects in LaTeX
+
+(C:\Users\sahin\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
+Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
+)
+\c@r@tfl@t=\count331
+\rotFPtop=\skip56
+\rotFPbot=\skip57
+\rot@float@box=\box105
+\rot@mess@toks=\toks29
+)
 (C:\Users\sahin\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdf
 tex.def
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count331
+\l__color_backend_stack_int=\count332
 ) (samplepaper.aux)
 \openout1 = `samplepaper.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
 
 (C:\Users\sahin\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mk
 ii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count332
+\scratchcounter=\count333
 \scratchdimen=\dimen195
-\scratchbox=\box105
-\nofMPsegments=\count333
-\nofMParguments=\count334
-\everyMPshowfont=\toks29
-\MPscratchCnt=\count335
+\scratchbox=\box106
+\nofMPsegments=\count334
+\nofMParguments=\count335
+\everyMPshowfont=\toks30
+\MPscratchCnt=\count336
 \MPscratchDim=\dimen196
-\MPnumerator=\count336
-\makeMPintoPDFobject=\count337
-\everyMPtoPDFconversion=\toks30
+\MPnumerator=\count337
+\makeMPintoPDFobject=\count338
+\everyMPtoPDFconversion=\toks31
 )
 (C:\Users\sahin\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-b
 ase.sty
@@ -339,18 +351,18 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 fg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
-LaTeX Font Info:    Trying to load font information for U+msa on input line 22.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 23.
 
  (C:\Users\sahin\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 22.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 23.
 
 
 (C:\Users\sahin\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Overfull \hbox (8.43097pt too wide) in paragraph at lines 27--28
+Overfull \hbox (8.43097pt too wide) in paragraph at lines 28--29
 []\T1/cmr/m/n/9 This study presents a graph-based article-to-article rec-om-men
 -da-tion frame-
  []
@@ -358,19 +370,19 @@ Overfull \hbox (8.43097pt too wide) in paragraph at lines 27--28
 [1
 
 {C:/Users/sahin/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}]
-Overfull \hbox (15.03802pt too wide) in paragraph at lines 64--72
+Overfull \hbox (15.03802pt too wide) in paragraph at lines 65--73
 \T1/cmr/m/n/10 based ar-ti-cle rec-om-men-da-tion frame-work built around se-ma
 n-tic re-trieval, Node2Vec-
  []
 
 
-Overfull \hbox (7.87311pt too wide) in paragraph at lines 64--72
+Overfull \hbox (7.87311pt too wide) in paragraph at lines 65--73
 \T1/cmr/m/n/10 based struc-tural re-trieval, cor-rected struc-tural vari-ants, 
 pooled semantic-structural
  []
 
 
-Overfull \hbox (0.51794pt too wide) in paragraph at lines 78--81
+Overfull \hbox (0.51794pt too wide) in paragraph at lines 79--82
 \T1/cmr/m/n/10 with Node2Vec-derived struc-tural sig-nals, in-clud-ing cor-rect
 ed struc-tural vari-
  []
@@ -379,29 +391,40 @@ ed struc-tural vari-
 <figs/degree-log-log.png, id=27, 564.6696pt x 418.6842pt>
 File: figs/degree-log-log.png Graphic file (type png)
 <use figs/degree-log-log.png>
-Package pdftex.def Info: figs/degree-log-log.png  used on input line 206.
+Package pdftex.def Info: figs/degree-log-log.png  used on input line 209.
 (pdftex.def)             Requested size: 163.14848pt x 120.96811pt.
 <figs/cosine-similarity-assortativity.png, id=29, 709.6914pt x 418.6842pt>
 File: figs/cosine-similarity-assortativity.png Graphic file (type png)
 <use figs/cosine-similarity-assortativity.png>
 Package pdftex.def Info: figs/cosine-similarity-assortativity.png  used on inpu
-t line 211.
+t line 214.
 (pdftex.def)             Requested size: 170.09244pt x 100.3457pt.
 <figs/community-size-distribution-louvain.png, id=30, 709.6914pt x 346.4142pt>
 File: figs/community-size-distribution-louvain.png Graphic file (type png)
 <use figs/community-size-distribution-louvain.png>
 Package pdftex.def Info: figs/community-size-distribution-louvain.png  used on 
-input line 236.
+input line 239.
 (pdftex.def)             Requested size: 142.32191pt x 69.46661pt.
 <figs/similarity-distributions.png, id=31, 1000.2168pt x 424.9476pt>
 File: figs/similarity-distributions.png Graphic file (type png)
 <use figs/similarity-distributions.png>
 Package pdftex.def Info: figs/similarity-distributions.png  used on input line 
-241.
+244.
 (pdftex.def)             Requested size: 190.91899pt x 81.11047pt.
- [5 <./figs/degree-log-log.png> <./figs/cosine-similarity-assortativity.png>] [
-6 <./figs/community-size-distribution-louvain.png> <./figs/similarity-distribut
-ions.png>] [7] [8] [9] [10] [11] [12] (samplepaper.bbl
+
+Underfull \vbox (badness 2735) has occurred while \output is active []
+
+ [5 <./figs/degree-log-log.png> <./figs/cosine-similarity-assortativity.png>]
+Underfull \vbox (badness 1097) has occurred while \output is active []
+
+ [6 <./figs/community-size-distribution-louvain.png> <./figs/similarity-distrib
+utions.png>] [7] [8] [9] [10] [11]
+Overfull \hbox (40.58879pt too wide) in paragraph at lines 667--669
+\T1/cmr/m/n/9 used in this study are cur-rently avail-able at $\T1/cmtt/m/n/9 h
+ttps : / / github . com / regsah / graph-[]final-[]project$\T1/cmr/m/n/9 . 
+ []
+
+(samplepaper.bbl [12]
 Underfull \hbox (badness 1189) in paragraph at lines 66--69
 []\T1/cmr/m/n/9 Moskalenko, O., Parra, D., Sáez-Trumper, D.: Scal-able rec-om-m
 en-da-tion of
@@ -432,42 +455,41 @@ L3 programming layer <2025-12-24>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 3592 strings out of 467871
- 51982 string characters out of 5418376
- 472955 words of memory out of 5000000
- 32429 multiletter control sequences out of 15000+600000
- 643495 words of font info for 79 fonts, out of 8000000 for 9000
+ 3728 strings out of 467871
+ 54152 string characters out of 5418376
+ 475966 words of memory out of 5000000
+ 32560 multiletter control sequences out of 15000+600000
+ 643182 words of font info for 78 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 57i,14n,65p,768b,338s stack positions out of 10000i,1000n,20000p,200000b,200000s
- <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt
-1000.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi60
-0\ecrm0600.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec
-/dpi600\ecrm0700.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknap
-pen/ec/dpi600\ecbx1000.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour
-/jknappen/ec/dpi600\ecbx1200.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/
-ljfour/jknappen/ec/dpi600\tcrm0900.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fon
-ts/pk/ljfour/jknappen/ec/dpi600\ecbx0900.pk> <C:\Users\sahin\AppData\Local\MiKT
-eX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt0900.pk> <C:\Users\sahin\AppData\Loca
-l\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm0900.pk> <C:\Users\sahin\AppDat
-a\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm1000.pk> <C:\Users\sahin\
-AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecbx1440.pk><C:/Users/s
-ahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C
-:/Users/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex
-10.pfb><C:/Users/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont
-s/cm/cmmi10.pfb><C:/Users/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/publi
-c/amsfonts/cm/cmmi5.pfb><C:/Users/sahin/AppData/Local/Programs/MiKTeX/fonts/typ
-e1/public/amsfonts/cm/cmmi6.pfb><C:/Users/sahin/AppData/Local/Programs/MiKTeX/f
-onts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/sahin/AppData/Local/Programs/
-MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/sahin/AppData/Local/P
-rograms/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/sahin/AppData/
-Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/sahin
-/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Use
-rs/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb
-><C:/Users/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symb
-ols/msbm10.pfb>
-Output written on samplepaper.pdf (14 pages, 509546 bytes).
+ 57i,14n,65p,768b,337s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm
+0600.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi60
+0\ecrm0700.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec
+/dpi600\ecbx1000.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknap
+pen/ec/dpi600\ecbx1200.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour
+/jknappen/ec/dpi600\tcrm0900.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/
+ljfour/jknappen/ec/dpi600\ecbx0900.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fon
+ts/pk/ljfour/jknappen/ec/dpi600\ectt0900.pk> <C:\Users\sahin\AppData\Local\MiKT
+eX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm0900.pk> <C:\Users\sahin\AppData\Loca
+l\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm1000.pk> <C:\Users\sahin\AppDat
+a\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecbx1440.pk><C:/Users/sahin/A
+ppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/User
+s/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb
+><C:/Users/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/c
+mmi10.pfb><C:/Users/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsf
+onts/cm/cmmi5.pfb><C:/Users/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/pub
+lic/amsfonts/cm/cmmi6.pfb><C:/Users/sahin/AppData/Local/Programs/MiKTeX/fonts/t
+ype1/public/amsfonts/cm/cmmi7.pfb><C:/Users/sahin/AppData/Local/Programs/MiKTeX
+/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/sahin/AppData/Local/Program
+s/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/sahin/AppData/Local/
+Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/sahin/AppDa
+ta/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/sah
+in/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/U
+sers/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/ms
+bm10.pfb>
+Output written on samplepaper.pdf (14 pages, 500307 bytes).
 PDF statistics:
- 542 PDF objects out of 1000 (max. 8388607)
+ 509 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 
