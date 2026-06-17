@@ -7,6 +7,7 @@
 \usepackage{amssymb}
 \usepackage{float}
 \usepackage{url}
+\usepackage{rotating}
 
 \begin{document}
 
@@ -129,9 +130,11 @@ Wikipedia as a graph recommendation environment, updates a widely used benchmark
 to support modern text modeling, and compares semantic, structural, hybrid, and
 GNN-based article recommendation models within one experimental framework.
 
-\section{Custom-WikiCS Reconstruction}
 
-\subsection{Motivation and Reconstruction Pipeline}
+\section{Method}
+\subsection{Custom-WikiCS Reconstruction}
+
+\subsubsection{Motivation and Reconstruction Pipeline}
 
 The original Wiki-CS graph is useful as a structural benchmark, but it is less
 convenient for modern article recommendation because the benchmark is graph-ready
@@ -177,7 +180,7 @@ Undirected edges & 216,123 \\
 \end{tabular}
 \end{table}
 
-\subsection{Graph Characteristics}
+\subsubsection{Graph Characteristics}
 
 The cleaned graph exhibits a heavy-tailed degree distribution, indicating that a
 small number of hub articles coexist with a much larger set of lower-degree
@@ -245,9 +248,9 @@ community similarity comparison.
 \label{fig:community-diagnostics}
 \end{figure}
 
-\section{Recommendation Framework}
+\subsection{Recommendation Framework}
 
-\subsection{Task Definition}
+\subsubsection{Task Definition}
 
 Let $G=(V,E)$ denote the reconstructed article graph. For a source article
 $u\in V$, the goal is to return a ranked list of candidate articles
@@ -276,7 +279,7 @@ $\downarrow$ & $\downarrow$ \\[0.4em]
 \label{fig:paper-pipeline}
 \end{figure}
 
-\subsection{Semantic Retrieval}
+\subsubsection{Semantic Retrieval}
 
 The semantic component uses BGE-M3 text embeddings~\cite{chen2025bgem3}. Each
 article is represented by a 1024-dimensional dense vector derived from its
@@ -290,7 +293,7 @@ This component captures semantic proximity even when the hyperlink relation is
 sparse or absent, and it serves as both a standalone baseline and one component
 of the hybrid models.
 
-\subsection{Structural Retrieval}
+\subsubsection{Structural Retrieval}
 
 The structural component uses Node2Vec-style representations~\cite{grover2016node2vec}
 computed on the Wikipedia hyperlink graph. Two structural variants are
@@ -318,7 +321,7 @@ corrected structural score becomes
 s_{\mathrm{corr}}(u,v)=\frac{\cos(\mathbf{n}_u,\mathbf{n}_v)}{p_u p_v}.
 \end{equation}
 
-\subsection{Hybrid and GNN-Based Models}
+\subsubsection{Hybrid and GNN-Based Models}
 
 The central model family of this paper combines semantic and structural
 representations. We evaluate four main hybrid variants:
@@ -357,9 +360,9 @@ a ranking-level fusion baseline combining GCN and BGE-M3. Together, these
 models span semantic-only, structural-only, hybrid-concatenative, rank-fusion,
 and GNN-based retrieval families.
 
-\section{Experimental Setup}
+\section{Experiments and Results}
 
-\subsection{Evaluation Protocol}
+%\subsection{Evaluation Protocol}
 
 All main results reported in this paper use the revised undirected structural
 evaluation protocol. Starting from the undirected version of the cleaned graph,
@@ -378,7 +381,13 @@ protocol therefore preserves the article-to-article ranking task while aligning
 the training structure, the correction heuristic, and the evaluation target more
 closely than a purely directed holdout would.
 
-\subsection{Metrics}
+The experimental workflow is notebook-centered and relies on cached structural
+and semantic artifacts generated from the reconstructed dataset. The benchmark
+includes semantic, structural, hybrid, and GNN-based models evaluated under the
+same underlying revised split, making the reported comparisons directly
+comparable at the level of ranking outputs.
+
+\subsection{Evaluation Metrics}
 
 Let \(Q\) denote the set of evaluation queries, let \(r_q\) be the rank of the
 held-out target article for query \(q\), and let \(L_q\) be the returned
@@ -386,6 +395,13 @@ recommendation list. Our ranking metrics follow standard information retrieval
 practice~\cite{manning2008ir,voorhees1999trec8qa}. Because each query has
 exactly one held-out target in the ranking protocol, several metrics simplify.
 The basic top-list metrics are
+
+\begin{equation}
+Hit@K = \frac{1}{|Q|}\sum_{q \in Q} \mathbf{1}[r_q \le K]
+\end{equation}
+
+
+
 \[
 \text{Hit@}K = \frac{1}{|Q|}\sum_{q \in Q} \mathbf{1}[r_q \le K],
 \qquad
@@ -480,23 +496,17 @@ catalog~\cite{zhao2023fairnessdiversity}. Higher values are better for Hit-based
 metrics, MRR, NDCG, MAP, Aggregate Diversity, Novelty, ILD, ROC-AUC, and
 PR-AUC, whereas lower values are better for Popularity Lift and Gini Index.
 
-\subsection{Implementation Notes}
 
-The experimental workflow is notebook-centered and relies on cached structural
-and semantic artifacts generated from the reconstructed dataset. The benchmark
-includes semantic, structural, hybrid, and GNN-based models evaluated under the
-same underlying revised split, making the reported comparisons directly
-comparable at the level of ranking outputs.
 
-\section{Results}
+\subsection{Results}
 
-\subsection{Combined Metrics on the Revised Protocol}
+\subsubsection{Combined Metrics on the Revised Protocol}
 
 Table~\ref{tab:combined-metrics} summarizes the main revised evaluation results.
 The corrected hybrid family occupies the strongest overall positions in top-list
 ranking metrics, while structural-only models remain competitive on some
 recommendation-quality indicators.
-
+%\begin{sidewaystable}
 \begin{table}[H]
 \caption{Combined ranking and recommendation-quality metrics under the revised evaluation protocol}
 \label{tab:combined-metrics}
@@ -535,6 +545,7 @@ GraphSAGE Only & 0.17\% & 1.22\% & 4.96\% & 8.72\% & 0.0076 & 0.0199 & 0.0872 & 
 \end{tabular}
 }
 \end{table}
+%\end{sidewaystable}
 
 Two patterns are visible in Table~\ref{tab:combined-metrics}. First, the
 corrected hybrid variants occupy the top positions on Hit@10 and maintain
@@ -543,7 +554,7 @@ not identical across all recommendation-quality measures. Structural-only
 models, for example, remain competitive on some novelty and ILD statistics,
 while semantic-only retrieval shows different popularity behavior.
 
-\subsection{Cutoff-10 and Link-Discrimination Metrics}
+\subsubsection{Cutoff-10 and Link-Discrimination Metrics}
 
 Table~\ref{tab:extension-metrics} adds a smaller-cutoff view together with
 ROC-AUC and PR-AUC. This table helps separate recommendation behavior near the
@@ -590,7 +601,7 @@ PR-AUC values. This indicates that the model family that works best for
 top-ranked recommendation is not necessarily the same one that works best for
 global edge discrimination.
 
-\subsection{Discussion}
+\subsubsection{Discussion}
 
 Taken together, the revised evaluation suggests that the corrected hybrid family
 offers the most balanced overall recommendation behavior for the present task.
@@ -660,6 +671,11 @@ currently available at \url{https://github.com/regsah/graph-final-project}.
 \section*{Disclosure of Interests}
 
 The authors have no competing interests to declare.
+
+\section*{Acknowledgment}
+This work is supported by the Galatasaray University Research Fund (BAP) within the scope of project number FBA-2026-1345, titled \textit{Çok Modlu Öneri Sistemlerinde Doğruluk, Çeşitlilik, Adalet ve}.
+
+
 
 \bibliographystyle{splncs04}
 \bibliography{paper_refs}
