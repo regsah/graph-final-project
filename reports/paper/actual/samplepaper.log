@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  17 JUN 2026 02:56
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  17 JUN 2026 17:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -376,41 +376,32 @@ ed struc-tural vari-
  []
 
 [2] [3] [4]
-<../../final-report/figures/degree-log-log.png, id=27, 564.6696pt x 418.6842pt>
-
-File: ../../final-report/figures/degree-log-log.png Graphic file (type png)
-<use ../../final-report/figures/degree-log-log.png>
-Package pdftex.def Info: ../../final-report/figures/degree-log-log.png  used on
- input line 206.
+<figs/degree-log-log.png, id=27, 564.6696pt x 418.6842pt>
+File: figs/degree-log-log.png Graphic file (type png)
+<use figs/degree-log-log.png>
+Package pdftex.def Info: figs/degree-log-log.png  used on input line 206.
 (pdftex.def)             Requested size: 163.14848pt x 120.96811pt.
-<../../final-report/figures/cosine-similarity-assortativity.png, id=29, 709.691
-4pt x 418.6842pt>
-File: ../../final-report/figures/cosine-similarity-assortativity.png Graphic fi
-le (type png)
-<use ../../final-report/figures/cosine-similarity-assortativity.png>
-Package pdftex.def Info: ../../final-report/figures/cosine-similarity-assortati
-vity.png  used on input line 211.
+<figs/cosine-similarity-assortativity.png, id=29, 709.6914pt x 418.6842pt>
+File: figs/cosine-similarity-assortativity.png Graphic file (type png)
+<use figs/cosine-similarity-assortativity.png>
+Package pdftex.def Info: figs/cosine-similarity-assortativity.png  used on inpu
+t line 211.
 (pdftex.def)             Requested size: 170.09244pt x 100.3457pt.
-<../../final-report/figures/community-size-distribution-louvain.png, id=30, 709
-.6914pt x 346.4142pt>
-File: ../../final-report/figures/community-size-distribution-louvain.png Graphi
-c file (type png)
-<use ../../final-report/figures/community-size-distribution-louvain.png>
-Package pdftex.def Info: ../../final-report/figures/community-size-distribution
--louvain.png  used on input line 236.
+<figs/community-size-distribution-louvain.png, id=30, 709.6914pt x 346.4142pt>
+File: figs/community-size-distribution-louvain.png Graphic file (type png)
+<use figs/community-size-distribution-louvain.png>
+Package pdftex.def Info: figs/community-size-distribution-louvain.png  used on 
+input line 236.
 (pdftex.def)             Requested size: 142.32191pt x 69.46661pt.
-<../../mid-report-2-en/figures/similarity-distributions.png, id=31, 1000.2168pt
- x 424.9476pt>
-File: ../../mid-report-2-en/figures/similarity-distributions.png Graphic file (
-type png)
-<use ../../mid-report-2-en/figures/similarity-distributions.png>
-Package pdftex.def Info: ../../mid-report-2-en/figures/similarity-distributions
-.png  used on input line 241.
+<figs/similarity-distributions.png, id=31, 1000.2168pt x 424.9476pt>
+File: figs/similarity-distributions.png Graphic file (type png)
+<use figs/similarity-distributions.png>
+Package pdftex.def Info: figs/similarity-distributions.png  used on input line 
+241.
 (pdftex.def)             Requested size: 190.91899pt x 81.11047pt.
- [5 <../../final-report/figures/degree-log-log.png> <../../final-report/figures
-/cosine-similarity-assortativity.png>] [6 <../../final-report/figures/community
--size-distribution-louvain.png> <../../mid-report-2-en/figures/similarity-distr
-ibutions.png>] [7] [8] [9] [10] [11] [12] (samplepaper.bbl
+ [5 <./figs/degree-log-log.png> <./figs/cosine-similarity-assortativity.png>] [
+6 <./figs/community-size-distribution-louvain.png> <./figs/similarity-distribut
+ions.png>] [7] [8] [9] [10] [11] [12] (samplepaper.bbl
 Underfull \hbox (badness 1189) in paragraph at lines 66--69
 []\T1/cmr/m/n/9 Moskalenko, O., Parra, D., Sáez-Trumper, D.: Scal-able rec-om-m
 en-da-tion of
@@ -442,7 +433,7 @@ L3 programming layer <2025-12-24>
  ) 
 Here is how much of TeX's memory you used:
  3592 strings out of 467871
- 52619 string characters out of 5418376
+ 51982 string characters out of 5418376
  472955 words of memory out of 5000000
  32429 multiletter control sequences out of 15000+600000
  643495 words of font info for 79 fonts, out of 8000000 for 9000
