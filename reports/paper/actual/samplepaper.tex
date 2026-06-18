@@ -92,7 +92,7 @@ structural-only, GCN, and GraphSAGE baselines~\cite{kipf2017semi,hamilton2017ind
 We also examine corrected structural variants and pooled semantic
 representations in order to better balance structural and textual evidence. To
 assess the proposed approach in a broader experimental setting, we compare it
-against a spectrum of semantic, structural, hybrid, and GNN-based
+against a representative set of semantic, structural, hybrid, and GNN-based
 alternatives.
 
 The contributions of this paper are threefold:
@@ -284,7 +284,11 @@ $u\in V$, the goal is to return a ranked list of candidate articles
 $v\in V\setminus\{u\}$ that are relevant to $u$ under semantic, structural, or
 hybrid similarity. The task is query-based and article-centric: the source
 article serves as the query, and the recommendation model ranks all remaining
-articles accordingly.
+articles accordingly. In the experimental setting used later, this is evaluated
+through held-out edge recovery and related-article ranking rather than direct
+user-behavior supervision. This provides an open and reproducible evaluation
+setting for comparing semantic, structural, and hybrid recommendation models on
+the same article collection.
 
 \begin{figure}[H]
 \centering
@@ -308,10 +312,15 @@ $\downarrow$ & $\downarrow$ \\[0.4em]
 
 \subsubsection{Semantic Retrieval}
 
-The semantic component uses BGE-M3 text embeddings~\cite{chen2024m3embedding}. Each
-article is represented by a 1024-dimensional dense vector derived from its
-reconstructed text. Recommendation scores in the semantic-only setting are
-computed by cosine similarity between source and candidate embeddings:
+The semantic component uses BGE-M3 text embeddings~\cite{chen2024m3embedding}.
+Each article is represented by a 1024-dimensional dense vector derived from its
+reconstructed raw text. In the implementation used for this paper, embeddings
+are generated in dense mode only, cached for reuse, and encoded with a maximum
+input length of 2048 tokens per article. Long articles are therefore truncated
+during embedding generation, but every active node remains associated with a
+usable semantic representation. Recommendation scores in the semantic-only
+setting are computed by cosine similarity between source and candidate
+embeddings:
 \begin{equation}
 s_{\mathrm{sem}}(u,v)=\cos(\mathbf{b}_u,\mathbf{b}_v).
 \end{equation}
@@ -323,9 +332,13 @@ of the hybrid models.
 \subsubsection{Structural Retrieval}
 
 The structural component uses Node2Vec-style representations~\cite{grover2016node2vec}
-computed on the Wikipedia hyperlink graph. Two structural variants are
-considered. The first is an uncorrected Node2Vec configuration, which ranks candidates
-using cosine similarity in the structural embedding space:
+computed on the Wikipedia hyperlink graph. In our implementation, these
+representations are obtained from unbiased random walks with $p=q=1.0$,
+10 walks per node, walk length 80, context window 5, and a final 128-dimensional
+embedding derived through an SVD-based co-occurrence factorization of the walk
+contexts. Two structural variants are considered. The first is an uncorrected
+Node2Vec configuration, which ranks candidates using cosine similarity in the
+structural embedding space:
 \begin{equation}
 s_{\mathrm{str}}(u,v)=\cos(\mathbf{n}_u,\mathbf{n}_v).
 \end{equation}
@@ -338,11 +351,14 @@ The correction factor for a node $v$ with undirected degree $d_v$ is defined as
 p_v = \log(d_v + 1)^{\alpha},
 \end{equation}
 where the exponent is estimated from the structural training graph and is
-approximately $\alpha \approx 2.9966$ in the revised evaluation setting. The
-logarithm softens the extreme upper tail of the degree distribution, while the
-power exponent preserves a stronger penalty for structurally over-connected
-nodes. The
-corrected structural score becomes
+approximately $\alpha \approx 2.9966$ in the revised evaluation setting. This
+choice should be understood as a heuristic motivated by the heavy-tailed degree
+profile observed in the cleaned graph, where a power-law-like exponent near
+$3$ provides a practical scale for suppressing hub dominance without removing
+structural similarity altogether. The logarithm softens the extreme upper tail
+of the degree distribution, while the power exponent preserves a stronger
+penalty for structurally over-connected nodes. The corrected structural score
+becomes
 \begin{equation}
 s_{\mathrm{corr}}(u,v)=\frac{\cos(\mathbf{n}_u,\mathbf{n}_v)}{p_u p_v}.
 \end{equation}
@@ -377,14 +393,18 @@ original BGE-M3 embedding:
 In corrected hybrids, the same degree-normalized structural signal is used
 before concatenation. After construction, the hybrid vectors are normalized and
 ranked by cosine similarity against all candidate articles. The purpose of
-pooling is not to create a new semantic encoder, but to prevent the 1024-dimensional
-text representation from numerically overwhelming the 128-dimensional
-structural contribution.
+pooling is not to create a new semantic encoder or to claim semantic meaning
+for contiguous embedding blocks. It is used as a pragmatic dimensional
+balancing step so that the 1024-dimensional text representation does not
+numerically overwhelm the 128-dimensional structural contribution.
 
 The benchmark also includes GCN and GraphSAGE structural baselines, as well as
 a ranking-level fusion baseline combining GCN and BGE-M3. Together, these
 models span semantic-only, structural-only, hybrid-concatenative, rank-fusion,
-and GNN-based retrieval families.
+and GNN-based retrieval families. The GCN and GraphSAGE baselines are trained
+as two-layer link-prediction models with negative sampling under the same
+revised protocol, using dropout 0.5, Adam optimization with learning rate 0.01
+and weight decay $5\times 10^{-4}$, and early stopping up to 200 epochs.
 
 \section{Experiments and Results}
 
@@ -403,15 +423,19 @@ evaluations based on held-out directed edges are possible, but the comparison
 in this paper is intentionally centered on the undirected structural
 graph because Node2Vec neighborhoods, community analysis, and the degree
 correction heuristic are all defined over that structural view. The revised
-protocol therefore preserves the article-to-article ranking task while aligning
-the training structure, the correction heuristic, and the evaluation target more
-closely than a purely directed holdout would.
+protocol should therefore be interpreted as a structurally aligned comparison
+setting for semantic, structural, and hybrid retrieval families, rather than
+as the only valid formulation of article recommendation. Directed navigation
+behavior remains meaningful and is left open for future extension.
 
 The experimental workflow is notebook-centered and relies on cached structural
 and semantic artifacts generated from the reconstructed dataset. The benchmark
 includes semantic, structural, hybrid, and GNN-based models evaluated under the
 same underlying revised split, making the reported comparisons directly
-comparable at the level of ranking outputs.
+comparable at the level of ranking outputs. For ROC-AUC and PR-AUC, positive
+undirected test edges are paired with an equally sized sampled negative edge
+set so that the discrimination-oriented extension is measured on a matched
+binary comparison problem.
 
 \subsection{Evaluation Metrics}
 
@@ -528,9 +552,9 @@ PR-AUC, whereas lower values are better for Popularity Lift and Gini Index.
 \subsubsection{Combined Metrics on the Revised Protocol}
 
 Table~\ref{tab:combined-metrics} summarizes the main revised evaluation results.
-The corrected hybrid family occupies the strongest overall positions in top-list
-ranking metrics, while structural-only models remain competitive on some
-recommendation-quality indicators.
+The revised protocol highlights clear strengths for the corrected hybrid family
+in top-list recommendation metrics, while also revealing metric-dependent
+trade-offs across semantic, structural, and hybrid families.
 %\begin{sidewaystable}
 \begin{table}[H]
 \caption{Combined ranking and recommendation-quality metrics under the revised evaluation protocol}
@@ -572,12 +596,15 @@ GraphSAGE Only & 0.17\% & 1.22\% & 4.96\% & 8.72\% & 0.0076 & 0.0199 & 0.0872 & 
 \end{table}
 %\end{sidewaystable}
 
-Two patterns are visible in Table~\ref{tab:combined-metrics}. First, the
-corrected hybrid variants occupy the top positions on Hit@10 and maintain
-strong placements on MRR, NDCG, Recall, and MAP. Second, the model ranking is
-not identical across all recommendation-quality measures. Structural-only
-models, for example, remain competitive on some novelty and ILD statistics,
-while semantic-only retrieval shows different popularity behavior.
+Several patterns are visible in Table~\ref{tab:combined-metrics}. First, the
+corrected hybrid variants occupy the top positions on Hit@10 and remain strong
+on MRR, NDCG, Recall, and MAP under the revised evaluation protocol. Second,
+BGE-M3 Only is still the strongest model on Hit@1, indicating that pure
+semantic retrieval can place the correct article first more often even when it
+falls behind on deeper cutoffs. Third, Node2Vec-style retrieval remains
+competitive at broader cutoffs such as Hit@100 and also preserves favorable
+novelty and ILD behavior relative to several alternatives. The model ranking is
+therefore not identical across all recommendation-quality measures.
 
 \subsubsection{Cutoff-10 and Link-Discrimination Metrics}
 
@@ -620,21 +647,22 @@ GraphSAGE Only & 1.22\% & 0.0060 & 1.22\% & 0.0041 & 0.8691 & 0.8561 \\
 The cutoff-10 view refines the interpretation of the benchmark. The corrected
 hybrid variants remain strongest on Hit@10, while the non-pooled corrected
 hybrid is highest on NDCG@10 among the compared models. At the same time,
-BGE-M3 Only remains competitive on MAP@10. On the broader discrimination side,
-uncorrected structural and lightly fused models occupy the highest ROC-AUC and
-PR-AUC values. This indicates that the model family that works best for
-top-ranked recommendation is not necessarily the same one that works best for
-global edge discrimination.
+BGE-M3 Only is strongest on MAP@10, showing that a purely semantic ranking can
+still be precision-competitive very near the top of the list. On the broader
+discrimination side, uncorrected structural and lightly fused models occupy the
+highest ROC-AUC and PR-AUC values. This indicates that the model family that
+works best for top-ranked recommendation is not necessarily the same one that
+works best for global edge discrimination.
 
 \subsubsection{Discussion}
 
 Taken together, the revised evaluation suggests that the corrected hybrid family
-offers the most balanced overall recommendation behavior for the present task.
-The pooled corrected hybrid reaches the top Hit@10 value, while the non-pooled
-corrected hybrid remains strong across MRR, NDCG, Recall, and several broader
-quality measures. These models benefit from access to both text-level semantic
-proximity and graph-level structural context, without relying exclusively on
-either.
+offers the most balanced top-list recommendation behavior in the present
+setting. The pooled corrected hybrid reaches the top Hit@10 value, while the
+non-pooled corrected hybrid remains strong across MRR, NDCG, Recall, and
+several broader quality measures. These models benefit from access to both
+text-level semantic proximity and graph-level structural context, without
+relying exclusively on either.
 
 Two design choices deserve separate interpretation. First, pooling was
 introduced to balance the dimensional contribution of the 1024-dimensional
@@ -667,6 +695,18 @@ reconstructed dataset and the revised evaluation protocol are not only
 supporting infrastructure; they are part of what makes the comparison
 interpretable.
 
+Several limitations should also be kept in view. First, the evaluation protocol
+is based on held-out edge recovery. The absence of a hyperlink does not imply
+that an article is irrelevant, and real reader behavior is not observed
+directly.
+Second, the undirected view improves comparability across structural and hybrid
+families, but it simplifies editorial links that are inherently directed.
+Third, both degree correction and pooling are heuristic engineering choices
+rather than learned fusion mechanisms. Finally, although the benchmark is
+text-complete after reconstruction, recovered raw text may still contain
+link-related cues or title mentions that should be kept in mind when
+interpreting edge-recovery performance.
+
 \section{Conclusion}
 
 This paper presented a graph-based article-to-article recommendation framework
@@ -676,17 +716,19 @@ text-complete version of Wiki-CS designed to support modern recommendation
 experiments with Transformer-based semantic representations.
 
 Within this benchmark, the compared models showed different strengths. The
-revised evaluation indicates that corrected semantic-structural hybrids occupy
-the strongest overall position for recommendation-oriented top-list retrieval,
-while structural-only models remain competitive under global discrimination
-metrics such as ROC-AUC and PR-AUC. This suggests that hybrid retrieval is a
-useful direction when the target task is ranked article recommendation rather
-than graph prediction in isolation.
+revised evaluation indicates that corrected semantic-structural hybrids are the
+most balanced family for recommendation-oriented top-list retrieval under the
+revised evaluation protocol, while semantic-only and structural-only models remain
+competitive on specific metrics such as Hit@1, MAP@10, ROC-AUC, and PR-AUC.
+This suggests that hybrid retrieval is a useful direction when the target task
+emphasizes short ranked recommendation lists rather than graph prediction in
+isolation.
 
 Future work can extend this line in several directions, including broader
-Wikipedia domains, alternative structural correction schemes, and richer hybrid
-fusion strategies that preserve interpretability while improving recommendation
-quality.
+Wikipedia domains, directed evaluation protocols, harder negative sampling,
+lexical and graph-heuristic baselines, alternative structural correction
+schemes, and richer hybrid fusion strategies that preserve interpretability
+while improving recommendation quality.
 
 \begin{credits}
 \subsubsection{Availability of Data and Code}

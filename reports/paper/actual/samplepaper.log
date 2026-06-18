@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  18 JUN 2026 01:54
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  18 JUN 2026 23:59
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -411,19 +411,19 @@ Package pdftex.def Info: figs/similarity-distributions.png  used on input line
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [6 <./figs/community-size-distribution-louvain.png> <./figs/similarity-distrib
-utions.png>] [7] [8] [9] [10] [11] [12]
-Overfull \hbox (40.58879pt too wide) in paragraph at lines 693--695
+utions.png>] [7] [8] [9] [10] [11] [12] [13]
+Overfull \hbox (40.58879pt too wide) in paragraph at lines 735--737
 \T1/cmr/m/n/9 used in this study are cur-rently avail-able at $\T1/cmtt/m/n/9 h
 ttps : / / github . com / regsah / graph-[]final-[]project$\T1/cmr/m/n/9 . 
  []
 
-(samplepaper.bbl [13]
+(samplepaper.bbl [14]
 Underfull \hbox (badness 1189) in paragraph at lines 67--70
 []\T1/cmr/m/n/9 Moskalenko, O., Parra, D., Sáez-Trumper, D.: Scal-able rec-om-m
 en-da-tion of
  []
 
-[14]
+
 Underfull \hbox (badness 10000) in paragraph at lines 102--106
 []\T1/cmr/m/n/9 Wang, K., Ding, Y., Han, S.C.: Graph neu-ral net-works for text
 
@@ -441,7 +441,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 102--106
  : / / link . springer . com /
  []
 
-) [15] (samplepaper.aux)
+[15]) [16] (samplepaper.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
@@ -450,11 +450,11 @@ L3 programming layer <2025-12-24>
 Here is how much of TeX's memory you used:
  3731 strings out of 467871
  54231 string characters out of 5418376
- 477978 words of memory out of 5000000
+ 479978 words of memory out of 5000000
  32563 multiletter control sequences out of 15000+600000
  643182 words of font info for 78 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 57i,14n,65p,768b,336s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,14n,65p,768b,337s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm
 0600.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi60
 0\ecrm0700.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec
@@ -480,9 +480,9 @@ ta/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/sah
 in/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/U
 sers/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/ms
 bm10.pfb>
-Output written on samplepaper.pdf (15 pages, 503436 bytes).
+Output written on samplepaper.pdf (16 pages, 507532 bytes).
 PDF statistics:
- 514 PDF objects out of 1000 (max. 8388607)
+ 517 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 
