@@ -63,17 +63,17 @@ Unix-like systems, or file-system concepts remain under-ranked. This motivates
 article content as a second source of evidence rather than a mere auxiliary
 feature.
 
-This is also what makes the Wikipedia setting scientifically interesting.
+This dual structure also makes Wikipedia scientifically useful.
 Openly available graph extractions make structural experimentation feasible, and
-resources such as WikiLinkGraphs and Wiki-CS provide convenient benchmark
-substrates for studying Wikipedia connectivity at scale~\cite{consonni2019wikilinkgraphs,mernyei2020wikics}. However, the open
+resources such as WikiLinkGraphs and Wiki-CS support large-scale studies of
+Wikipedia connectivity~\cite{consonni2019wikilinkgraphs,mernyei2020wikics}. However, the open
 resources are uneven across structure and content. Wiki-CS was introduced for
 node classification rather than article recommendation, and it does not
 directly expose the recovered, up-to-date raw article text needed to
 regenerate semantic representations with modern encoders. Graph-text paired
 datasets such as WikiGraphs are valuable for related objectives~\cite{wikigraphs2021},
-yet they do not by themselves provide a recommendation-oriented, text-complete
-version of the same Wiki-CS article set. As a result, there remains a gap
+yet they do not provide the same Wiki-CS article set with complete text for
+recommendation. As a result, there remains a gap
 between the availability of open Wikipedia graphs and the availability of an
 open benchmark that supports joint structural and semantic recommendation
 experiments on the same articles.
@@ -677,91 +677,66 @@ works best for global edge discrimination.
 
 \subsubsection{Discussion}
 
-Taken together, the revised evaluation suggests that the corrected hybrid family
-offers the most balanced top-list recommendation behavior in the present
-setting. The pooled corrected hybrid reaches the top Hit@10 value, while the
-non-pooled corrected hybrid remains strong across MRR, NDCG, Recall, and
-several broader quality measures. These models benefit from access to both
-text-level semantic proximity and graph-level structural context, without
-relying exclusively on either.
+Corrected hybrids provide the most balanced top-list behavior: the pooled model
+ties for the best Hit@10, while the non-pooled model is slightly stronger on
+MRR, NDCG, Recall, and MAP. Pooling balances semantic (1024-D) and structural
+(128-D) vectors, but its effect is modest; it is useful as an alignment device
+rather than the sole explanation for the hybrid gains. Degree correction shows
+a clearer interaction effect. Corrected and uncorrected pure Node2Vec are nearly
+identical, whereas corrected hybrids improve top-list metrics such as Hit@10 and
+MRR. The heuristic therefore appears to stabilize semantic-structural fusion
+more than it changes structural retrieval in isolation.
 
-Two design choices deserve separate interpretation. First, pooling was
-introduced to balance the dimensional contribution of the 1024-dimensional
-semantic vector and the 128-dimensional structural vector. In the revised
-results, that balancing effect is visible but modest: the pooled corrected
-hybrid ties for the best Hit@10, whereas the non-pooled corrected hybrid remains
-slightly stronger on MRR, NDCG, Recall, and MAP. Pooling is therefore useful as
-an alignment device, but it does not by itself explain the full gain of the
-hybrid family.
+Semantic-only models remain competitive near the top of the ranking, while
+structural models are stronger for broad link discrimination. Model selection
+therefore depends on whether the objective is a short recommendation list or
+global edge separation. The benchmark layer is also important: reconstruction
+makes semantic and structural evidence available for the same article set, and
+the undirected protocol gives the compared model families a consistent
+structural target.
 
-Second, degree correction behaves differently depending on where it is used. In
-pure Node2Vec retrieval, the corrected and uncorrected variants are nearly
-identical in the revised tables. In the hybrid setting, however, the corrected
-variants improve substantially over their uncorrected counterparts on top-list
-metrics such as Hit@10 and MRR. This suggests that the heuristic matters less as
-an isolated structural adjustment than as a way of stabilizing the interaction
-between semantic and structural signals inside the hybrid representation.
-
-The structural-only models remain informative, particularly when the evaluation
-is interpreted as link discrimination rather than recommendation at the top of a
-ranked list. Conversely, the semantic-only setting remains competitive on some
-precision-sensitive metrics while showing a different popularity profile. This
-split supports a practical conclusion: model selection depends on whether the
-main objective is broad edge separation or short ranked recommendation lists.
-
-The benchmark layer also matters. Because the revised protocol is aligned with
-the undirected structural view, it provides a cleaner basis for comparing
-semantic and structural retrieval families on the same task. In that sense, the
-reconstructed dataset and the revised evaluation protocol are not only
-supporting infrastructure; they are part of what makes the comparison
-interpretable.
-
-Several limitations should also be kept in view. First, the evaluation protocol
-is based on held-out edge recovery. The absence of a hyperlink does not imply
-that an article is irrelevant, and real reader behavior is not observed
-directly.
-Second, the undirected view improves comparability across structural and hybrid
-families, but it simplifies editorial links that are inherently directed.
-Third, both degree correction and pooling are heuristic engineering choices
-rather than learned fusion mechanisms. Finally, although the benchmark is
-text-complete after reconstruction, recovered raw text may still contain
-link-related cues or title mentions that should be kept in mind when
-interpreting edge-recovery performance.
+The evaluation nevertheless remains a proxy. Missing hyperlinks are not
+necessarily irrelevant, reader behavior is unobserved, and edge direction is
+discarded. Moreover, pooling and degree correction are heuristic rather than
+learned fusion mechanisms, and recovered text may contain link-related cues or
+title mentions.
 
 \section{Conclusion}
 
-This paper presented a graph-based article-to-article recommendation framework
-for Wikipedia built around semantic, structural, hybrid, and GNN-based
-retrieval families. The work also introduced Custom-WikiCS, a reconstructed and
-text-complete version of Wiki-CS designed to support modern recommendation
-experiments with Transformer-based semantic representations.
+We introduced Custom-WikiCS, a reconstructed, text-complete Wiki-CS benchmark,
+and evaluated semantic, structural, hybrid, and GNN-based article retrieval on
+it. Beyond the model comparison, the work closes a practical dataset gap: raw
+text and graph structure are aligned for every active node, allowing semantic
+representations to be regenerated as encoders evolve. The revised protocol
+therefore provides a common basis for comparing content-driven and
+topology-driven recommendations on the same articles.
 
-Within this benchmark, the compared models showed different strengths. The
-revised evaluation indicates that corrected semantic-structural hybrids are the
-most balanced family for recommendation-oriented top-list retrieval under the
-revised evaluation protocol, while semantic-only and structural-only models remain
-competitive on specific metrics such as Hit@1, MAP@10, ROC-AUC, and PR-AUC.
-This suggests that hybrid retrieval is a useful direction when the target task
-emphasizes short ranked recommendation lists rather than graph prediction in
-isolation.
+Corrected semantic-structural hybrids provide the best balance for short
+recommendation lists, while semantic and structural models retain advantages on
+Hit@1, MAP@10, ROC-AUC, or PR-AUC. These results support complementarity rather
+than universal dominance: semantic evidence is valuable near the top of a
+ranking, while structural evidence remains effective for broader connectivity.
+The reconstructed benchmark makes that comparison reproducible with modern text
+encoders on a shared node set. Accordingly, hybrid retrieval is most compelling
+when the application prioritizes short ranked lists rather than global graph
+prediction in isolation.
 
-Future work can extend this line in several directions, including broader
-Wikipedia domains, directed evaluation protocols, harder negative sampling,
-lexical and graph-heuristic baselines, alternative structural correction
-schemes, and richer hybrid fusion strategies that preserve interpretability
-while improving recommendation quality.
+Future work should examine broader Wikipedia domains, directed protocols,
+harder negatives, lexical and graph-heuristic baselines, and learned yet
+interpretable fusion.
 
 \begin{credits}
 \subsubsection{Availability of Data and Code}
 The codebase and dataset reconstruction artifacts used in this study are
-currently available at \url{https://github.com/regsah/graph-final-project}.
+available at\newline
+\url{https://github.com/regsah/graph-final-project}.
 
 \subsubsection{\discintname}
 The authors have no competing interests to declare.
 
 \subsubsection{\ackname}
 This work is supported by the Galatasaray University Research Fund (BAP) within
-the scope of project number FBA-2026-1345 , and titled ``Çok Modlu Öneri Sistemlerinde Doğruluk, Çeşitlilik, Adalet ve''.
+the scope of project number FBA-2026-1345.
  
 \end{credits}
 
