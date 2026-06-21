@@ -44,7 +44,7 @@ explicit hyperlink network. Its pages are publicly reachable as text, its links
 encode relations among topics, and its coverage spans a broad range of domains.
 For these reasons, Wikipedia has repeatedly been used in benchmark
 construction, retrieval studies, graph learning, knowledge-intensive NLP, and
-content-oriented analysis~\cite{mernyei2020wikics,wikirecnet2020,wikigraphs2021,petroni2020kilt,wong2021wikireliability}.
+content-oriented analysis~\cite{mernyei2020wikics,wikirecnet2020,wikigraphs2021,petroni2021kilt,wong2021wikireliability}.
 From an analytical perspective, this dual availability of content and
 relational structure makes the same article collection suitable for semantic
 modeling, structural modeling, and experiments that combine both views.
@@ -53,8 +53,8 @@ Within such an environment, article-to-article recommendation is a natural and
 practically useful problem. Given a page currently being examined, the task is
 to recommend other pages worth reading next, ideally preserving topical
 relevance while still broadening navigation. Wikipedia's hyperlink graph offers
-a strong starting point because direct links often encode editorial,
-conceptual, or historical relatedness~\cite{wikirecnet2020,grover2016node2vec}.
+a strong starting point because direct links provide an explicit structural
+signal between articles~\cite{wikirecnet2020,grover2016node2vec}.
 At the same time, relying only on graph structure may be too restrictive. For
 example, a graph-driven recommender around an operating-systems article may
 prioritize directly linked hub pages such as Linus Torvalds, while
@@ -121,12 +121,15 @@ experimental setting and results. Section~5 concludes the paper.
 
 Wikipedia can be modeled naturally as a graph whose nodes are articles and
 whose edges are hyperlinks. This makes it a practical environment for graph
-representation learning and graph-based recommendation. Wiki-CS provides one of
-the most widely reused Wikipedia-derived graph benchmarks in graph learning
+representation learning and graph-based recommendation. Wiki-CS provides a
+well-established Wikipedia-derived graph benchmark for graph learning
 research~\cite{mernyei2020wikics}, although its original use case is node
 classification rather than article recommendation. More directly related work
-includes WikiRecNet, which studies large-scale Wikipedia recommendation using
-graph structure and representation learning~\cite{wikirecnet2020}. One lesson
+includes WikiRecNet, which studies editor-oriented Wikipedia article
+recommendation using graph structure and representation learning~\cite{wikirecnet2020}.
+Its personalized editor-to-article task differs from our article-to-article
+setting, but it demonstrates the value of structural and textual article
+representations at Wikipedia scale. One lesson
 from this line of work is that structural proximity is informative, but
 recommendation quality should not be reduced to a generic graph prediction task.
 
@@ -152,9 +155,9 @@ standard transductive baseline~\cite{kipf2017semi}, while
 GraphSAGE~\cite{hamilton2017inductive} introduces neighborhood aggregation with
 an inductive flavor. Survey work on GNNs for text-related settings suggests
 that these models remain central at the interface of graph structure and
-linguistic representation~\cite{wang2024gnntextsurvey}. In parallel, multimodal and
-hybrid recommender systems increasingly combine text and graph signals rather
-than relying on either source alone~\cite{zhou2023multimodal}.
+linguistic representation~\cite{wang2024gnntextsurvey}. In parallel, multimodal
+recommender systems increasingly combine heterogeneous content signals rather
+than relying on a single modality~\cite{liu2024multimodal}.
 
 The present work is positioned at the intersection of these directions. It uses
 Wikipedia as a graph recommendation environment, updates a widely used benchmark
@@ -178,11 +181,15 @@ not auxiliary metadata, but part of the representation being evaluated.
 
 Custom-WikiCS addresses this limitation through a reconstruction pipeline with
 three main stages. First, article titles are cleaned and aligned in order to
-improve consistency across graph records, the Wikipedia STEM corpus\footnote{\url{https://www.kaggle.com/datasets/conjuring92/wiki-stem-corpus}}, and API
+improve consistency across graph records, the Wikipedia STEM corpus\footnote{%
+\url{https://www.kaggle.com/datasets/conjuring92/wiki-stem-corpus}, accessed
+22 June 2026}, and API
 lookups. This stage resolves naming mismatches, formatting inconsistencies, and
 stale title variants that would otherwise prevent article recovery. Second, raw
 article text is recovered by combining the Wikipedia STEM corpus with Wikipedia
-API backfilling, producing a text-complete collection for the active article
+API backfilling\footnote{MediaWiki Action API documentation:
+\url{https://www.mediawiki.org/wiki/API:Main_page}, accessed 22 June 2026},
+producing a text-complete collection for the active article
 set. Third, the reconstructed collection is used to generate modern text
 representations, enabling semantic retrieval models and hybrid recommendation
 variants on top of the same graph. In the final reconstructed benchmark, every
@@ -250,13 +257,13 @@ of Fig.~\ref{fig:dataset-struct-sem} summarizes this effect.
 \end{figure}
 
 Community analysis further shows that the graph is neither flat nor uniformly
-mixed. Louvain detection yields modularity
+mixed. Louvain detection~\cite{blondel2008louvain} yields modularity
 0.6476 over 38 communities, with a largest community of 2,040 nodes and mean
 community size 299.13. This confirms that the cleaned graph contains broad topic
 regions rather than a single homogeneous article pool. Moreover, the semantic
 coherence of these communities is measurable: intra-community cosine similarity
 is higher than inter-community similarity under both Louvain (0.5729 vs.\ 0.5435)
-and Infomap (0.5748 vs.\ 0.5480). This means that graph communities are not only
+and Infomap~\cite{rosvall2008infomap} (0.5748 vs.\ 0.5480). This means that graph communities are not only
 topological partitions but also semantically coherent article groupings. Such a
 structure is useful for recommendation because it creates meaningful local
 neighborhoods beyond direct edge presence. Figure~\ref{fig:community-diagnostics}
@@ -503,19 +510,21 @@ imbalance~\cite{saito2015pr}:
 We also report recommendation-quality metrics that characterize broader system
 behavior beyond target ranking. Let \(C\) denote the candidate article set,
 let \(d(v)\) be the undirected degree of article \(v\), and let
-\(M = \sum_{v \in C}(d(v)+1)\). Popularity Lift is computed as
+\(M = \sum_{v \in C}(d(v)+1)\). The Degree Popularity Ratio is computed as
 \begin{equation}
-\text{Popularity Lift} =
+\text{Degree Popularity Ratio} =
 \frac{\frac{1}{|Q|}\sum_{q \in Q}\frac{1}{|L_q|}\sum_{v \in L_q} d(v)}
 {\frac{1}{|C|}\sum_{v \in C} d(v)}
 \end{equation}
-This is a graph-degree adaptation of popularity lift in recommendation-bias
-evaluation~\cite{kowald2023popularity}. Values above \(1\) indicate that a
-model tends to recommend higher-degree articles than the candidate-pool
+This ratio is related to popularity lift in recommendation-bias
+evaluation~\cite{kowald2023popularity}, but it uses the candidate-pool mean as
+its baseline and deliberately retains a neutral value of \(1\), rather than the
+zero-centered definition of conventional lift. Values above \(1\) indicate
+that a model tends to recommend higher-degree articles than the candidate-pool
 baseline.
 
 Aggregate Diversity counts how many distinct articles appear at least once
-across all recommendation lists~\cite{mansoury2020fairmatch,zhao2023fairnessdiversity}:
+across all recommendation lists~\cite{mansoury2020fairmatch,zhao2025fairnessdiversity}:
 \begin{equation}
 \text{Aggregate Diversity} = \left| \bigcup_{q \in Q} L_q \right|
 \end{equation}
@@ -526,7 +535,7 @@ Novelty is measured with a graph-degree-based self-information score,
 -\log_2\left(\frac{d(v)+1}{M}\right)
 \end{equation}
 which is the graph-adapted form used in our implementation rather than an
-interaction-frequency definition~\cite{zhao2023fairnessdiversity}. For
+interaction-frequency definition~\cite{vargas2011novelty}. For
 Intra-List Diversity (ILD), we average pairwise cosine distances within each
 recommendation list in semantic embedding space:
 \begin{equation}
@@ -537,19 +546,25 @@ recommendation list in semantic embedding space:
 \left(1-\cos(e(v_i), e(v_j))\right)
 \end{equation}
 where \(e(v)\) denotes the BGE-M3 embedding of article \(v\) and the formula is
-applied to lists with at least two items~\cite{zhao2023fairnessdiversity}.
+applied to lists with at least two items~\cite{zhao2025fairnessdiversity}.
 Finally, let \(c_{(1)} \le \cdots \le c_{(n)}\) denote the sorted recommendation
-counts of the distinct articles that appear in at least one list. The Gini
-Index is
+counts of the distinct articles that appear in at least one list. The
+Exposed-Item Gini is
 \begin{equation}
-\text{Gini} =
+\text{Exposed-Item Gini} =
 \frac{\sum_{i=1}^{n}(2i-n-1)c_{(i)}}
 {n\sum_{i=1}^{n} c_{(i)}}
 \end{equation}
-which summarizes how unevenly recommendation exposure is distributed over the
-catalog~\cite{zhao2023fairnessdiversity}. Higher values are better for Hit-based
-metrics, MRR, NDCG, MAP, Aggregate Diversity, Novelty, ILD, ROC-AUC, and
-PR-AUC, whereas lower values are better for Popularity Lift and Gini Index.
+which summarizes how unevenly recommendation exposure is distributed among
+items that receive at least one recommendation~\cite{zhao2025fairnessdiversity}.
+Because zero-exposure candidates are excluded, this is not a full-catalog Gini;
+Aggregate Diversity separately reports how much of the catalog is reached.
+Higher Hit-based metrics, MRR, NDCG, MAP, ROC-AUC, and PR-AUC indicate better
+target recovery or discrimination, while higher Aggregate Diversity, Novelty,
+and ILD indicate broader coverage, less-popular recommendations, and greater
+within-list semantic diversity, respectively. A lower Degree Popularity Ratio
+indicates less hub-oriented recommendations, and a lower Exposed-Item Gini
+indicates more even exposure among reached items.
 
 
 
@@ -580,8 +595,8 @@ trade-offs across semantic, structural, and hybrid families.
 \textbf{NDCG} &
 \textbf{Recall} &
 \textbf{MAP} &
-\textbf{Pop. Lift} &
-\textbf{Gini} &
+\textbf{Deg. Pop. Ratio} &
+\textbf{Exp. Gini} &
 \textbf{Agg. Div.} &
 \textbf{Novelty} &
 \textbf{ILD} \\
