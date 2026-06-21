@@ -106,7 +106,7 @@ The contributions of this paper are threefold:
       modern embedding pipelines.
 \item We propose a hybrid article recommendation framework that combines
       BGE-M3 semantic representations with Node2Vec-based structural signals,
-      including corrected structural scoring and pooled fusion variants.
+      including degree-rescaled structural fusion and pooled variants.
 \item We provide a comparative evaluation across recommendation-accuracy and
       recommendation-quality metrics under a revised undirected protocol,
       covering semantic, structural, hybrid, and GNN-based baselines.
@@ -189,42 +189,41 @@ stale title variants that would otherwise prevent article recovery. Second, raw
 article text is recovered by combining the Wikipedia STEM corpus with Wikipedia
 API backfilling\footnote{MediaWiki Action API documentation:
 \url{https://www.mediawiki.org/wiki/API:Main_page}, accessed 22 June 2026},
-producing a text-complete collection for the active article
-set. Third, the reconstructed collection is used to generate modern text
+producing a text-complete collection for the aligned article
+catalog. Third, the reconstructed collection is used to generate modern text
 representations, enabling semantic retrieval models and hybrid recommendation
-variants on top of the same graph. In the final reconstructed benchmark, every
-active node is associated with usable article text and can therefore participate
-in both structural and semantic evaluation.
+variants on top of the same graph. In the reconstructed benchmark, every
+catalog node is associated with usable article text and can therefore participate
+in semantic evaluation.
 
-After reconstruction and cleaning, isolated nodes are removed and the final
-graph contains the statistics reported in Table~\ref{tab:dataset-stats}. The
-resulting benchmark supports both graph-structural experiments and modern
-text-based retrieval on the same article set.
+The catalog contains 11,701 nodes: 11,367 are structurally active and 334 are
+isolated. Diagnostics use the active subgraph; embeddings and retrieval retain
+the full catalog (Table~\ref{tab:dataset-stats}).
 
 \begin{table}[!htbp]
-\caption{Custom-WikiCS graph statistics after reconstruction and cleaning}
+\caption{Custom-WikiCS catalog and graph statistics}
 \label{tab:dataset-stats}
 \centering
 \begin{tabular}{lr}
 \toprule
 \textbf{Statistic} & \textbf{Value} \\
 \midrule
-Initial nodes & 11,701 \\
-Removed isolates & 334 \\
-Active nodes & 11,367 \\
+Catalog nodes & 11,701 \\
+Isolated nodes & 334 \\
+Active diagnostic nodes & 11,367 \\
 Directed edges & 291,039 \\
-Undirected edges & 216,123 \\
+Undirected split edges & 216,123 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 %\subsection{Wiki-CS Graph Characteristics}
 
-The cleaned graph exhibits a heavy-tailed degree distribution, indicating that a
+The active subgraph exhibits a heavy-tailed degree distribution, indicating that a
 small number of hub articles coexist with a much larger set of lower-degree
 nodes. This matters for article recommendation because purely structural methods
 can become dominated by hubs if degree effects are left untreated. The degree
-statistics are also strongly skewed in the cleaned graph: total degree ranges
+statistics are also strongly skewed in the active subgraph: total degree ranges
 from 1 to 3,474, with mean 51.21 and median 16. This gap between mean and median
 is consistent with a hub-dominated article network rather than a uniformly mixed
 graph. The left panel of Fig.~\ref{fig:dataset-struct-sem} visualizes the same
@@ -259,7 +258,7 @@ of Fig.~\ref{fig:dataset-struct-sem} summarizes this effect.
 Community analysis further shows that the graph is neither flat nor uniformly
 mixed. Louvain detection~\cite{blondel2008louvain} yields modularity
 0.6476 over 38 communities, with a largest community of 2,040 nodes and mean
-community size 299.13. This confirms that the cleaned graph contains broad topic
+community size 299.13. This confirms that the active subgraph contains broad topic
 regions rather than a single homogeneous article pool. Moreover, the semantic
 coherence of these communities is measurable: intra-community cosine similarity
 is higher than inter-community similarity under both Louvain (0.5729 vs.\ 0.5435)
@@ -282,7 +281,7 @@ community similarity comparison.
 \includegraphics[width=\textwidth]{figs/similarity-distributions.png}
 \par\small (b) Intra- vs.\ inter-community similarity
 \end{minipage}
-\caption{Community diagnostics for Custom-WikiCS. The cleaned graph contains non-trivial communities, and those communities remain semantically coherent}
+\caption{Community diagnostics for Custom-WikiCS. The active subgraph contains non-trivial communities, and those communities remain semantically coherent}
 \label{fig:community-diagnostics}
 \end{figure}
 
@@ -314,7 +313,7 @@ $\downarrow$ & $\downarrow$ \\[0.4em]
 \fbox{\parbox{0.27\textwidth}{\centering BGE-M3 semantic\\embeddings}} &
 \fbox{\parbox{0.27\textwidth}{\centering Node2Vec structural\\embeddings}} \\[0.4em]
 \multicolumn{2}{c}{$\searrow \hspace{7em} \swarrow$} \\[0.2em]
-\multicolumn{2}{c}{\fbox{\parbox{0.48\textwidth}{\centering Hybrid retrieval model\\(full or pooled semantic signal + optional degree-corrected structural signal)}}} \\[0.4em]
+\multicolumn{2}{c}{\fbox{\parbox{0.48\textwidth}{\centering Hybrid retrieval model\\(full or pooled semantic signal + optional degree-rescaled structural signal)}}} \\[0.4em]
 \multicolumn{2}{c}{$\downarrow$} \\[0.2em]
 \multicolumn{2}{c}{\fbox{\parbox{0.42\textwidth}{\centering Normalization and cosine ranking over candidate articles}}}
 \end{tabular}
@@ -355,26 +354,15 @@ structural embedding space:
 \begin{equation}
 s_{\mathrm{str}}(u,v)=\cos(\mathbf{n}_u,\mathbf{n}_v).
 \end{equation}
-The second is a corrected variant that applies a power-law degree penalty during structural
-scoring in order to reduce the tendency of high-degree hubs to dominate
-retrieval. We propose this correction for reducing a high-degree bias at the recommendation. 
-
-The correction factor for a node $v$ with undirected degree $d_v$ is defined as
+The second is a degree-rescaled variant used in hybrid fusion. For undirected
+degree $d_v$, it attenuates high-degree nodes before concatenation:
 \begin{equation}
-p_v = \log(d_v + 1)^{\alpha},
+\tilde{\mathbf{n}}_v=
+\frac{\mathbf{n}_v}{[\log(d_v+1)]^{\alpha}},\qquad \alpha\approx2.9966,
 \end{equation}
-where the exponent is estimated from the structural training graph and is
-approximately $\alpha \approx 2.9966$ in the revised evaluation setting. This
-choice should be understood as a heuristic motivated by the heavy-tailed degree
-profile observed in the cleaned graph, where a power-law-like exponent near
-$3$ provides a practical scale for suppressing hub dominance without removing
-structural similarity altogether. The logarithm softens the extreme upper tail
-of the degree distribution, while the power exponent preserves a stronger
-penalty for structurally over-connected nodes. The corrected structural score
-becomes
-\begin{equation}
-s_{\mathrm{corr}}(u,v)=\frac{\cos(\mathbf{n}_u,\mathbf{n}_v)}{p_u p_v}.
-\end{equation}
+where $\alpha$ is estimated on the structural training graph. Positive scalar
+rescaling preserves standalone cosine rankings but changes the structural
+block's relative weight inside a hybrid representation.
 
 \subsubsection{Hybrid and GNN-Based Models}
 
@@ -403,8 +391,8 @@ original BGE-M3 embedding:
 \begin{equation}
 \mathbf{h}^{\mathrm{pool}}_u = [\bar{\mathbf{b}}_u ; \mathbf{n}_u].
 \end{equation}
-In corrected hybrids, the same degree-normalized structural signal is used
-before concatenation. After construction, the hybrid vectors are normalized and
+In corrected hybrids, $\tilde{\mathbf{n}}_u$ replaces $\mathbf{n}_u$ before
+concatenation. After construction, the hybrid vectors are normalized and
 ranked by cosine similarity against all candidate articles. The purpose of
 pooling is not to create a new semantic encoder or to claim semantic meaning
 for contiguous embedding blocks. It is used as a pragmatic dimensional
@@ -424,7 +412,7 @@ and weight decay $5\times 10^{-4}$, and early stopping up to 200 epochs.
 %\subsection{Evaluation Protocol}
 
 All main results reported in this paper use the revised undirected structural
-evaluation protocol. Starting from the undirected version of the cleaned graph,
+evaluation protocol. Starting from the undirected version of the full aligned catalog,
 we construct a split with 216,123 undirected edges, of which 172,900 are used
 for training and 43,223 for testing. To align ranking evaluation with
 article-to-article retrieval, each undirected test edge $\{u,v\}$ is expanded
@@ -435,7 +423,7 @@ This revised protocol plays an important methodological role. Alternative
 evaluations based on held-out directed edges are possible, but the comparison
 in this paper is intentionally centered on the undirected structural
 graph because Node2Vec neighborhoods, community analysis, and the degree
-correction heuristic are all defined over that structural view. The revised
+rescaling heuristic are all defined over that structural view. The revised
 protocol should therefore be interpreted as a structurally aligned comparison
 setting for semantic, structural, and hybrid retrieval families, rather than
 as the only valid formulation of article recommendation. Directed navigation
@@ -697,7 +685,7 @@ structural target.
 
 The evaluation nevertheless remains a proxy. Missing hyperlinks are not
 necessarily irrelevant, reader behavior is unobserved, and edge direction is
-discarded. Moreover, pooling and degree correction are heuristic rather than
+discarded. Moreover, pooling and degree rescaling are heuristic rather than
 learned fusion mechanisms, and recovered text may contain link-related cues or
 title mentions.
 
@@ -706,7 +694,7 @@ title mentions.
 We introduced Custom-WikiCS, a reconstructed, text-complete Wiki-CS benchmark,
 and evaluated semantic, structural, hybrid, and GNN-based article retrieval on
 it. Beyond the model comparison, the work closes a practical dataset gap: raw
-text and graph structure are aligned for every active node, allowing semantic
+text and graph structure are aligned across the full catalog, allowing semantic
 representations to be regenerated as encoders evolve. The revised protocol
 therefore provides a common basis for comparing content-driven and
 topology-driven recommendations on the same articles.

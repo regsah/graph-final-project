@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  22 JUN 2026 01:02
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.17)  22 JUN 2026 02:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -372,13 +372,13 @@ Underfull \vbox (badness 2158) has occurred while \output is active []
 <figs/degree-log-log.png, id=27, 564.6696pt x 418.6842pt>
 File: figs/degree-log-log.png Graphic file (type png)
 <use figs/degree-log-log.png>
-Package pdftex.def Info: figs/degree-log-log.png  used on input line 247.
+Package pdftex.def Info: figs/degree-log-log.png  used on input line 246.
 (pdftex.def)             Requested size: 138.6772pt x 102.82448pt.
 <figs/cosine-similarity-assortativity.png, id=29, 709.6914pt x 418.6842pt>
 File: figs/cosine-similarity-assortativity.png Graphic file (type png)
 <use figs/cosine-similarity-assortativity.png>
 Package pdftex.def Info: figs/cosine-similarity-assortativity.png  used on inpu
-t line 252.
+t line 251.
 (pdftex.def)             Requested size: 170.09244pt x 100.3457pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
@@ -388,13 +388,13 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 File: figs/community-size-distribution-louvain.png Graphic file (type png)
 <use figs/community-size-distribution-louvain.png>
 Package pdftex.def Info: figs/community-size-distribution-louvain.png  used on 
-input line 277.
+input line 276.
 (pdftex.def)             Requested size: 142.32191pt x 69.46661pt.
 <figs/similarity-distributions.png, id=36, 1000.2168pt x 424.9476pt>
 File: figs/similarity-distributions.png Graphic file (type png)
 <use figs/similarity-distributions.png>
 Package pdftex.def Info: figs/similarity-distributions.png  used on input line 
-282.
+281.
 (pdftex.def)             Requested size: 190.91899pt x 81.11047pt.
  [6 <./figs/community-size-distribution-louvain.png> <./figs/similarity-distrib
 utions.png>]
@@ -473,11 +473,11 @@ L3 programming layer <2025-12-24>
 Here is how much of TeX's memory you used:
  3733 strings out of 467871
  54279 string characters out of 5418376
- 477990 words of memory out of 5000000
+ 474990 words of memory out of 5000000
  32565 multiletter control sequences out of 15000+600000
  643182 words of font info for 78 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 57i,14n,65p,1611b,341s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,14n,65p,1611b,339s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm
 0600.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi60
 0\ecrm0700.pk> <C:\Users\sahin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec
@@ -503,7 +503,7 @@ ta/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/sah
 in/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/U
 sers/sahin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/ms
 bm10.pfb>
-Output written on samplepaper.pdf (15 pages, 509446 bytes).
+Output written on samplepaper.pdf (15 pages, 508594 bytes).
 PDF statistics:
  519 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
