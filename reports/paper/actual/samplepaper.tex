@@ -23,11 +23,15 @@
 \maketitle
 
 \begin{abstract}
-Article recommendation systems identify relevant articles based on reader preferences and reading history. Existing approaches include collaborative filtering, matrix factorization, content-based methods, and neural network-based models. Recently, Graph Neural Networks (GNNs) have become central to article recommendation by leveraging article network structure. These systems are often evaluated on benchmarks such as Cora, CiteSeer, PubMed, and Wiki-CS. Among them, Wiki-CS is widely used due to its open-source accessibility, graph-ready structure, and representation of Wikipedia articles as nodes with directed hyperlink edges. Article text can also be embedded and used as node attributes, enabling richer representations.
+% Article recommendation systems identify relevant articles based on reader preferences and reading history. Existing approaches include collaborative filtering, matrix factorization, content-based methods, and neural network-based models. Recently, Graph Neural Networks (GNNs) have become central to article recommendation by leveraging article network structure. These systems are often evaluated on benchmarks such as Cora, CiteSeer, PubMed, and Wiki-CS. Among them, Wiki-CS is widely used due to its open-source accessibility, graph-ready structure, and representation of Wikipedia articles as nodes with directed hyperlink edges. Article text can also be embedded and used as node attributes, enabling richer representations.
 
-This study presents a graph-based article-to-article recommendation framework centered on hybrid semantic-structural retrieval. We combine sentence embeddings with structural representations from Node2Vec, and study corrected Node2Vec variants together with hybrid models that fuse text and graph structure. We also investigate pooled semantic representations designed to balance textual and structural signals, yielding corrected hybrid models with the most balanced recommendation quality in our experiments. We benchmark semantic, structural, hybrid, and GNN-based models under a revised evaluation protocol, showing that carefully designed hybrid retrieval is more reliable than single-source baselines.
+% This study presents a graph-based article-to-article recommendation framework centered on hybrid semantic-structural retrieval. We combine sentence embeddings with structural representations from Node2Vec, and study corrected Node2Vec variants together with hybrid models that fuse text and graph structure. We also investigate pooled semantic representations designed to balance textual and structural signals, yielding corrected hybrid models with the most balanced recommendation quality in our experiments. We benchmark semantic, structural, hybrid, and GNN-based models under a revised evaluation protocol, showing that carefully designed hybrid retrieval is more reliable than single-source baselines.
 
-To support this setting, we introduce a reconstructed and up-to-date version of Wiki-CS. The reconstruction resolves the lack of usable raw text in the original benchmark by cleaning and aligning article titles, recovering article text through integration with the Wikipedia STEM corpus and Wikipedia API, and applying state-of-the-art embedding models to the reconstructed collection. This provides complete raw text for every active node and enables reproducible, up-to-date recommendation experiments with modern Transformer-based text representations.
+% To support this setting, we introduce a reconstructed and up-to-date version of Wiki-CS. The reconstruction resolves the lack of usable raw text in the original benchmark by cleaning and aligning article titles, recovering article text through integration with the Wikipedia STEM corpus and Wikipedia API, and applying state-of-the-art embedding models to the reconstructed collection. This provides complete raw text for every active node and enables reproducible, up-to-date recommendation experiments with modern Transformer-based text representations.
+
+
+Article recommendation systems are commonly evaluated on benchmark graph datasets such as Cora, CiteSeer, PubMed, and Wiki-CS. Among these, Wiki-CS is widely used due to its open accessibility and graph-ready structure. However, its associated article content is outdated and does not adequately reflect recent developments in computer science, limiting its usefulness for modern text-aware recommendation methods. To address this limitation, we reconstruct and update Wiki-CS by aligning article titles, recovering article texts through the integration of the Wikipedia STEM corpus and the Wikipedia API, and generating semantic representations using state-of-the-art embedding models. The resulting benchmark provides complete textual coverage for all active nodes and supports reproducible recommendation experiments with contemporary Transformer-based language models.  Using this reconstructed dataset, we develop an article-to-article recommendation framework that combines semantic and structural information. In particular, we investigate degree-bias-corrected Node2Vec variants that reduce the influence of highly connected nodes in graph embeddings, alongside hybrid retrieval approaches that integrate textual and graph-based representations with a pooling operation. We benchmark semantic, structural, hybrid, and GNN-based methods under a revised evaluation protocol. Experimental results show that hybrid retrieval models consistently outperform single-source baselines, providing a more robust balance between semantic relevance and structural connectivity.
+
 
 \keywords{Article recommendation \and Graph recommendation \and Hybrid retrieval \and Wikipedia graphs \and Benchmark reconstruction}
 \end{abstract}
@@ -161,7 +165,7 @@ GNN-based article recommendation models within one experimental framework.
 \section{Method}
 \subsection{Custom-WikiCS Reconstruction}
 
-\subsubsection{Motivation and Reconstruction Pipeline}
+%\subsubsection{Motivation and Reconstruction Pipeline}
 
 The original Wiki-CS graph is useful as a structural benchmark, but it is less
 convenient for modern article recommendation because the benchmark is graph-ready
@@ -190,7 +194,7 @@ graph contains the statistics reported in Table~\ref{tab:dataset-stats}. The
 resulting benchmark supports both graph-structural experiments and modern
 text-based retrieval on the same article set.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \caption{Custom-WikiCS graph statistics after reconstruction and cleaning}
 \label{tab:dataset-stats}
 \centering
@@ -207,7 +211,7 @@ Undirected edges & 216,123 \\
 \end{tabular}
 \end{table}
 
-\subsubsection{Graph Characteristics}
+%\subsection{Wiki-CS Graph Characteristics}
 
 The cleaned graph exhibits a heavy-tailed degree distribution, indicating that a
 small number of hub articles coexist with a much larger set of lower-degree
@@ -229,11 +233,11 @@ retrieval is not being imposed on an unrelated graph; it operates on a benchmark
 where the link structure already carries topic-level coherence. The right panel
 of Fig.~\ref{fig:dataset-struct-sem} summarizes this effect.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
 \centering
 \begin{minipage}[t]{0.47\textwidth}
 \centering
-\includegraphics[width=\textwidth]{figs/degree-log-log.png}
+\includegraphics[width=0.85\textwidth]{figs/degree-log-log.png}
 \par\small (a) Log-log degree distribution
 \end{minipage}\hfill
 \begin{minipage}[t]{0.49\textwidth}
@@ -259,7 +263,7 @@ neighborhoods beyond direct edge presence. Figure~\ref{fig:community-diagnostics
 summarizes the community-size distribution together with the intra/inter
 community similarity comparison.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
 \centering
 \begin{minipage}[t]{0.41\textwidth}
 \centering
@@ -277,23 +281,25 @@ community similarity comparison.
 
 \subsection{Recommendation Framework}
 
-\subsubsection{Task Definition}
+%\subsubsection{Task Definition}
 
 Let $G=(V,E)$ denote the reconstructed article graph. For a source article
 $u\in V$, the goal is to return a ranked list of candidate articles
 $v\in V\setminus\{u\}$ that are relevant to $u$ under semantic, structural, or
 hybrid similarity. The task is query-based and article-centric: the source
 article serves as the query, and the recommendation model ranks all remaining
-articles accordingly. In the experimental setting used later, this is evaluated
-through held-out edge recovery and related-article ranking rather than direct
-user-behavior supervision. This provides an open and reproducible evaluation
-setting for comparing semantic, structural, and hybrid recommendation models on
-the same article collection.
+articles accordingly. The framework that we built for recommendation is figured in Fig~\ref{fig:paper-pipeline}. In the next part, we introduce the details of semantic and structural embedding generations and the proposed combination strategies for final recommendation. 
 
-\begin{figure}[H]
+% In the experimental setting used later, this is evaluated
+% through held-out edge recovery and related-article ranking rather than direct
+% user-behavior supervision. This provides an open and reproducible evaluation
+% setting for comparing semantic, structural, and hybrid recommendation models on
+% the same article collection.
+
+\begin{figure}[!htbp]
 \centering
 \setlength{\fboxsep}{6pt}
-\resizebox{0.78\textwidth}{!}{
+\resizebox{0.70\textwidth}{!}{
 \begin{tabular}{c c}
 \fbox{\parbox{0.27\textwidth}{\centering Cleaned article titles\\and recovered raw text}} &
 \fbox{\parbox{0.27\textwidth}{\centering Cleaned hyperlink\\graph}} \\[0.6em]
@@ -344,7 +350,7 @@ s_{\mathrm{str}}(u,v)=\cos(\mathbf{n}_u,\mathbf{n}_v).
 \end{equation}
 The second is a corrected variant that applies a power-law degree penalty during structural
 scoring in order to reduce the tendency of high-degree hubs to dominate
-retrieval.
+retrieval. We propose this correction for reducing a high-degree bias at the recommendation. 
 
 The correction factor for a node $v$ with undirected degree $d_v$ is defined as
 \begin{equation}
@@ -740,7 +746,8 @@ The authors have no competing interests to declare.
 
 \subsubsection{\ackname}
 This work is supported by the Galatasaray University Research Fund (BAP) within
-the scope of project number FBA-2026-1345.
+the scope of project number FBA-2026-1345 , and titled ``Çok Modlu Öneri Sistemlerinde Doğruluk, Çeşitlilik, Adalet ve''.
+ 
 \end{credits}
 
 \bibliographystyle{splncs04}
